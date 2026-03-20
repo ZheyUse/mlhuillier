@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.7"
+set "ML_VERSION=1.0.8"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -48,6 +48,7 @@ echo Flags:
 echo   --h    Show this help
 echo   --v    Show version
 echo   --c    Check for newer version
+echo   --a    Account creation (use with `ml create --a`)
 echo.
 echo Commands:
 echo   test userdb        Run remote DB connection test
@@ -60,6 +61,7 @@ echo To get help for a specific command:
 echo   ml --h create
 echo   ml --h test userdb
 echo   ml --h --c
+echo   ml --h create --a
 exit /b 0
 
 :prepare_help_args
@@ -235,9 +237,35 @@ echo Use: ml update
 exit /b 0
 
 :cmd_update
+set "VER_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/VERSION"
+set "TMP_VER=%TEMP%\ml_remote_version.txt"
 set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml-update.php"
 set "TMP_FILE=%TEMP%\ml-update.php"
 set "LOCAL_UPDATER=%~dp0ml-update.php"
+
+echo Checking remote ML CLI version from !VER_URL! ...
+
+where curl >nul 2>&1
+if %ERRORLEVEL%==0 (
+        curl -s -f -o "!TMP_VER!" "!VER_URL!"
+) else (
+        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!VER_URL!','!TMP_VER!'); exit 0 } Catch { exit 2 }"
+)
+if %ERRORLEVEL% neq 0 (
+        echo Failed to fetch remote VERSION, proceeding with update...
+) else (
+        set /p REMOTE_VER=<"!TMP_VER!"
+        del /f /q "!TMP_VER!" >nul 2>&1
+        if defined REMOTE_VER (
+                if "%REMOTE_VER%"=="%ML_VERSION%" (
+                        echo.
+                        echo Your ML CLI is up to date.
+                        echo Current Version: %ML_VERSION%
+                        exit /b 0
+                )
+        )
+)
+
 echo Updating ML CLI from !RAW_URL! ...
 
 where curl >nul 2>&1
