@@ -331,7 +331,7 @@ try {
   $_SESSION[$sessionKey] = $user;
   unset($_SESSION['login_error']);
 
-  header('Location: ../../public/home.php');
+  header('Location: ../../src/pages/home/home.php');
   exit;
 } catch (Throwable $e) {
   $_SESSION['login_error'] = 'Login unavailable right now. Please try again.';
@@ -349,7 +349,7 @@ require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/../controllers/logout-controller.php';
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
-  header('Location: ../../public/home.php');
+  header('Location: ../../src/pages/home/home.php');
   exit;
 }
 
@@ -546,7 +546,7 @@ unset($_SESSION['login_error']);
         <label for="username">Username</label>
         <div class="input-with-icon">
           <span class="material-icons input-icon">person</span>
-          <input type="text" id="username" name="username" placeholder="Username" required>
+          <input type="text" id="username" name="username" placeholder="Username" required style="text-transform:uppercase">
         </div>
       </div>
 
@@ -796,6 +796,11 @@ PHP,
 CSS,
 
         'src/modals/logout-modal/logout-modal.php' => <<<'PHP'
+<?php
+$appBaseUrl = isset($appBaseUrl) ? rtrim((string) $appBaseUrl, '/') : '';
+$logoutAction = ($appBaseUrl !== '' ? $appBaseUrl : '') . '/src/config/logout-handler.php';
+?>
+
 <div class="logout-modal" id="logoutModal" aria-hidden="true">
   <div class="logout-modal__overlay" data-close-logout-modal></div>
   <div class="logout-modal__content" role="dialog" aria-modal="true" aria-labelledby="logoutModalTitle">
@@ -804,7 +809,7 @@ CSS,
 
     <div class="logout-modal__actions">
       <button type="button" class="logout-modal__cancel" data-close-logout-modal>Cancel</button>
-      <form method="post" action="../src/config/logout-handler.php">
+      <form method="post" action="<?= htmlspecialchars($logoutAction, ENT_QUOTES, 'UTF-8'); ?>">
         <button type="submit" class="logout-modal__confirm">Logout</button>
       </form>
     </div>
@@ -926,6 +931,27 @@ $displayName = trim((string) (($user['firstname'] ?? '') . ' ' . ($user['lastnam
 if ($displayName === '') {
   $displayName = (string) ($user['username'] ?? 'User');
 }
+$scriptName = (string) ($_SERVER['SCRIPT_NAME'] ?? '');
+$appBaseUrl = preg_replace('#/src/pages/home/home\.php$#', '', $scriptName);
+$appBaseUrl = rtrim((string) $appBaseUrl, '/');
+$isEntry = (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === realpath(__FILE__));
+if ($isEntry) {
+  ?>
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <link rel="icon" type="image/png" href="<?= htmlspecialchars($appBaseUrl . '/src/assets/images/logo2.png', ENT_QUOTES, 'UTF-8'); ?>">
+    <link rel="stylesheet" href="<?= htmlspecialchars($appBaseUrl . '/public/index.css', ENT_QUOTES, 'UTF-8'); ?>">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="<?= htmlspecialchars($appBaseUrl . '/src/templates/sidebar.css', ENT_QUOTES, 'UTF-8'); ?>">
+    <link rel="stylesheet" href="<?= htmlspecialchars($appBaseUrl . '/src/modals/logout-modal/logout-modal.css', ENT_QUOTES, 'UTF-8'); ?>">
+  </head>
+  <body>
+  <?php
+}
 ?>
 <div class="app-layout">
   <?php require __DIR__ . '/../../templates/sidebar.php'; ?>
@@ -940,6 +966,10 @@ if ($displayName === '') {
 </div>
 
 <?php require __DIR__ . '/../../modals/logout-modal/logout-modal.php'; ?>
+<?php
+if ($isEntry) {
+  echo "</body>\n</html>\n";
+}
 PHP,
 
         'src/pages/home/home.css' => <<<'CSS'
@@ -957,12 +987,14 @@ $userController = new UserController();
 $user = $userController->profile();
 $username = htmlspecialchars(strtoupper((string) ($user['username'] ?? 'Guest')), ENT_QUOTES, 'UTF-8');
 $role = htmlspecialchars((string) ($user['role'] ?? ''), ENT_QUOTES, 'UTF-8');
+$appBaseUrl = isset($appBaseUrl) ? rtrim((string) $appBaseUrl, '/') : '';
+$logoSrc = ($appBaseUrl !== '' ? $appBaseUrl : '') . '/src/assets/images/logo1.png';
 ?>
 
 <aside class="sidebar" id="appSidebar" aria-label="Sidebar">
   <div class="sidebar__top">
     <div class="sidebar__brand">
-      <img src="../src/assets/images/logo1.png" alt="Logo" class="sidebar__brand-logo">
+      <img src="<?= htmlspecialchars($logoSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="Logo" class="sidebar__brand-logo">
       <div class="sidebar__brand-text">
         <div class="sidebar__brand-title">Project Title</div>
         <div class="sidebar__brand-sub">Project Subtitle</div>
@@ -1227,34 +1259,6 @@ guestOnly();
   <?php require __DIR__ . '/components/hero-section.php'; ?>
   <?php require __DIR__ . '/../src/modals/login-modal/login-modal.php'; ?>
   <?php require __DIR__ . '/components/index-footer.php'; ?>
-</body>
-</html>
-PHP,
-
-        'public/home.php' => <<<'PHP'
-<?php
-
-declare(strict_types=1);
-
-require_once __DIR__ . '/../src/config/session.php';
-require_once __DIR__ . '/../src/config/middleware.php';
-
-requireAuth();
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Home</title>
-  <link rel="icon" type="image/png" href="../src/assets/images/logo2.png">
-  <link rel="stylesheet" href="index.css">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link rel="stylesheet" href="../src/templates/sidebar.css">
-  <link rel="stylesheet" href="../src/modals/logout-modal/logout-modal.css">
-</head>
-<body>
-  <?php require __DIR__ . '/../src/pages/home/home.php'; ?>
 </body>
 </html>
 PHP,
