@@ -51,3 +51,4 @@ coverage/
 
 # Ignore the helper reference folder/file used for generator templates
 /ignore
+/test

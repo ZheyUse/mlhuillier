@@ -1,5 +1,5 @@
 @echo off
-setlocal
+setlocal enabledelayedexpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
 rem CLI version
@@ -41,36 +41,47 @@ echo ==============================
 echo.
 )
 
-if exist "C:\xampp\php\php.exe" (
-                "C:\xampp\php\php.exe" "%ML_SCRIPT%" %*
-                exit /b %ERRORLEVEL%
-)
-
 :: Handle custom commands before falling back to the generator
 if /I "%~1"=="test" (
         if /I "%~2"=="userdb" (
+                rem Remote-run the test script from GitHub by streaming to PHP stdin (no file saved)
                 set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/userdb-con-test.php"
-                set "TMP_FILE=%TEMP%\\userdb-con-test.php"
-                echo Fetching userdb connection test...
-                curl -s -f -o "%TMP_FILE%" "%RAW_URL%"
-                if %ERRORLEVEL% neq 0 (
-                        powershell -Command "Try { (New-Object System.Net.WebClient).DownloadFile('%RAW_URL%','%TMP_FILE%'); exit 0 } Catch { exit 1 }"
-                        if %ERRORLEVEL% neq 0 (
-                                echo Failed to download test script from %RAW_URL%
-                                exit /b 2
-                        )
-                )
-                if exist "C:\xampp\php\php.exe" (
-                        "C:\xampp\php\php.exe" "%TMP_FILE%"
-                        set "RC=%ERRORLEVEL%"
-                        del /f /q "%TMP_FILE%" >nul 2>&1
-                        exit /b %RC%
-                )
-                php "%TMP_FILE%"
-                set "RC=%ERRORLEVEL%"
-                del /f /q "%TMP_FILE%" >nul 2>&1
-                exit /b %RC%
+                echo Running remote userdb connection test from !RAW_URL! ...
+
+                rem determine php executable
+                set "PHP_EXE=php"
+                if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
+
+                                rem download to a temp file (ephemeral) then run with PHP, then delete
+                                set "TMP_FILE=%TEMP%\\userdb-con-test.php"
+                                where curl >nul 2>&1
+                                if %ERRORLEVEL%==0 (
+                                        curl -s -f -o "!TMP_FILE!" "!RAW_URL!"
+                                        if %ERRORLEVEL% neq 0 (
+                                                echo Failed to fetch remote test script
+                                                exit /b 2
+                                        )
+                                        "!PHP_EXE!" -d display_errors=0 "!TMP_FILE!"
+                                        set "RC=%ERRORLEVEL%"
+                                        del /f /q "!TMP_FILE!" >nul 2>&1
+                                        exit /b %RC%
+                                )
+
+                                powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!RAW_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
+                                if %ERRORLEVEL% neq 0 (
+                                        echo Failed to fetch remote test script
+                                        exit /b 2
+                                )
+                                "!PHP_EXE!" -d display_errors=0 "!TMP_FILE!"
+                                set "RC=%ERRORLEVEL%"
+                                del /f /q "!TMP_FILE!" >nul 2>&1
+                                exit /b %RC%
         )
+)
+
+if exist "C:\xampp\php\php.exe" (
+        "C:\xampp\php\php.exe" "%ML_SCRIPT%" %*
+        exit /b %ERRORLEVEL%
 )
 
 php "%ML_SCRIPT%" %*
