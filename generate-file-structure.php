@@ -949,6 +949,16 @@ PHP,
 CSS,
 
         'src/templates/sidebar.php' => <<<'PHP'
+<?php
+require_once __DIR__ . '/../config/session.php';
+require_once __DIR__ . '/../controllers/usercontroller.php';
+
+$userController = new UserController();
+$user = $userController->profile();
+$username = htmlspecialchars(strtoupper((string) ($user['username'] ?? 'Guest')), ENT_QUOTES, 'UTF-8');
+$role = htmlspecialchars((string) ($user['role'] ?? ''), ENT_QUOTES, 'UTF-8');
+?>
+
 <aside class="sidebar" id="appSidebar" aria-label="Sidebar">
   <div class="sidebar__top">
     <div class="sidebar__brand">
@@ -956,6 +966,16 @@ CSS,
       <div class="sidebar__brand-text">
         <div class="sidebar__brand-title">Project Title</div>
         <div class="sidebar__brand-sub">Project Subtitle</div>
+      </div>
+    </div>
+
+    <div class="sidebar__user">
+      <div class="sidebar__user-avatar" aria-hidden="true">
+        <span class="material-icons">person</span>
+      </div>
+      <div class="sidebar__user-text">
+        <div class="sidebar__user-name"><?= $username; ?></div>
+        <div class="sidebar__user-role"><?= $role !== '' ? $role : '&nbsp;'; ?></div>
       </div>
     </div>
   </div>
@@ -1011,10 +1031,13 @@ body {
 
 .sidebar__top {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
   padding: 18px 12px;
-  min-height: 80px;
+  gap: 14px;
+  min-height: 96px;
+  border-bottom: 0.5px solid var(--accent-dark);
 }
 
 .sidebar__brand {
@@ -1045,19 +1068,58 @@ body {
 }
 
 .sidebar__brand-title {
-  font-size: 14px;
+  font-size: 18px;
   color: var(--surface);
   font-weight: 700;
 }
 
 .sidebar__brand-sub {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--surface);
   opacity: 0.85;
   margin-top: 2px;
 }
 
-.sidebar__brand-text { /* handled above */ }
+/* User block (shows below brand in the top area) */
+.sidebar__user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidebar__user-avatar {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.06);
+  color: var(--surface);
+}
+
+.sidebar__user-text {
+  display: none;
+  flex-direction: column;
+  line-height: 1.0;
+}
+
+.sidebar__user-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--surface);
+}
+
+.sidebar__user-role {
+  font-size: 11px;
+  color: var(--surface);
+  opacity: 0.85;
+  margin-top: 2px;
+}
+
+.sidebar:hover .sidebar__user-text {
+  display: flex;
+}
 
 .sidebar__toggle {
   border: 1px solid var(--surface);
@@ -1081,14 +1143,14 @@ body {
 }
 
 .sidebar__bottom {
-  border-top: 1px solid var(--stroke);
+  border-top: 0.5px solid var(--accent-dark);
   padding-top: 12px;
 }
 
 .sidebar__logout {
   width: 100%;
   border: 1px solid var(--surface);
-  background: var(--accent-dark);
+  background: var(--accent);
   color: var(--surface);
   border-radius: 10px;
   padding: 10px 12px;
@@ -1120,7 +1182,7 @@ body {
 }
 
 .sidebar__logout:hover {
-  background: var(--accent);
+  background: var(--accent-dark);
   transform: translateX(3px);
   box-shadow: 0 8px 20px rgba(16,24,40,0.12);
 }
@@ -1138,15 +1200,15 @@ body {
 CSS,
 
         'public/index.php' => <<<'PHP'
-      <?php
+<?php
 
-      declare(strict_types=1);
+declare(strict_types=1);
 
-      require_once __DIR__ . '/../src/config/session.php';
-      require_once __DIR__ . '/../src/config/middleware.php';
-      guestOnly();
-      ?>
-      <!DOCTYPE html>
+require_once __DIR__ . '/../src/config/session.php';
+require_once __DIR__ . '/../src/config/middleware.php';
+guestOnly();
+?>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -1185,6 +1247,7 @@ requireAuth();
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Home</title>
+  <link rel="icon" type="image/png" href="../src/assets/images/logo2.png">
   <link rel="stylesheet" href="index.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="../src/templates/sidebar.css">
