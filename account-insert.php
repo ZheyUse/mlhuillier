@@ -165,23 +165,39 @@ if ($stmt) {
     exit(2);
 }
 
-// Insert into userlogs
-$insertLogSql = "INSERT INTO userlogs (id_number, status, created_at) VALUES (?,?,?)";
-$stmt2 = $mysqli->prepare($insertLogSql);
-if ($stmt2) {
-    $status = 'active';
-    $stmt2->bind_param('sss', $idNumber, $status, $now);
-    if (!$stmt2->execute()) {
-        safeEcho('Warning: Failed to insert userlog: ' . $stmt2->error);
+// Insert into userlogs — detect available timestamp column (created_at or dateCreated)
+$logCols = [];
+$res = $mysqli->query("SHOW COLUMNS FROM userlogs");
+if ($res) {
+    while ($row = $res->fetch_assoc()) {
+        $logCols[] = $row['Field'];
     }
-    $stmt2->close();
+    $res->free();
+}
+
+$status = 'active';
+if (in_array('created_at', $logCols)) {
+    $insertLogSql = "INSERT INTO userlogs (id_number, status, created_at) VALUES (?,?,?)";
+    $stmt2 = $mysqli->prepare($insertLogSql);
+    if ($stmt2) {
+        $stmt2->bind_param('sss', $idNumber, $status, $now);
+        if (!$stmt2->execute()) safeEcho('Warning: Failed to insert userlog: ' . $stmt2->error);
+        $stmt2->close();
+    }
+} elseif (in_array('dateCreated', $logCols)) {
+    $insertLogSql = "INSERT INTO userlogs (id_number, status, dateCreated) VALUES (?,?,?)";
+    $stmt2 = $mysqli->prepare($insertLogSql);
+    if ($stmt2) {
+        $stmt2->bind_param('sss', $idNumber, $status, $now);
+        if (!$stmt2->execute()) safeEcho('Warning: Failed to insert userlog: ' . $stmt2->error);
+        $stmt2->close();
+    }
 } else {
-    // try fallback: only id_number and status
+    // Fallback: insert only id_number and status if timestamp column not present
     $fallback = $mysqli->prepare('INSERT INTO userlogs (id_number, status) VALUES (?,?)');
     if ($fallback) {
-        $status = 'active';
         $fallback->bind_param('ss', $idNumber, $status);
-        $fallback->execute();
+        if (!$fallback->execute()) safeEcho('Warning: Failed to insert userlog (fallback): ' . $fallback->error);
         $fallback->close();
     }
 }
