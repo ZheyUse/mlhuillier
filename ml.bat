@@ -3,7 +3,7 @@ setlocal enabledelayedexpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
 rem CLI version
-set "ML_VERSION=1.0.2"
+set "ML_VERSION=1.0.3"
 
 rem Handle top-level flags before invoking the PHP generator
 if /I "%~1"=="--v" (
