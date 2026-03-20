@@ -62,18 +62,25 @@ if ($envPath) {
 
 $dbHost = $env['DB_HOST'] ?? '127.0.0.1';
 $dbPort = $env['DB_PORT'] ?? '';
-$dbName = $env['DB_DATABASE'] ?? ($env['DB_NAME'] ?? 'userdb');
+$dbName = $env['DB_DATABASE'] ?? ($env['DB_NAME'] ?? null);
 $dbUser = $env['DB_USERNAME'] ?? ($env['DB_USER'] ?? 'root');
 $dbPass = $env['DB_PASSWORD'] ?? ($env['DB_PASS'] ?? '');
 
-// If .env contains obvious placeholder values, prompt for DB info interactively
-if ($dbName === '' || strpos($dbName, '#') === 0 || preg_match('/put\s+system/i', $dbName)) {
-    safeEcho('No valid DB name found in .env; please enter DB settings:');
-    $dbHost = prompt('DB Host (default 127.0.0.1): ') ?: $dbHost;
-    $dbPort = prompt('DB Port (default 3306): ') ?: $dbPort;
-    $dbName = prompt('DB Database (e.g. userdb): ') ?: $dbName;
-    $dbUser = prompt('DB Username (default root): ') ?: $dbUser;
-    $dbPass = prompt('DB Password: ') ?: $dbPass;
+// If .env contains obvious placeholder values, try USERDB_NAME/UserDB fallback
+if ($dbName === '' || $dbName === null || strpos($dbName, '#') === 0 || preg_match('/put\s+system/i', $dbName)) {
+    // Prefer explicit USERDB_NAME / USERDB if provided
+    $dbName = $env['USERDB_NAME'] ?? ($env['USERDB'] ?? null);
+    if ($dbName) {
+        safeEcho('Using USERDB_NAME from .env: ' . $dbName);
+    } else {
+        // still no DB name, prompt interactively
+        safeEcho('No valid DB name found in .env; please enter DB settings:');
+        $dbHost = prompt('DB Host (default 127.0.0.1): ') ?: $dbHost;
+        $dbPort = prompt('DB Port (default 3306): ') ?: $dbPort;
+        $dbName = prompt('DB Database (e.g. userdb): ') ?: $dbName;
+        $dbUser = prompt('DB Username (default root): ') ?: $dbUser;
+        $dbPass = prompt('DB Password: ') ?: $dbPass;
+    }
 }
 
 // Not used directly but kept for debugging
