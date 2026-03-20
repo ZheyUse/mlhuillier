@@ -42,8 +42,35 @@ echo.
 )
 
 if exist "C:\xampp\php\php.exe" (
-        "C:\xampp\php\php.exe" "%ML_SCRIPT%" %*
-        exit /b %ERRORLEVEL%
+                "C:\xampp\php\php.exe" "%ML_SCRIPT%" %*
+                exit /b %ERRORLEVEL%
+)
+
+:: Handle custom commands before falling back to the generator
+if /I "%~1"=="test" (
+        if /I "%~2"=="userdb" (
+                set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/userdb-con-test.php"
+                set "TMP_FILE=%TEMP%\\userdb-con-test.php"
+                echo Fetching userdb connection test...
+                curl -s -f -o "%TMP_FILE%" "%RAW_URL%"
+                if %ERRORLEVEL% neq 0 (
+                        powershell -Command "Try { (New-Object System.Net.WebClient).DownloadFile('%RAW_URL%','%TMP_FILE%'); exit 0 } Catch { exit 1 }"
+                        if %ERRORLEVEL% neq 0 (
+                                echo Failed to download test script from %RAW_URL%
+                                exit /b 2
+                        )
+                )
+                if exist "C:\xampp\php\php.exe" (
+                        "C:\xampp\php\php.exe" "%TMP_FILE%"
+                        set "RC=%ERRORLEVEL%"
+                        del /f /q "%TMP_FILE%" >nul 2>&1
+                        exit /b %RC%
+                )
+                php "%TMP_FILE%"
+                set "RC=%ERRORLEVEL%"
+                del /f /q "%TMP_FILE%" >nul 2>&1
+                exit /b %RC%
+        )
 )
 
 php "%ML_SCRIPT%" %*
