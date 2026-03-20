@@ -116,7 +116,7 @@ function genPassword($len = 8)
     return $out;
 }
 
-$password = genPassword(8);
+$password = $username;
 $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
 safeEcho("Account Name: $firstName $lastName");
