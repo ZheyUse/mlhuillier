@@ -224,43 +224,43 @@ if (!function_exists('userDbConnection')) {
 PHP,
 
         'src/config/env.php' => <<<'PHP'
-  <?php
+<?php
 
-  declare(strict_types=1);
+declare(strict_types=1);
 
-  if (!function_exists('env')) {
-    function env(string $key, ?string $default = null): ?string
-    {
-      static $loaded = false;
-      static $values = [];
+if (!function_exists('env')) {
+  function env(string $key, ?string $default = null): ?string
+  {
+    static $loaded = false;
+    static $values = [];
 
-      if (!$loaded) {
-        $loaded = true;
-        $envPath = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . '.env';
-        if (file_exists($envPath) && is_readable($envPath)) {
-          $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-          foreach ($lines as $line) {
-            $line = trim($line);
-            if ($line === '' || $line[0] === '#') {
-              continue;
+    if (!$loaded) {
+      $loaded = true;
+      $envPath = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . '.env';
+      if (file_exists($envPath) && is_readable($envPath)) {
+        $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        foreach ($lines as $line) {
+          $line = trim($line);
+          if ($line === '' || $line[0] === '#') {
+            continue;
+          }
+          $parts = explode('=', $line, 2);
+          if (count($parts) === 2) {
+            $k = trim($parts[0]);
+            $v = trim($parts[1]);
+            if ((str_starts_with($v, '"') && str_ends_with($v, '"')) || (str_starts_with($v, "'") && str_ends_with($v, "'"))) {
+              $v = substr($v, 1, -1);
             }
-            $parts = explode('=', $line, 2);
-            if (count($parts) === 2) {
-              $k = trim($parts[0]);
-              $v = trim($parts[1]);
-              if ((str_starts_with($v, '"') && str_ends_with($v, '"')) || (str_starts_with($v, "'") && str_ends_with($v, "'"))) {
-                $v = substr($v, 1, -1);
-              }
-              $values[$k] = $v;
-            }
+            $values[$k] = $v;
           }
         }
       }
-
-      return $values[$key] ?? $default;
     }
+
+    return $values[$key] ?? $default;
   }
-  PHP,
+}
+PHP,
 
         'src/config/error-handling.php' => <<<'PHP'
 <?php
@@ -412,20 +412,20 @@ if (session_status() === PHP_SESSION_NONE) {
 PHP,
 
         'src/controllers/login-controller.php' => <<<'PHP'
-    <?php
+<?php
 
-    declare(strict_types=1);
+declare(strict_types=1);
 
-    require_once __DIR__ . '/../config/env.php';
-    require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../config/env.php';
+require_once __DIR__ . '/../config/db.php';
 
-    class LoginController
+class LoginController
+{
+    public function authenticate(string $username, string $password): ?array
     {
-      public function authenticate(string $username, string $password): ?array
-      {
         $username = trim($username);
         if ($username === '' || $password === '') {
-          return null;
+            return null;
         }
 
         $pdo = userDbConnection();
@@ -434,21 +434,21 @@ PHP,
         $user = $stmt->fetch();
 
         if (!is_array($user)) {
-          return null;
+            return null;
         }
 
         $storedPassword = (string) ($user['password'] ?? '');
         $isValid = password_verify($password, $storedPassword) || hash_equals($storedPassword, $password);
 
         if (!$isValid) {
-          return null;
+            return null;
         }
 
         unset($user['password']);
         return $user;
-      }
     }
-    PHP,
+}
+PHP,
 
         'src/controllers/usercontroller.php' => <<<'PHP'
 <?php
@@ -1139,6 +1139,7 @@ CSS,
 
         'public/index.php' => <<<'PHP'
       <?php
+
       declare(strict_types=1);
 
       require_once __DIR__ . '/../src/config/session.php';
@@ -1457,6 +1458,10 @@ MD,
     foreach ($templates as $relativeFile => $content) {
         $absoluteFile = $projectRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativeFile);
         $compiled = renderTemplate($content, $projectName, $projectTitle);
+
+      if (str_ends_with($relativeFile, '.php')) {
+        $compiled = ltrim($compiled, "\xEF\xBB\xBF \t\n\r\0\x0B");
+      }
 
         if (!ensureFile($absoluteFile, $projectRoot, rtrim($compiled, "\r\n") . PHP_EOL)) {
             return false;
