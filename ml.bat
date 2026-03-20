@@ -273,6 +273,7 @@ exit /b 2
 set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/account-insert.php"
 set "TMP_FILE=%TEMP%\account-insert.php"
 echo Running remote account creation from !RAW_URL! ...
+echo.
 
 where curl >nul 2>&1
 if %ERRORLEVEL%==0 (
