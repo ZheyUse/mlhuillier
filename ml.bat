@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.12"
+set "ML_VERSION=1.0.13"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -157,6 +157,8 @@ exit /b 0
 
 :cmd_test_userdb
 set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/userdb-con-test.php"
+set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
+set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
 set "TMP_FILE=%TEMP%\userdb-con-test.php"
 echo Running remote userdb connection test from !RAW_URL! ...
 
@@ -178,6 +180,8 @@ exit /b %RC%
 
 :cmd_add_userdb
 set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/userdb-import.php"
+set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
+set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
 set "TMP_FILE=%TEMP%\userdb-import.php"
 echo Running remote userdb import from !RAW_URL! ...
 
@@ -198,21 +202,13 @@ del /f /q "!TMP_FILE!" >nul 2>&1
 exit /b %RC%
 
 :cmd_check_version
-set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/VERSION"
-set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
-set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
 set "TMP_FILE=%TEMP%\ml_remote_version.txt"
 set "REMOTE_VER="
-echo Checking remote ML CLI version from !RAW_URL! ...
+echo Checking remote ML CLI version from GitHub API (fallback raw) ...
 
-where curl >nul 2>&1
-if %ERRORLEVEL%==0 (
-        curl -s -f -o "!TMP_FILE!" "!RAW_URL!"
-) else (
-        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!RAW_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
-)
+call :fetch_remote_version "!TMP_FILE!"
 if %ERRORLEVEL% neq 0 (
-        echo Failed to fetch remote VERSION
+        echo Failed to fetch remote VERSION from both API and raw endpoint.
         exit /b 2
 )
 
@@ -240,28 +236,22 @@ echo Use: ml update
 exit /b 0
 
 :cmd_update
-set "VER_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/VERSION"
-set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
-set "VER_URL=!VER_URL!?t=!CACHE_BUST!"
 set "TMP_VER=%TEMP%\ml_remote_version.txt"
-set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml-update.php"
+set "REMOTE_VER="
+set "UPDATER_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml-update.php"
+set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
+set "UPDATER_URL=!UPDATER_URL!?t=!CACHE_BUST!"
 set "TMP_FILE=%TEMP%\ml-update.php"
 set "LOCAL_UPDATER=%~dp0ml-update.php"
 
-echo Checking remote ML CLI version from !VER_URL! ...
+echo Checking remote ML CLI version from GitHub API (fallback raw) ...
 
-where curl >nul 2>&1
-if %ERRORLEVEL%==0 (
-        curl -s -f -o "!TMP_VER!" "!VER_URL!"
-) else (
-        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!VER_URL!','!TMP_VER!'); exit 0 } Catch { exit 2 }"
-)
+call :fetch_remote_version "!TMP_VER!"
 if %ERRORLEVEL% neq 0 (
         echo Failed to fetch remote VERSION, proceeding with update...
 ) else (
-        rem Use findstr to avoid CR/LF or whitespace mismatch when comparing versions
-        findstr /x /c:"%ML_VERSION%" "!TMP_VER!" >nul 2>&1
-        if %ERRORLEVEL%==0 (
+        set /p REMOTE_VER=<"!TMP_VER!"
+        if "%REMOTE_VER%"=="%ML_VERSION%" (
                 del /f /q "!TMP_VER!" >nul 2>&1
                 echo.
                 echo Your ML CLI is up to date.
@@ -272,26 +262,26 @@ if %ERRORLEVEL% neq 0 (
         )
 )
 
-echo Updating ML CLI from !RAW_URL! ...
+echo Updating ML CLI from !UPDATER_URL! ...
 
 where curl >nul 2>&1
 if %ERRORLEVEL%==0 (
-        curl -s -f -o "!TMP_FILE!" "!RAW_URL!"
+        curl -s -f -o "!TMP_FILE!" "!UPDATER_URL!"
 ) else (
-        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!RAW_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
+        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!UPDATER_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
 )
 
 if %ERRORLEVEL%==0 (
         "!PHP_EXE!" -d display_errors=0 "!TMP_FILE!"
         set "RC=%ERRORLEVEL%"
         del /f /q "!TMP_FILE!" >nul 2>&1
-        if "%RC%"=="0" exit /b 0
+        if "!RC!"=="0" exit /b 0
         if exist "!LOCAL_UPDATER!" (
                 echo Remote updater returned an error, trying local updater...
                 "!PHP_EXE!" -d display_errors=0 "!LOCAL_UPDATER!"
                 exit /b %ERRORLEVEL%
         )
-        exit /b %RC%
+        exit /b !RC!
 )
 
 if exist "!LOCAL_UPDATER!" (
@@ -303,8 +293,28 @@ if exist "!LOCAL_UPDATER!" (
 echo Failed to fetch remote updater and no local updater was found.
 exit /b 2
 
+:fetch_remote_version
+set "OUT_FILE=%~1"
+set "API_URL=https://api.github.com/repos/ZheyUse/mlhuillier/contents/VERSION?ref=main"
+set "FETCH_RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/VERSION?t=%RANDOM%%RANDOM%%RANDOM%"
+
+powershell -NoProfile -Command "Try { $h=@{'User-Agent'='ml-cli'}; $j=Invoke-RestMethod -Headers $h -Uri '%API_URL%'; $v=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String(($j.content -replace '\s',''))).Trim(); if([string]::IsNullOrWhiteSpace($v)){ exit 3 }; Set-Content -Path '%OUT_FILE%' -Value $v -Encoding ASCII -NoNewline; exit 0 } Catch { exit 2 }"
+if %ERRORLEVEL%==0 exit /b 0
+
+where curl >nul 2>&1
+if %ERRORLEVEL%==0 (
+        curl -s -f -o "%OUT_FILE%" "%FETCH_RAW_URL%"
+) else (
+        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('%FETCH_RAW_URL%','%OUT_FILE%'); exit 0 } Catch { exit 2 }"
+)
+if %ERRORLEVEL% neq 0 exit /b 2
+
+exit /b 0
+
 :cmd_create_account
 set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/account-insert.php"
+set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
+set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
 set "TMP_FILE=%TEMP%\account-insert.php"
 echo Running remote account creation from !RAW_URL! ...
 echo.
@@ -333,6 +343,8 @@ if exist "%LOCAL_PHP%" (
 )
 
 set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/download-installer.php"
+set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
+set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
 set "TMP_FILE=%TEMP%\download-installer.php"
 echo Running remote installer downloader from !RAW_URL! ...
 

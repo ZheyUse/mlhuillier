@@ -5,7 +5,7 @@ set "TARGET_DIR=C:\ML CLI\Tools"
 set "SOURCE_DIR=%~dp0"
 
 rem Determine CLI version from local VERSION file if present (fallback 1.0.3)
-set "CLI_VERSION=1.0.12"
+set "CLI_VERSION=1.0.13"
 if exist "%SOURCE_DIR%VERSION" (
   for /f "usebackq delims=" %%v in ("%SOURCE_DIR%VERSION") do set "CLI_VERSION=%%v"
 )
@@ -49,7 +49,7 @@ echo Installing Necessary Files...
 echo Progress: %PROGRESS%/%TOTAL%
 
 rem Step 1: download generator stub and CLI batch (GitHub-only)
-powershell -NoProfile -ExecutionPolicy Bypass -Command "try{ (New-Object Net.WebClient).DownloadFile('%RAW_BASE%/generate-file-remote.php', '%TARGET_DIR%\\generate-file-structure.php'); (New-Object Net.WebClient).DownloadFile('%RAW_BASE%/ml.bat', '%TARGET_DIR%\\ml.bat'); exit 0 } catch { exit 2 }"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "try{ (New-Object Net.WebClient).DownloadFile('%RAW_BASE%/generate-file-remote.php?t=%RANDOM%%RANDOM%%RANDOM%', '%TARGET_DIR%\\generate-file-structure.php'); (New-Object Net.WebClient).DownloadFile('%RAW_BASE%/ml.bat?t=%RANDOM%%RANDOM%%RANDOM%', '%TARGET_DIR%\\ml.bat'); exit 0 } catch { exit 2 }"
 if errorlevel 1 (
   echo [ERROR] Failed to download necessary files
   exit /b 1
@@ -89,7 +89,7 @@ echo Progress: %PROGRESS%/%TOTAL%
 echo Installing Uninstaller...
 
 rem Step 2: download uninstaller (GitHub-only)
-powershell -NoProfile -ExecutionPolicy Bypass -Command "try{ (New-Object Net.WebClient).DownloadFile('%RAW_BASE%/uninstall-ml.bat', '%TARGET_DIR%\\uninstall-ml.bat'); exit 0 } catch { exit 2 }"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "try{ (New-Object Net.WebClient).DownloadFile('%RAW_BASE%/uninstall-ml.bat?t=%RANDOM%%RANDOM%%RANDOM%', '%TARGET_DIR%\\uninstall-ml.bat'); exit 0 } catch { exit 2 }"
 if errorlevel 1 (
   echo [ERROR] Failed to download uninstall-ml.bat
   exit /b 1
