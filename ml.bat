@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.14"
+set "ML_VERSION=1.0.15"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -49,6 +49,7 @@ echo Flags:
 echo   --h    Show this help
 echo   --v    Show version
 echo   --c    Check for newer version
+echo   --d    Download remote installer
 echo   --a    Account creation (use with `ml create --a`)
 echo.
 echo Commands:
@@ -56,6 +57,7 @@ echo   test userdb        Run remote DB connection test
 echo   add userdb         Import userdb SQL (migration/userdb)
 echo   create --a         Create interactive account (add user)
 echo   update             Update ML CLI from remote
+echo   --d                Download remote installer
 echo   --c                Check remote ML CLI version
 echo.
 echo To get help for a specific command:
@@ -63,6 +65,7 @@ echo   ml --h create
 echo   ml --h test userdb
 echo   ml --h --c
 echo   ml --h create --a
+echo   ml --h --d
 exit /b 0
 
 :prepare_help_args
@@ -87,6 +90,7 @@ if not defined CMD goto :show_help
 
 if /I "%CMD%"=="--c" goto :help_check_version
 if /I "%CMD%"=="update" goto :help_update
+if /I "%CMD%"=="--d" goto :help_download_installer
 if /I "%CMD%"=="create" if /I "%SUB%"=="--a" goto :help_create_account
 if /I "%CMD%"=="create" goto :help_create
 if /I "%CMD%"=="test" goto :help_test
@@ -107,6 +111,13 @@ echo.
 echo HELP: Update ML CLI
 echo Usage: ml update
 echo Description: Downloads and runs the remote updater to replace installed CLI files.
+exit /b 0
+
+:help_download_installer
+echo.
+echo HELP: Download installer
+echo Usage: ml --d
+echo Description: Downloads the remote installer downloader script and runs it to fetch the full installer.
 exit /b 0
 
 :help_create
