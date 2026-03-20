@@ -125,7 +125,11 @@ if "%REMOTE_VER%"=="%ML_VERSION%" (
         exit /b 0
 )
 
+echo.
 echo New version is available.
+echo version: %REMOTE_VER%
+echo.
+echo to update to the latest version
 echo Use: ml update
 exit /b 0
 
