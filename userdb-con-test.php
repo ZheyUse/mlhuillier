@@ -47,7 +47,7 @@ function safeEcho($line)
     fwrite(STDOUT, $line . PHP_EOL);
 }
 
-safeEcho('UserDB Connection: testing...');
+safeEcho('UserDB Connection: Connecting...');
 
 $dsn = sprintf('mysql:host=%s;port=%s;dbname=%s;charset=%s', $host, $port, $dbname, $charset);
 try {
