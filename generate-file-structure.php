@@ -294,6 +294,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/session.php';
 require_once __DIR__ . '/csrf.php';
 require_once __DIR__ . '/../controllers/login-controller.php';
+require_once __DIR__ . '/../controllers/password-controller/changepass-controller.php';
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
   header('Location: ../../public/index.php');
@@ -330,6 +331,35 @@ try {
   session_regenerate_id(true);
   $_SESSION[$sessionKey] = $user;
   unset($_SESSION['login_error']);
+
+  // After authentication, check userlogs for forced password change
+  $cp = new ChangePassController();
+  $ulog = $cp->getUserLog((string) ($user['id_number'] ?? ''));
+  $mustChange = false;
+  if (is_array($ulog)) {
+    $status = (string) ($ulog['status'] ?? '');
+    $dateModified = $ulog['dateModified'] ?? null;
+    if ($status === 'reset' || ($status === 'active' && ($dateModified === null || $dateModified === ''))) {
+      $mustChange = true;
+    }
+  }
+
+  if ($mustChange) {
+    // mark session so middleware/pages can show the changepass modal
+    $_SESSION['must_change_password'] = true;
+    header('Location: ../../public/index.php');
+    exit;
+  }
+
+  // Normal login: update last_online
+  try {
+    $pdo = userDbConnection();
+    $now = (new DateTime('now', new DateTimeZone('UTC')))->format('Y-m-d H:i:s');
+    $upd = $pdo->prepare('UPDATE userlogs SET last_online = :lo WHERE id_number = :id');
+    $upd->execute(['lo' => $now, 'id' => (string) ($user['id_number'] ?? '')]);
+  } catch (Throwable $_) {
+    // ignore update failures for now
+  }
 
   header('Location: ../../src/pages/home/home.php');
   exit;
@@ -395,10 +425,13 @@ if (!function_exists('guestOnly')) {
     $sessionKey = (string) ($auth['session_key'] ?? 'auth_user');
 
     if (!empty($_SESSION[$sessionKey])) {
-      $base = appBase();
-      $target = $base . '/src/pages/home/home.php';
-      header('Location: ' . $target);
-      exit;
+      // If user is authenticated but flagged to change password, allow staying on public index
+      if (empty($_SESSION['must_change_password'])) {
+        $base = appBase();
+        $target = $base . '/src/pages/home/home.php';
+        header('Location: ' . $target);
+        exit;
+      }
     }
   }
 }
@@ -414,6 +447,16 @@ if (!function_exists('requireAuth')) {
       $target = $base . '/public/index.php';
       header('Location: ' . $target);
       exit;
+    }
+
+    // If user is authenticated but required to change password, force them back to public index
+    if (!empty($_SESSION[$sessionKey]) && !empty($_SESSION['must_change_password'])) {
+      $script = (string) ($_SERVER['SCRIPT_NAME'] ?? '');
+      if (strpos($script, '/public/index.php') === false) {
+        $base = appBase();
+        header('Location: ' . $base . '/public/index.php');
+        exit;
+      }
     }
   }
 }
@@ -660,6 +703,171 @@ unset($_SESSION['login_error']);
 </script>
 PHP,
 
+        'src/modals/login-modal/changepass-modal.php' => <<<'PHP'
+<?php
+require_once __DIR__ . '/../../config/session.php';
+$csrf = require __DIR__ . '/../../config/csrf.php';
+$tokenKey = (string) ($csrf['token_key'] ?? '_csrf');
+
+$scriptName = (string) ($_SERVER['SCRIPT_NAME'] ?? '');
+$appBaseUrl = preg_replace('#/(?:(?:public)|(?:src))/.*$#', '', $scriptName);
+$appBaseUrl = $appBaseUrl === null ? '' : rtrim((string) $appBaseUrl, '/');
+$action = ($appBaseUrl !== '' ? $appBaseUrl : '') . '/src/config/changepass-handler.php';
+
+$error = $_SESSION['changepass_error'] ?? '';
+unset($_SESSION['changepass_error']);
+?>
+
+<div class="changepass-modal" id="changepassModal" aria-hidden="true">
+  <div class="changepass-modal__overlay"></div>
+  <div class="changepass-modal__content" role="dialog" aria-modal="true" aria-labelledby="changepassTitle">
+    <div class="changepass-modal__header">
+      <div class="changepass-modal__illustration" aria-hidden="true">
+        <span class="material-icons changepass-modal__icon">lock</span>
+      </div>
+
+      <div class="changepass-modal__textblock">
+        <h2 class="changepass-modal__title" id="changepassTitle">Change Password</h2>
+        <p class="changepass-modal__subtitle">Set a new password to secure your account.</p>
+      </div>
+    </div>
+
+    <?php if ($error !== ''): ?>
+      <div class="changepass-error" role="alert"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?></div>
+    <?php endif; ?>
+
+    <form id="changepassForm" method="post" action="<?= htmlspecialchars($action, ENT_QUOTES, 'UTF-8'); ?>">
+      <input type="hidden" name="<?= htmlspecialchars($tokenKey, ENT_QUOTES, 'UTF-8'); ?>" value="<?= htmlspecialchars((string) $_SESSION[$tokenKey] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+
+      <div class="changepass-modal__body">
+        <div class="field">
+          <label for="currentPassword">Current password</label>
+          <div class="input-with-icon password-wrap">
+            <span class="material-icons input-icon">lock</span>
+            <input type="password" id="currentPassword" name="current_password" required>
+            <button class="password-toggle" data-toggle="currentPassword" type="button" aria-label="Toggle visibility"><span class="material-icons">visibility</span></button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="newPassword">New password</label>
+          <div class="input-with-icon password-wrap">
+            <span class="material-icons input-icon">lock</span>
+            <input type="password" id="newPassword" name="new_password" required>
+            <button class="password-toggle" data-toggle="newPassword" type="button" aria-label="Toggle visibility"><span class="material-icons">visibility</span></button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="confirmPassword">Confirm password</label>
+          <div class="input-with-icon password-wrap">
+            <span class="material-icons input-icon">lock</span>
+            <input type="password" id="confirmPassword" name="confirm_password" required>
+            <button class="password-toggle" data-toggle="confirmPassword" type="button" aria-label="Toggle visibility"><span class="material-icons">visibility</span></button>
+          </div>
+        </div>
+      </div>
+      <div class="changepass-client-error" id="changepassClientError" aria-live="polite"></div>
+
+      <div class="changepass-modal__actions">
+        <button type="submit" class="changepass-submit">
+          <span class="material-icons">done</span>
+          <span class="changepass-submit__label">Change Password</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<link rel="stylesheet" href="<?= htmlspecialchars(($appBaseUrl !== '' ? $appBaseUrl : '') . '/src/modals/login-modal/changepass-modal.css', ENT_QUOTES, 'UTF-8'); ?>">
+
+<script>
+  (function () {
+    function toggle(id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.type = el.type === 'password' ? 'text' : 'password';
+    }
+
+    document.querySelectorAll('.password-toggle').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var target = btn.getAttribute('data-toggle');
+        toggle(target);
+        var icon = btn.querySelector('.material-icons');
+        if (icon) icon.textContent = icon.textContent === 'visibility' ? 'visibility_off' : 'visibility';
+      });
+    });
+
+    var form = document.getElementById('changepassForm');
+    if (form) {
+      var clientError = document.getElementById('changepassClientError');
+      function showClientError(msg) {
+        if (!clientError) return;
+        clientError.textContent = msg;
+        clientError.style.display = 'block';
+      }
+      function clearClientError() {
+        if (!clientError) return;
+        clientError.textContent = '';
+        clientError.style.display = 'none';
+      }
+
+      // Real-time match validator
+      var newInput = document.getElementById('newPassword');
+      var confInput = document.getElementById('confirmPassword');
+      function updateMatchState() {
+        if (!newInput || !confInput) return;
+        var a = newInput.value;
+        var b = confInput.value;
+        var aWrap = newInput.closest('.input-with-icon');
+        var bWrap = confInput.closest('.input-with-icon');
+        if ((!a && !b) || (a === '' && b === '')) {
+          if (aWrap) { aWrap.classList.remove('input-valid', 'input-invalid'); }
+          if (bWrap) { bWrap.classList.remove('input-valid', 'input-invalid'); }
+          clearClientError();
+          return;
+        }
+        if (a === b) {
+          if (aWrap) { aWrap.classList.add('input-valid'); aWrap.classList.remove('input-invalid'); }
+          if (bWrap) { bWrap.classList.add('input-valid'); bWrap.classList.remove('input-invalid'); }
+          clearClientError();
+          return;
+        }
+        // Not matching
+        if (aWrap) { aWrap.classList.add('input-invalid'); aWrap.classList.remove('input-valid'); }
+        if (bWrap) { bWrap.classList.add('input-invalid'); bWrap.classList.remove('input-valid'); }
+        // show client error only when user has started typing confirmation
+        if (b.length > 0) {
+          showClientError('Passwords do not match.');
+        }
+      }
+
+      if (newInput) newInput.addEventListener('input', updateMatchState);
+      if (confInput) confInput.addEventListener('input', updateMatchState);
+
+      form.addEventListener('submit', function (e) {
+        var newP = document.getElementById('newPassword').value;
+        var conf = document.getElementById('confirmPassword').value;
+        var cur = document.getElementById('currentPassword').value;
+        clearClientError();
+        if (newP !== conf) {
+          e.preventDefault();
+          showClientError('New password and confirmation do not match.');
+          updateMatchState();
+          return false;
+        }
+        if (newP === cur) {
+          e.preventDefault();
+          showClientError('New password must be different from current password.');
+          return false;
+        }
+        clearClientError();
+      });
+    }
+  })();
+</script>
+PHP,
+
         'src/modals/login-modal/login-modal.css' => <<<'CSS'
 .login-modal {
   position: fixed;
@@ -812,6 +1020,92 @@ PHP,
   background: var(--accent-dark);
 }
 CSS,
+        'src/modals/login-modal/changepass-modal.css' => <<<'CSS'
+@import url('../../assets/css/color.css');
+
+.changepass-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1300;
+  padding: 20px;
+}
+
+.changepass-modal.is-open { display: flex; }
+
+.changepass-modal__overlay { position: absolute; inset: 0; background: rgba(16,24,40,0.45); }
+.changepass-modal__content {
+  position: relative;
+  width: min(520px, 96vw);
+  background: var(--surface);
+  color: var(--ink);
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 14px 30px rgba(16,24,40,0.12);
+  z-index: 2;
+  padding: 18px 20px;
+}
+
+.changepass-modal__header {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.changepass-modal__illustration {
+  flex: 0 0 56px;
+  height: 56px;
+  border-radius: 999px;
+  background: rgba(220,53,69,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.changepass-modal__icon { color: var(--accent); font-size: 22px; }
+
+.changepass-modal__textblock { flex: 1 1 auto; }
+
+.changepass-modal__title { margin:0 0 6px; font-size:18px; font-weight:700; }
+.changepass-modal__subtitle { margin:0; color:var(--muted); font-size:13px; }
+
+.changepass-error { border:1px solid #fecaca; background:#fff1f0; color:#991b1b; padding:8px 10px; border-radius:8px; margin:12px 0; }
+
+.changepass-modal__body { margin-top: 12px; }
+
+.field { margin-bottom:12px; }
+.field label { display:block; margin-bottom:6px; font-weight:600; color:var(--ink); }
+.input-with-icon { display:flex; align-items:center; gap:8px; border:1px solid var(--stroke); border-radius:8px; padding:8px 10px; background:#fff; }
+.input-with-icon input { border:0; outline:none; flex:1 1 auto; }
+.password-toggle { background:transparent; border:0; cursor:pointer; color:var(--muted); }
+
+.changepass-modal__actions { display:flex; justify-content:flex-end; margin-top: 18px; }
+.changepass-submit { display:inline-flex; align-items:center; gap:8px; background:var(--accent); color:#fff; border:0; padding:10px 16px; border-radius:10px; cursor:pointer; font-weight:700; }
+.changepass-submit:hover { background:var(--accent-dark); }
+
+.changepass-client-error {
+  margin-top: 12px;
+  color: #991b1b;
+  background: #fff7f6;
+  border: 1px solid #f5c6cb;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  display: none;
+}
+
+/* Real-time validation states for new/confirm inputs */
+.input-with-icon.input-valid {
+  border-color: #16a34a; /* green */
+  box-shadow: 0 4px 10px rgba(22,163,74,0.08);
+}
+.input-with-icon.input-invalid {
+  border-color: #ef4444; /* red */
+  box-shadow: 0 4px 10px rgba(239,68,68,0.06);
+}
+CSS,
 
         'src/modals/logout-modal/logout-modal.php' => <<<'PHP'
 <?php
@@ -822,13 +1116,28 @@ $logoutAction = ($appBaseUrl !== '' ? $appBaseUrl : '') . '/src/config/logout-ha
 <div class="logout-modal" id="logoutModal" aria-hidden="true">
   <div class="logout-modal__overlay" data-close-logout-modal></div>
   <div class="logout-modal__content" role="dialog" aria-modal="true" aria-labelledby="logoutModalTitle">
-    <h2 class="logout-modal__title" id="logoutModalTitle">Confirm Logout</h2>
-    <p class="logout-modal__text">Are you sure you want to log out?</p>
+    <div class="logout-modal__header">
+      <div class="logout-modal__illustration" aria-hidden="true">
+        <span class="material-icons logout-modal__icon">logout</span>
+      </div>
 
-    <div class="logout-modal__actions">
-      <button type="button" class="logout-modal__cancel" data-close-logout-modal>Cancel</button>
+      <div class="logout-modal__textblock">
+        <h2 class="logout-modal__title" id="logoutModalTitle">Confirm Logout</h2>
+        <p class="logout-modal__text">Are you sure you want to logout?</p>
+      </div>
+    </div>
+
+    <div class="logout-modal__actions" role="group" aria-label="Logout actions">
+      <button type="button" class="logout-modal__cancel" data-close-logout-modal>
+        <span class="material-icons" aria-hidden="true">close</span>
+        <span class="logout-modal__label">Cancel</span>
+      </button>
+
       <form method="post" action="<?= htmlspecialchars($logoutAction, ENT_QUOTES, 'UTF-8'); ?>">
-        <button type="submit" class="logout-modal__confirm">Logout</button>
+        <button type="submit" class="logout-modal__confirm">
+          <span class="material-icons" aria-hidden="true">done</span>
+          <span class="logout-modal__label">Yes, Logout</span>
+        </button>
       </form>
     </div>
   </div>
@@ -887,55 +1196,95 @@ PHP,
   opacity: 0.45;
 }
 
+
 .logout-modal__content {
   position: relative;
-  width: min(420px, 96vw);
+  width: min(520px, 96vw);
   background: var(--surface);
   color: var(--ink);
-  border: 1px solid var(--stroke);
+  border: 0;
   border-radius: 12px;
-  box-shadow: var(--shadow);
+  box-shadow: 0 14px 30px rgba(16,24,40,0.12);
   z-index: 2;
-  padding: 20px;
+  padding: 18px 20px;
 }
 
+.logout-modal__header {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+
+.logout-modal__illustration {
+  flex: 0 0 56px;
+  height: 56px;
+  border-radius: 999px;
+  background: rgba(220,53,69,0.10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logout-modal__icon {
+  color: var(--accent);
+  font-size: 22px;
+}
+
+.logout-modal__textblock { flex: 1 1 auto; }
+
 .logout-modal__title {
-  margin: 0 0 8px;
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 700;
 }
 
 .logout-modal__text {
-  margin: 0 0 18px;
+  margin: 0;
   color: var(--muted);
+  font-size: 13px;
 }
 
 .logout-modal__actions {
   display: flex;
+  gap: 12px;
   justify-content: flex-end;
-  gap: 10px;
+  align-items: center;
+  margin-top: 18px;
 }
 
 .logout-modal__cancel,
 .logout-modal__confirm {
-  border: 1px solid var(--stroke);
-  border-radius: 8px;
-  padding: 10px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 10px;
+  padding: 10px 16px;
   cursor: pointer;
+  font-weight: 700;
+  font-size: 15px;
 }
 
 .logout-modal__cancel {
-  background: var(--surface);
+  background: #f3f4f6;
   color: var(--ink);
+  border: 0;
+  box-shadow: none;
 }
+
+.logout-modal__cancel .material-icons { font-size: 18px; color: #374151; }
 
 .logout-modal__confirm {
   background: var(--accent);
   color: var(--surface);
-  border-color: var(--accent);
+  border: 0;
+  box-shadow: 0 6px 18px rgba(220,53,69,0.12);
 }
 
-.logout-modal__confirm:hover {
-  background: var(--accent-dark);
-}
+.logout-modal__confirm .material-icons { font-size: 18px; color: #fff; }
+
+.logout-modal__label { display: inline-block; }
+
+.logout-modal__confirm:hover { background: var(--accent-dark); }
 CSS,
 
         'src/pages/home/home.php' => <<<'PHP'
@@ -1281,6 +1630,23 @@ guestOnly();
   <?php require __DIR__ . '/components/hero-section.php'; ?>
   <?php require __DIR__ . '/../src/modals/login-modal/login-modal.php'; ?>
   <?php require __DIR__ . '/components/index-footer.php'; ?>
+  <?php require __DIR__ . '/../src/modals/login-modal/changepass-modal.php'; ?>
+  <?php if (!empty($_SESSION['must_change_password'])): ?>
+  <script>
+    (function () {
+      var loginModal = document.getElementById('loginModal');
+      if (loginModal) {
+        loginModal.classList.remove('is-open');
+        loginModal.setAttribute('aria-hidden', 'true');
+      }
+      var changeModal = document.getElementById('changepassModal');
+      if (changeModal) {
+        changeModal.classList.add('is-open');
+        changeModal.setAttribute('aria-hidden', 'false');
+      }
+    })();
+  </script>
+  <?php endif; ?>
 </body>
 </html>
 PHP,
