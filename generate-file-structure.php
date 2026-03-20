@@ -127,6 +127,7 @@ function scaffoldProject(string $projectRoot, string $projectName): bool
         'src/assets/fonts',
         'src/config',
         'src/controllers',
+        'src/controllers/password-controller',
         'src/models',
         'src/modals',
         'src/modals/login-modal',
@@ -393,6 +394,80 @@ header('Location: ../../public/index.php?logout=1');
 exit;
 PHP,
 
+    'src/config/changepass-handler.php' => <<<'PHP'
+<?php
+declare(strict_types=1);
+
+require_once __DIR__ . '/session.php';
+require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/csrf.php';
+require_once __DIR__ . '/../controllers/password-controller/changepass-controller.php';
+
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+  header('Location: ../public/index.php');
+  exit;
+}
+
+$csrf = require __DIR__ . '/csrf.php';
+$tokenKey = (string) ($csrf['token_key'] ?? '_csrf');
+$posted = (string) ($_POST[$tokenKey] ?? '');
+$sessionToken = (string) ($_SESSION[$tokenKey] ?? '');
+if ($posted === '' || $sessionToken === '' || !hash_equals($sessionToken, $posted)) {
+  $_SESSION['changepass_error'] = 'Invalid session token.';
+  header('Location: ../public/index.php');
+  exit;
+}
+
+$current = (string) ($_POST['current_password'] ?? '');
+$new = (string) ($_POST['new_password'] ?? '');
+$confirm = (string) ($_POST['confirm_password'] ?? '');
+
+if ($new === '' || $confirm === '' || $current === '') {
+  $_SESSION['changepass_error'] = 'All fields are required.';
+  header('Location: ../public/index.php');
+  exit;
+}
+
+if ($new !== $confirm) {
+  $_SESSION['changepass_error'] = 'New password and confirmation do not match.';
+  header('Location: ../public/index.php');
+  exit;
+}
+
+if (!isset($_SESSION['auth_user']) && !isset($_SESSION[(require __DIR__ . '/auth.php')['session_key']])) {
+  $_SESSION['changepass_error'] = 'Not authenticated.';
+  header('Location: ../public/index.php');
+  exit;
+}
+
+$auth = require __DIR__ . '/auth.php';
+$sessionKey = (string) ($auth['session_key'] ?? 'auth_user');
+$user = $_SESSION[$sessionKey] ?? null;
+if (!is_array($user) || empty($user['id_number'])) {
+  $_SESSION['changepass_error'] = 'Invalid session user.';
+  header('Location: ../public/index.php');
+  exit;
+}
+
+$id = (string) $user['id_number'];
+$controller = new ChangePassController();
+if (!$controller->verifyCurrentPassword($id, $current)) {
+  $_SESSION['changepass_error'] = 'Current password is incorrect.';
+  header('Location: ../public/index.php');
+  exit;
+}
+
+if ($controller->changePassword($id, $new)) {
+  unset($_SESSION['must_change_password']);
+  header('Location: ../pages/home/home.php');
+  exit;
+}
+
+$_SESSION['changepass_error'] = 'Unable to update password. Please try again later.';
+header('Location: ../public/index.php');
+exit;
+PHP,
+
         'src/config/middleware.php' => <<<'PHP'
 <?php
 
@@ -557,6 +632,61 @@ class LogoutController
     }
 
     session_destroy();
+  }
+}
+PHP,
+
+    'src/controllers/password-controller/changepass-controller.php' => <<<'PHP'
+<?php
+declare(strict_types=1);
+
+require_once __DIR__ . '/../../config/env.php';
+require_once __DIR__ . '/../../config/db.php';
+
+class ChangePassController
+{
+  public function getUserLog(string $id_number): ?array
+  {
+    $pdo = userDbConnection();
+    $stmt = $pdo->prepare('SELECT id_number, status, dateModified, last_online FROM userlogs WHERE id_number = :id LIMIT 1');
+    $stmt->execute(['id' => $id_number]);
+    $row = $stmt->fetch();
+    return is_array($row) ? $row : null;
+  }
+
+  public function verifyCurrentPassword(string $id_number, string $currentPassword): bool
+  {
+    $pdo = userDbConnection();
+    $stmt = $pdo->prepare('SELECT password FROM users WHERE id_number = :id LIMIT 1');
+    $stmt->execute(['id' => $id_number]);
+    $row = $stmt->fetch();
+    if (!is_array($row)) return false;
+    $stored = (string) ($row['password'] ?? '');
+    if ($stored === '') return false;
+    return password_verify($currentPassword, $stored) || hash_equals($stored, $currentPassword);
+  }
+
+  public function changePassword(string $id_number, string $newPassword): bool
+  {
+    $hash = password_hash($newPassword, PASSWORD_DEFAULT);
+    if ($hash === false) return false;
+
+    $pdo = userDbConnection();
+    $pdo->beginTransaction();
+    try {
+      $stmt = $pdo->prepare('UPDATE users SET password = :pw WHERE id_number = :id');
+      $stmt->execute(['pw' => $hash, 'id' => $id_number]);
+
+      $now = (new DateTime('now', new DateTimeZone('UTC')))->format('Y-m-d H:i:s');
+      $ulog = $pdo->prepare('UPDATE userlogs SET dateModified = :dm, last_online = :lo, status = :st WHERE id_number = :id');
+      $ulog->execute(['dm' => $now, 'lo' => $now, 'st' => 'active', 'id' => $id_number]);
+
+      $pdo->commit();
+      return true;
+    } catch (Throwable $e) {
+      $pdo->rollBack();
+      return false;
+    }
   }
 }
 PHP,
