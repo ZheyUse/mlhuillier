@@ -21,24 +21,25 @@ function parseEnvFile($path)
     return $result;
 }
 
+function findEnvFile($startDir)
+{
+    $dir = realpath($startDir);
+    if ($dir === false) return null;
+    while (true) {
+        $candidate = $dir . DIRECTORY_SEPARATOR . '.env';
+        if (file_exists($candidate)) return $candidate;
+        $parent = dirname($dir);
+        if ($parent === $dir) break;
+        $dir = $parent;
+    }
+    return null;
+}
+
 function safeEcho($msg)
 {
     echo $msg . PHP_EOL;
 }
 
-$env = parseEnvFile('.env');
-$dbHost = $env['DB_HOST'] ?? '127.0.0.1';
-$dbPort = $env['DB_PORT'] ?? '';
-$dbName = $env['DB_DATABASE'] ?? ($env['DB_NAME'] ?? 'userdb');
-$dbUser = $env['DB_USERNAME'] ?? ($env['DB_USER'] ?? 'root');
-$dbPass = $env['DB_PASSWORD'] ?? ($env['DB_PASS'] ?? '');
-
-$dsn = 'mysqli://' . $dbUser . ':' . rawurlencode($dbPass) . '@' . $dbHost . ($dbPort ? ':' . $dbPort : '') . '/' . $dbName;
-
-safeEcho('Creating Account...');
-
-$stdin = fopen('php://stdin', 'r');
-// Prompt for fields
 function prompt($label)
 {
     echo $label;
@@ -48,7 +49,38 @@ function prompt($label)
     return $val;
 }
 
-// Read interactively
+// Find nearest .env in current directory or parents (project .env)
+$envPath = findEnvFile(getcwd());
+if ($envPath) {
+    safeEcho('Using .env: ' . $envPath);
+    $env = parseEnvFile($envPath);
+} else {
+    $env = parseEnvFile('.env');
+}
+
+$dbHost = $env['DB_HOST'] ?? '127.0.0.1';
+$dbPort = $env['DB_PORT'] ?? '';
+$dbName = $env['DB_DATABASE'] ?? ($env['DB_NAME'] ?? 'userdb');
+$dbUser = $env['DB_USERNAME'] ?? ($env['DB_USER'] ?? 'root');
+$dbPass = $env['DB_PASSWORD'] ?? ($env['DB_PASS'] ?? '');
+
+// If .env contains obvious placeholder values, prompt for DB info interactively
+if ($dbName === '' || strpos($dbName, '#') === 0 || preg_match('/put\s+system/i', $dbName)) {
+    safeEcho('No valid DB name found in .env; please enter DB settings:');
+    $dbHost = prompt('DB Host (default 127.0.0.1): ') ?: $dbHost;
+    $dbPort = prompt('DB Port (default 3306): ') ?: $dbPort;
+    $dbName = prompt('DB Database (e.g. userdb): ') ?: $dbName;
+    $dbUser = prompt('DB Username (default root): ') ?: $dbUser;
+    $dbPass = prompt('DB Password: ') ?: $dbPass;
+}
+
+// Not used directly but kept for debugging
+$dsn = 'mysqli://' . $dbUser . ':' . rawurlencode($dbPass) . '@' . $dbHost . ($dbPort ? ':' . $dbPort : '') . '/' . $dbName;
+
+safeEcho('Creating Account...');
+
+// Read interactively for account fields
+$stdin = fopen('php://stdin', 'r');
 echo 'ID Number: ';
 $idNumber = trim(fgets($stdin));
 echo 'First Name: ';
@@ -91,10 +123,24 @@ safeEcho("Account Name: $firstName $lastName");
 safeEcho("Role: $role");
 safeEcho('Inserting created account to userdb...');
 
-// Connect to DB using mysqli
-$mysqli = @new mysqli($dbHost, $dbUser, $dbPass, $dbName, $dbPort ?: 3306);
-if ($mysqli->connect_errno) {
+// Connect to DB using mysqli, allow retry if connection fails
+$portInt = $dbPort ? intval($dbPort) : 3306;
+$mysqli = @new mysqli($dbHost, $dbUser, $dbPass, $dbName, $portInt);
+$tries = 0;
+while ($mysqli->connect_errno && $tries < 2) {
     safeEcho('Database connection failed: ' . $mysqli->connect_error);
+    safeEcho('Please enter DB connection details to retry (leave blank to cancel).');
+    $dbHost = prompt('DB Host (current ' . $dbHost . '): ') ?: $dbHost;
+    $dbPort = prompt('DB Port (current ' . $dbPort . '): ') ?: $dbPort;
+    $dbName = prompt('DB Database (current ' . $dbName . '): ') ?: $dbName;
+    $dbUser = prompt('DB Username (current ' . $dbUser . '): ') ?: $dbUser;
+    $dbPass = prompt('DB Password: ') ?: $dbPass;
+    $portInt = $dbPort ? intval($dbPort) : 3306;
+    $mysqli = @new mysqli($dbHost, $dbUser, $dbPass, $dbName, $portInt);
+    $tries++;
+}
+if ($mysqli->connect_errno) {
+    safeEcho('Could not connect to database. Aborting.');
     exit(2);
 }
 
