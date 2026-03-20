@@ -14,7 +14,6 @@ $baseRaw = 'https://raw.githubusercontent.com/ZheyUse/mlhuillier/main';
 $files = [
     'ml.bat' => $baseRaw . '/ml.bat',
     'VERSION' => $baseRaw . '/VERSION',
-    'version.txt' => $baseRaw . '/version.txt',
 ];
 
 $targetDir = 'C:\\ML CLI\\Tools';
@@ -72,6 +71,29 @@ foreach ($files as $name => $url) {
         safeEcho('ML Updater: Failed to write ' . $dest . '. Check permissions.');
         exit(2);
     }
+}
+
+// version.txt is optional in the repository; generate it if not downloadable.
+$versionTxtUrl = $baseRaw . '/version.txt';
+$versionTxtData = null;
+try {
+    safeEcho('ML Updater: Downloading version.txt ...');
+    $versionTxtData = fetchUrl($versionTxtUrl);
+} catch (RuntimeException $e) {
+    $version = @file_get_contents($targetDir . DIRECTORY_SEPARATOR . 'VERSION');
+    if ($version === false) {
+        $version = 'unknown';
+    }
+    $version = trim($version);
+    safeEcho('ML Updater: version.txt not found remotely; generating local version.txt');
+    $versionTxtData = "ML CLI Updater\nVersion: {$version}\nSource: {$baseRaw}\nUpdatedAt: " . date('c') . "\n";
+}
+
+$versionTxtDest = $targetDir . DIRECTORY_SEPARATOR . 'version.txt';
+safeEcho('ML Updater: Writing to ' . $versionTxtDest . ' ...');
+if (file_put_contents($versionTxtDest, $versionTxtData) === false) {
+    safeEcho('ML Updater: Failed to write ' . $versionTxtDest . '. Check permissions.');
+    exit(2);
 }
 
 safeEcho('ML Updater: Update completed successfully.');
