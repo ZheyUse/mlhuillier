@@ -55,7 +55,9 @@ if ($envPath) {
     safeEcho('Using .env: ' . $envPath);
     $env = parseEnvFile($envPath);
 } else {
-    $env = parseEnvFile('.env');
+    safeEcho('Error: cannot find .env in the current project.');
+    safeEcho('Hint: cd <projectname>');
+    exit(2);
 }
 
 $dbHost = $env['DB_HOST'] ?? '127.0.0.1';
@@ -123,12 +125,15 @@ safeEcho("Account Name: $firstName $lastName");
 safeEcho("Role: $role");
 safeEcho('Inserting created account to userdb...');
 
-// Connect to DB using mysqli, allow retry if connection fails
+// Connect to DB using mysqli, allow one interactive retry if connection fails
 $portInt = $dbPort ? intval($dbPort) : 3306;
-$mysqli = @new mysqli($dbHost, $dbUser, $dbPass, $dbName, $portInt);
-$tries = 0;
-while ($mysqli->connect_errno && $tries < 2) {
-    safeEcho('Database connection failed: ' . $mysqli->connect_error);
+$mysqli = null;
+try {
+    $mysqli = @new mysqli($dbHost, $dbUser, $dbPass, $dbName, $portInt);
+    if ($mysqli->connect_errno) throw new Exception('connect');
+} catch (Throwable $e) {
+    safeEcho('Error: Cannot connect to the userdb.');
+    safeEcho('Hint: run ml test userdb');
     safeEcho('Please enter DB connection details to retry (leave blank to cancel).');
     $dbHost = prompt('DB Host (current ' . $dbHost . '): ') ?: $dbHost;
     $dbPort = prompt('DB Port (current ' . $dbPort . '): ') ?: $dbPort;
@@ -136,12 +141,14 @@ while ($mysqli->connect_errno && $tries < 2) {
     $dbUser = prompt('DB Username (current ' . $dbUser . '): ') ?: $dbUser;
     $dbPass = prompt('DB Password: ') ?: $dbPass;
     $portInt = $dbPort ? intval($dbPort) : 3306;
-    $mysqli = @new mysqli($dbHost, $dbUser, $dbPass, $dbName, $portInt);
-    $tries++;
-}
-if ($mysqli->connect_errno) {
-    safeEcho('Could not connect to database. Aborting.');
-    exit(2);
+    try {
+        $mysqli = @new mysqli($dbHost, $dbUser, $dbPass, $dbName, $portInt);
+        if ($mysqli->connect_errno) throw new Exception('connect');
+    } catch (Throwable $e2) {
+        safeEcho('Error: Cannot connect to the userdb.');
+        safeEcho('Hint: run ml test userdb');
+        exit(2);
+    }
 }
 
 $mysqli->set_charset('utf8mb4');
