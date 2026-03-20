@@ -10,7 +10,7 @@
 declare(strict_types=1);
 
 // TODO: set this to the raw URL where your generator lives (HTTPS required)
-$remoteUrl = getenv('ML_GENERATOR_URL') ?: 'https://raw.githubusercontent.com/ZheyUse/mlgen/main/generate-file-structure.php';
+$remoteUrl = getenv('ML_GENERATOR_URL') ?: 'https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/generate-file-structure.php';
 
 function fetchRemote(string $url): ?string
 {
@@ -64,7 +64,7 @@ if (file_put_contents($temp, $code) === false) {
 // from the repository raw URLs if available.
 $assetsImagesDir = $workDir . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'images';
 @mkdir($assetsImagesDir, 0700, true);
-$repoRawBase = 'https://raw.githubusercontent.com/ZheyUse/mlgen/main/assets/images';
+    $repoRawBase = 'https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/assets/images';
 foreach (['logo1.png', 'logo2.png'] as $logoFile) {
     $imgUrl = $repoRawBase . '/' . $logoFile;
     $imgBody = fetchRemote($imgUrl);

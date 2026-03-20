@@ -17,7 +17,7 @@ echo.
 
 
 rem Download required CLI files from the GitHub repo if not bundling locally.
-set "RAW_BASE=https://raw.githubusercontent.com/ZheyUse/mlgen/main"
+set "RAW_BASE=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main"
 
 
 rem If local assets are missing, we'll download them from the repository instead

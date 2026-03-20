@@ -937,7 +937,7 @@ MD,
 
       // Attempt to download the logo from the repository raw URL before
       // falling back to a transparent placeholder.
-      $repoRawBase = 'https://raw.githubusercontent.com/ZheyUse/mlgen/main/assets/images';
+      $repoRawBase = 'https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/assets/images';
       $rawUrl = $repoRawBase . '/' . $logoFileName;
       $downloaded = null;
 

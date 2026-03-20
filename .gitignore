@@ -1,0 +1,53 @@
+# Reference gitignore for PHP / XAMPP projects
+# Sourced from ./ignore
+
+# Composer
+/vendor/
+/composer.lock
+
+# Environment files
+.env
+.env.*
+.env.local
+
+# Node/npm
+/node_modules/
+/npm-debug.log
+/yarn-error.log
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs
+/.idea/
+/.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# PHPUnit / coverage
+coverage/
+.phpunit.result.cache
+
+# Build / temp
+/tmp/
+/var/
+*.tmp
+*.cache
+
+# Images and uploads (adjust if you want to track uploaded files)
+# public/uploads/
+
+# XAMPP/Apache configs (do NOT ignore public/index.php by default)
+# *.htaccess
+
+# Notes:
+# - This file is a reference; modify patterns to match files you want ignored
+# - When you're ready, I can add these patterns to the generator template
+
+# Ignore the helper reference folder/file used for generator templates
+/ignore
