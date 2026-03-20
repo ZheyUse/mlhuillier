@@ -2,13 +2,14 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.9"
+set "ML_VERSION=1.0.10"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
 if /I "%~1"=="--v" goto :show_version
 if /I "%~1"=="--h" if "%~2"=="" goto :show_help
 if /I "%~1"=="--h" goto :prepare_help_args
+if /I "%~1"=="--d" goto :cmd_download_installer
 
 echo.
 echo ==============================
@@ -312,6 +313,33 @@ if %ERRORLEVEL%==0 (
 )
 if %ERRORLEVEL% neq 0 (
         echo Failed to fetch remote account script
+        exit /b 2
+)
+
+"%PHP_EXE%" -d display_errors=0 "!TMP_FILE!"
+set "RC=%ERRORLEVEL%"
+del /f /q "!TMP_FILE!" >nul 2>&1
+exit /b %RC%
+
+:cmd_download_installer
+set "LOCAL_PHP=%~dp0download-installer.php"
+if exist "%LOCAL_PHP%" (
+        "%PHP_EXE%" -d display_errors=0 "%LOCAL_PHP%"
+        exit /b %ERRORLEVEL%
+)
+
+set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/download-installer.php"
+set "TMP_FILE=%TEMP%\download-installer.php"
+echo Running remote installer downloader from !RAW_URL! ...
+
+where curl >nul 2>&1
+if %ERRORLEVEL%==0 (
+        curl -s -f -o "!TMP_FILE!" "!RAW_URL!"
+) else (
+        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!RAW_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
+)
+if %ERRORLEVEL% neq 0 (
+        echo Failed to fetch downloader script
         exit /b 2
 )
 
