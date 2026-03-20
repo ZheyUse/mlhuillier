@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.6"
+set "ML_VERSION=1.0.7"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -52,6 +52,7 @@ echo.
 echo Commands:
 echo   test userdb        Run remote DB connection test
 echo   add userdb         Import userdb SQL (migration/userdb)
+echo   create --a         Create interactive account (add user)
 echo   update             Update ML CLI from remote
 echo   --c                Check remote ML CLI version
 echo.
@@ -83,6 +84,7 @@ if not defined CMD goto :show_help
 
 if /I "%CMD%"=="--c" goto :help_check_version
 if /I "%CMD%"=="update" goto :help_update
+if /I "%CMD%"=="create" if /I "%SUB%"=="--a" goto :help_create_account
 if /I "%CMD%"=="create" goto :help_create
 if /I "%CMD%"=="test" goto :help_test
 if /I "%CMD%"=="add" goto :help_add
@@ -109,6 +111,15 @@ echo.
 echo HELP: Create project
 echo Usage: ml create ^<project_name^>
 echo Description: Generates project scaffold using generator script.
+exit /b 0
+
+:help_create_account
+echo.
+echo HELP: Create account (interactive)
+echo Usage: ml create --a
+echo Description: Downloads and runs the remote `account-insert.php` script which
+echo   interactively prompts for ID, first/last name and role, then inserts a user
+echo   into the `users` table and an `active` entry into `userlogs`.
 exit /b 0
 
 :help_test
