@@ -7,7 +7,8 @@ set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
 if /I "%~1"=="--v" goto :show_version
-if /I "%~1"=="--h" goto :show_help
+if /I "%~1"=="--h" if "%~2"=="" goto :show_help
+if /I "%~1"=="--h" goto :prepare_help_args
 
 echo.
 echo ==============================
@@ -18,6 +19,7 @@ echo.
 
 if /I "%~1"=="test" if /I "%~2"=="userdb" goto :cmd_test_userdb
 if /I "%~1"=="add" if /I "%~2"=="userdb" goto :cmd_add_userdb
+if /I "%~1"=="create" if /I "%~2"=="--a" goto :cmd_create_account
 if /I "%~1"=="--c" goto :cmd_check_version
 if /I "%~1"=="update" goto :cmd_update
 
@@ -48,9 +50,95 @@ echo   --v    Show version
 echo   --c    Check for newer version
 echo.
 echo Commands:
-echo   test userdb
-echo   add userdb
-echo   update
+echo   test userdb        Run remote DB connection test
+echo   add userdb         Import userdb SQL (migration/userdb)
+echo   update             Update ML CLI from remote
+echo   --c                Check remote ML CLI version
+echo.
+echo To get help for a specific command:
+echo   ml --h create
+echo   ml --h test userdb
+echo   ml --h --c
+exit /b 0
+
+:prepare_help_args
+set "ARG1=%~2"
+set "ARG2=%~3"
+set "ARG3=%~4"
+if /I "%ARG1%"=="ml" goto :help_shift
+set "CMD=%ARG1%"
+set "SUB=%ARG2%"
+goto :show_help_command
+
+:help_shift
+set "CMD=%ARG2%"
+set "SUB=%ARG3%"
+goto :show_help_command
+
+
+
+:show_help_command
+rem CMD and SUB are pre-populated by the caller
+if not defined CMD goto :show_help
+
+if /I "%CMD%"=="--c" goto :help_check_version
+if /I "%CMD%"=="update" goto :help_update
+if /I "%CMD%"=="create" goto :help_create
+if /I "%CMD%"=="test" goto :help_test
+if /I "%CMD%"=="add" goto :help_add
+
+echo No help available for '%CMD%'.
+exit /b 2
+
+:help_check_version
+echo.
+echo HELP: Check remote version
+echo Usage: ml --c
+echo Description: Fetches remote VERSION and compares with local ML CLI version.
+exit /b 0
+
+:help_update
+echo.
+echo HELP: Update ML CLI
+echo Usage: ml update
+echo Description: Downloads and runs the remote updater to replace installed CLI files.
+exit /b 0
+
+:help_create
+echo.
+echo HELP: Create project
+echo Usage: ml create ^<project_name^>
+echo Description: Generates project scaffold using generator script.
+exit /b 0
+
+:help_test
+if /I "%SUB%"=="userdb" goto :help_test_userdb
+echo.
+echo HELP: Test commands
+echo Usage: ml test userdb
+echo Description: Run specific tests; use ml --h test userdb for DB test help.
+exit /b 0
+
+:help_test_userdb
+echo.
+echo HELP: Test userdb
+echo Usage: ml test userdb
+echo Description: Downloads and runs a remote PHP script that checks userdb connection and schema.
+exit /b 0
+
+:help_add
+if /I "%SUB%"=="userdb" goto :help_add_userdb
+echo.
+echo HELP: Add commands
+echo Usage: ml add userdb
+echo Description: Imports the userdb SQL dump into your server (downloads if not present locally).
+exit /b 0
+
+:help_add_userdb
+echo.
+echo HELP: Add userdb
+echo Usage: ml add userdb
+echo Description: Downloads/imports migration/userdb SQL files to create the userdb schema and tables.
 exit /b 0
 
 :cmd_test_userdb
@@ -169,6 +257,27 @@ if exist "!LOCAL_UPDATER!" (
 
 echo Failed to fetch remote updater and no local updater was found.
 exit /b 2
+
+:cmd_create_account
+set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/account-insert.php"
+set "TMP_FILE=%TEMP%\account-insert.php"
+echo Running remote account creation from !RAW_URL! ...
+
+where curl >nul 2>&1
+if %ERRORLEVEL%==0 (
+        curl -s -f -o "!TMP_FILE!" "!RAW_URL!"
+) else (
+        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!RAW_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
+)
+if %ERRORLEVEL% neq 0 (
+        echo Failed to fetch remote account script
+        exit /b 2
+)
+
+"%PHP_EXE%" -d display_errors=0 "!TMP_FILE!"
+set "RC=%ERRORLEVEL%"
+del /f /q "!TMP_FILE!" >nul 2>&1
+exit /b %RC%
 
 :cmd_generate
 if exist "C:\xampp\php\php.exe" (
