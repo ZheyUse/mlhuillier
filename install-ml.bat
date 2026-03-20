@@ -4,7 +4,13 @@ setlocal
 set "TARGET_DIR=C:\ML CLI\Tools"
 set "SOURCE_DIR=%~dp0"
 
-echo Installing ML CLI...
+rem Determine CLI version from local VERSION file if present (fallback 1.0.2)
+set "CLI_VERSION=1.0.2"
+if exist "%SOURCE_DIR%VERSION" (
+  for /f "usebackq delims=" %%v in ("%SOURCE_DIR%VERSION") do set "CLI_VERSION=%%v"
+)
+
+echo Installing ML CLI v.%CLI_VERSION%...
 echo Target: %TARGET_DIR%
 
 rem Console-friendly intro before installation (ASCII fallback)
@@ -47,6 +53,34 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "try{ (New-Object Net.Web
 if errorlevel 1 (
   echo [ERROR] Failed to download necessary files
   exit /b 1
+)
+rem Ensure installed ml.bat reports the desired CLI version regardless of remote copy
+powershell -NoProfile -ExecutionPolicy Bypass -Command "try{ (Get-Content '%TARGET_DIR%\\ml.bat') -replace 'set \"ML_VERSION=.*\"','set \"ML_VERSION=%CLI_VERSION%\"' | Set-Content -Encoding ASCII '%TARGET_DIR%\\ml.bat'; exit 0 } catch { exit 2 }"
+if errorlevel 1 (
+  echo [WARN] Unable to enforce ML_VERSION in installed ml.bat
+) else (
+  echo Set ML CLI version to %CLI_VERSION% in installed ml.bat
+)
+
+rem Write the VERSION file into the installed target so uninstall/readers can detect it
+echo %CLI_VERSION%> "%TARGET_DIR%\VERSION"
+if errorlevel 1 (
+  echo [WARN] Failed to write %TARGET_DIR%\VERSION
+) else (
+  echo Wrote %TARGET_DIR%\VERSION (%CLI_VERSION%)
+)
+
+rem Also write a human-readable version.txt with source and timestamp for users
+(
+  echo ML CLI Installer
+  echo Version: %CLI_VERSION%
+  echo Source: %RAW_BASE%
+  echo InstalledAt: %DATE% %TIME%
+)> "%TARGET_DIR%\version.txt"
+if errorlevel 1 (
+  echo [WARN] Failed to write %TARGET_DIR%\version.txt
+) else (
+  echo Wrote %TARGET_DIR%\version.txt
 )
 
 set /a PROGRESS+=1
