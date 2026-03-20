@@ -341,28 +341,27 @@ try {
 PHP,
 
         'src/config/logout-handler.php' => <<<'PHP'
-      <?php
+<?php
+declare(strict_types=1);
 
-      declare(strict_types=1);
+require_once __DIR__ . '/session.php';
+require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/../controllers/logout-controller.php';
 
-      require_once __DIR__ . '/session.php';
-      require_once __DIR__ . '/auth.php';
-      require_once __DIR__ . '/../controllers/logout-controller.php';
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+  header('Location: ../../public/home.php');
+  exit;
+}
 
-      if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
-        header('Location: ../../public/home.php');
-        exit;
-      }
+$auth = require __DIR__ . '/auth.php';
+$sessionKey = (string) ($auth['session_key'] ?? 'auth_user');
 
-      $auth = require __DIR__ . '/auth.php';
-      $sessionKey = (string) ($auth['session_key'] ?? 'auth_user');
+$controller = new LogoutController();
+$controller->logout($sessionKey);
 
-      $controller = new LogoutController();
-      $controller->logout($sessionKey);
-
-      header('Location: ../../public/index.php?logout=1');
-      exit;
-      PHP,
+header('Location: ../../public/index.php?logout=1');
+exit;
+PHP,
 
         'src/config/middleware.php' => <<<'PHP'
 <?php
@@ -1140,14 +1139,13 @@ CSS,
 
         'public/index.php' => <<<'PHP'
       <?php
-
       declare(strict_types=1);
 
       require_once __DIR__ . '/../src/config/session.php';
       require_once __DIR__ . '/../src/config/middleware.php';
       guestOnly();
       ?>
-<!DOCTYPE html>
+      <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
