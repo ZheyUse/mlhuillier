@@ -5,7 +5,7 @@ set "TARGET_DIR=C:\ML CLI\Tools"
 set "SOURCE_DIR=%~dp0"
 
 rem Determine CLI version from local VERSION file if present (fallback 1.0.3)
-set "CLI_VERSION=1.0.11"
+set "CLI_VERSION=1.0.12"
 if exist "%SOURCE_DIR%VERSION" (
   for /f "usebackq delims=" %%v in ("%SOURCE_DIR%VERSION") do set "CLI_VERSION=%%v"
 )
