@@ -254,15 +254,16 @@ if %ERRORLEVEL%==0 (
 if %ERRORLEVEL% neq 0 (
         echo Failed to fetch remote VERSION, proceeding with update...
 ) else (
-        set /p REMOTE_VER=<"!TMP_VER!"
-        del /f /q "!TMP_VER!" >nul 2>&1
-        if defined REMOTE_VER (
-                if "%REMOTE_VER%"=="%ML_VERSION%" (
-                        echo.
-                        echo Your ML CLI is up to date.
-                        echo Current Version: %ML_VERSION%
-                        exit /b 0
-                )
+        rem Use findstr to avoid CR/LF or whitespace mismatch when comparing versions
+        findstr /x /c:"%ML_VERSION%" "!TMP_VER!" >nul 2>&1
+        if %ERRORLEVEL%==0 (
+                del /f /q "!TMP_VER!" >nul 2>&1
+                echo.
+                echo Your ML CLI is up to date.
+                echo Current Version: %ML_VERSION%
+                exit /b 0
+        ) else (
+                del /f /q "!TMP_VER!" >nul 2>&1
         )
 )
 
