@@ -115,6 +115,74 @@ if /I "%~1"=="add" (
         )
 )
 
+:: Check remote CLI version: `ml --c`
+if /I "%~1"=="--c" (
+        set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml.bat"
+        echo Checking remote ML CLI version from !RAW_URL! ...
+
+        set "TMP_FILE=%TEMP%\\ml_remote_check.bat"
+        where curl >nul 2>&1
+        if %ERRORLEVEL%==0 (
+                curl -s -f -o "!TMP_FILE!" "!RAW_URL!"
+                if %ERRORLEVEL% neq 0 (
+                        echo Failed to fetch remote ml.bat
+                        exit /b 2
+                )
+        ) else (
+                powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!RAW_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
+                if %ERRORLEVEL% neq 0 (
+                        echo Failed to fetch remote ml.bat
+                        exit /b 2
+                )
+        )
+
+        rem extract remote ML_VERSION value
+        set "REMOTE_VER="
+        for /f "usebackq tokens=1* delims==" %%A in (`findstr /I "ML_VERSION" "!TMP_FILE!"`) do (
+                set "LINE=%%B"
+        )
+        if defined LINE (
+                set "REMOTE_VER=!LINE:~1!"
+                set "REMOTE_VER=!REMOTE_VER:"=!"
+                set "REMOTE_VER=!REMOTE_VER: =!"
+        )
+
+        del /f /q "!TMP_FILE!" >nul 2>&1
+
+        if not defined REMOTE_VER (
+                echo Unable to determine remote version.
+                exit /b 2
+        )
+
+        if "%REMOTE_VER%"=="%ML_VERSION%" (
+                echo ML CLI is up to date (version %ML_VERSION%).
+                exit /b 0
+        ) else (
+                echo New version available: %REMOTE_VER% (local: %ML_VERSION%)
+                echo Use: ml update
+                exit /b 0
+        )
+)
+
+:: Update CLI by streaming remote `ml-update.php` into PHP: `ml update`
+if /I "%~1"=="update" (
+        set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml-update.php"
+        echo Updating ML CLI from !RAW_URL! ...
+        set "PHP_EXE=php"
+        if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
+
+        where curl >nul 2>&1
+        if %ERRORLEVEL%==0 (
+                curl -s -f "!RAW_URL!" | "!PHP_EXE!" -d display_errors=0 -
+                set "RC=%ERRORLEVEL%"
+                exit /b %RC%
+        ) else (
+                powershell -NoProfile -Command "Try { $s=(New-Object Net.WebClient).DownloadString('!RAW_URL!'); if($s -eq $null){ exit 2 } ; $s | & '!PHP_EXE!' -d display_errors=0 - ; exit $LASTEXITCODE } Catch { exit 2 }"
+                set "RC=%ERRORLEVEL%"
+                exit /b %RC%
+        )
+)
+
 if exist "C:\xampp\php\php.exe" (
         "C:\xampp\php\php.exe" "%ML_SCRIPT%" %*
         exit /b %ERRORLEVEL%
