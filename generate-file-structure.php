@@ -383,7 +383,7 @@ if (!function_exists('guestOnly')) {
     $sessionKey = (string) ($auth['session_key'] ?? 'auth_user');
 
     if (!empty($_SESSION[$sessionKey])) {
-      redirect('home.php');
+      redirect('../../src/pages/home/home.php');
     }
   }
 }
@@ -395,7 +395,7 @@ if (!function_exists('requireAuth')) {
     $sessionKey = (string) ($auth['session_key'] ?? 'auth_user');
 
     if (empty($_SESSION[$sessionKey])) {
-      redirect('index.php');
+      redirect('../../public/index.php');
     }
   }
 }
