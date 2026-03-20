@@ -64,7 +64,7 @@ if (file_put_contents($temp, $code) === false) {
 // from the repository raw URLs if available.
 $assetsImagesDir = $workDir . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'images';
 @mkdir($assetsImagesDir, 0700, true);
-    $repoRawBase = 'https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/assets/images';
+$repoRawBase = 'https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/assets/images';
 foreach (['logo1.png', 'logo2.png'] as $logoFile) {
     $imgUrl = $repoRawBase . '/' . $logoFile;
     $imgBody = fetchRemote($imgUrl);
@@ -72,6 +72,11 @@ foreach (['logo1.png', 'logo2.png'] as $logoFile) {
         @file_put_contents($assetsImagesDir . DIRECTORY_SEPARATOR . $logoFile, $imgBody);
     }
 }
+
+// Note: we intentionally do NOT download the full `/ignore` reference scaffold.
+// The generator embedded in `generate-file-structure.php` should be the
+// single source of truth. This remote loader fetches only the generator
+// script itself and optional image assets (logo files) needed by the scaffold.
 
 // Execute the fetched generator from the isolated workdir
 require $temp;

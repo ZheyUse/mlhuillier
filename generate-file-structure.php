@@ -117,6 +117,8 @@ function scaffoldProject(string $projectRoot, string $projectName): bool
     $projectTitle = humanizeProjectName($projectName);
 
     $directories = [
+      'migration',
+      'migration/userdb',
         'src',
         'src/assets',
         'src/assets/css',
@@ -128,8 +130,10 @@ function scaffoldProject(string $projectRoot, string $projectName): bool
         'src/models',
         'src/modals',
         'src/modals/login-modal',
+        'src/modals/logout-modal',
         'src/pages',
         'src/pages/home',
+        'src/templates',
         'public',
         'public/components',
     ];
@@ -143,17 +147,23 @@ function scaffoldProject(string $projectRoot, string $projectName): bool
 
     $templates = [
         '.env' => <<<'ENV'
-APP_NAME="{{PROJECT_TITLE}}"
-APP_ENV=local
-APP_DEBUG=true
-DB_DRIVER=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=my_database
-DB_USERNAME=root
-DB_PASSWORD=
-DB_CHARSET=utf8mb4
-ENV,
+      APP_NAME="{{PROJECT_TITLE}}"
+      APP_ENV=local
+      APP_DEBUG=true
+
+      # Primary application database (root schema DB)
+      DB_DRIVER=mysql
+      DB_HOST=localhost
+      DB_PORT=3306
+      DB_DATABASE= #put system DB Here
+      DB_USERNAME=root
+      DB_PASSWORD=Password1
+      DB_CHARSET=utf8mb4
+
+      # Authentication schema name (same server/credentials can access multiple schemas)
+      USERDB_HOST=localhost
+      USERDB_NAME=userdb
+      ENV,
 
         'src/config/auth.php' => <<<'PHP'
 <?php
@@ -179,9 +189,6 @@ PHP,
 <?php
 
 declare(strict_types=1);
-
-use PDO;
-use PDOException;
 
 if (!function_exists('userDbConnection')) {
   function userDbConnection(): PDO
@@ -334,12 +341,28 @@ try {
 PHP,
 
         'src/config/logout-handler.php' => <<<'PHP'
-<?php
+      <?php
 
-declare(strict_types=1);
+      declare(strict_types=1);
 
-// Handle logout here.
-PHP,
+      require_once __DIR__ . '/session.php';
+      require_once __DIR__ . '/auth.php';
+      require_once __DIR__ . '/../controllers/logout-controller.php';
+
+      if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+        header('Location: ../../public/home.php');
+        exit;
+      }
+
+      $auth = require __DIR__ . '/auth.php';
+      $sessionKey = (string) ($auth['session_key'] ?? 'auth_user');
+
+      $controller = new LogoutController();
+      $controller->logout($sessionKey);
+
+      header('Location: ../../public/index.php?logout=1');
+      exit;
+      PHP,
 
         'src/config/middleware.php' => <<<'PHP'
 <?php
@@ -390,30 +413,91 @@ if (session_status() === PHP_SESSION_NONE) {
 PHP,
 
         'src/controllers/login-controller.php' => <<<'PHP'
-<?php
+    <?php
 
-declare(strict_types=1);
+    declare(strict_types=1);
 
-class LoginController
-{
-    public function show(): void
+    require_once __DIR__ . '/../config/env.php';
+    require_once __DIR__ . '/../config/db.php';
+
+    class LoginController
     {
-        // Render login modal/page.
+      public function authenticate(string $username, string $password): ?array
+      {
+        $username = trim($username);
+        if ($username === '' || $password === '') {
+          return null;
+        }
+
+        $pdo = userDbConnection();
+        $stmt = $pdo->prepare('SELECT id_number, username, firstname, middlename, lastname, role, password FROM users WHERE username = :username LIMIT 1');
+        $stmt->execute(['username' => $username]);
+        $user = $stmt->fetch();
+
+        if (!is_array($user)) {
+          return null;
+        }
+
+        $storedPassword = (string) ($user['password'] ?? '');
+        $isValid = password_verify($password, $storedPassword) || hash_equals($storedPassword, $password);
+
+        if (!$isValid) {
+          return null;
+        }
+
+        unset($user['password']);
+        return $user;
+      }
     }
-}
-PHP,
+    PHP,
 
         'src/controllers/usercontroller.php' => <<<'PHP'
 <?php
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/../config/auth.php';
+
 class UserController
 {
-    public function profile(): void
+    public function profile(): ?array
     {
-        // Render user profile.
+        $auth = require __DIR__ . '/../config/auth.php';
+        $sessionKey = (string) ($auth['session_key'] ?? 'auth_user');
+
+        $user = $_SESSION[$sessionKey] ?? null;
+        return is_array($user) ? $user : null;
     }
+}
+PHP,
+
+        'src/controllers/logout-controller.php' => <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+class LogoutController
+{
+  public function logout(string $sessionKey): void
+  {
+    unset($_SESSION[$sessionKey]);
+    $_SESSION = [];
+
+    if (ini_get('session.use_cookies')) {
+      $params = session_get_cookie_params();
+      setcookie(
+        session_name(),
+        '',
+        time() - 42000,
+        $params['path'],
+        $params['domain'],
+        $params['secure'],
+        $params['httponly']
+      );
+    }
+
+    session_destroy();
+  }
 }
 PHP,
 
@@ -429,6 +513,19 @@ class UserModel
 PHP,
 
         'src/modals/login-modal/login-modal.php' => <<<'PHP'
+<?php
+require_once __DIR__ . '/../../config/session.php';
+$csrf = require __DIR__ . '/../../config/csrf.php';
+$tokenKey = (string) ($csrf['token_key'] ?? '_csrf');
+
+if (empty($_SESSION[$tokenKey])) {
+  $_SESSION[$tokenKey] = bin2hex(random_bytes(32));
+}
+
+$loginError = (string) ($_SESSION['login_error'] ?? '');
+unset($_SESSION['login_error']);
+?>
+
 <div class="login-modal" id="loginModal" aria-hidden="true">
   <div class="login-modal__overlay" data-close-login-modal></div>
   <div class="login-modal__content" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle">
@@ -440,6 +537,12 @@ PHP,
     </div>
 
     <form id="loginForm" class="login-modal__form" method="post" action="../src/config/login-handler.php" autocomplete="on">
+      <input type="hidden" name="<?= htmlspecialchars($tokenKey, ENT_QUOTES, 'UTF-8'); ?>" value="<?= htmlspecialchars((string) $_SESSION[$tokenKey], ENT_QUOTES, 'UTF-8'); ?>">
+
+      <?php if ($loginError !== ''): ?>
+        <div class="login-error" role="alert"><?= htmlspecialchars($loginError, ENT_QUOTES, 'UTF-8'); ?></div>
+      <?php endif; ?>
+
       <div class="field">
         <label for="username">Username</label>
         <div class="input-with-icon">
@@ -479,6 +582,8 @@ PHP,
     var loginForm = document.getElementById('loginForm');
     var toggleIcon = togglePassword ? togglePassword.querySelector('.material-icons') : null;
 
+    var shouldOpenFromError = window.location.search.indexOf('login=') !== -1 || !!document.querySelector('.login-error');
+
     function openModal() {
       if (!modal) return;
       modal.classList.add('is-open');
@@ -493,6 +598,10 @@ PHP,
 
     if (openButton) {
       openButton.addEventListener('click', openModal);
+    }
+
+    if (shouldOpenFromError) {
+      openModal();
     }
 
     closeButtons.forEach(function (button) {
@@ -611,6 +720,15 @@ PHP,
   gap: 14px;
 }
 
+.login-error {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
 .field label {
   display: block;
   margin-bottom: 6px;
@@ -678,11 +796,151 @@ PHP,
 }
 CSS,
 
+        'src/modals/logout-modal/logout-modal.php' => <<<'PHP'
+<div class="logout-modal" id="logoutModal" aria-hidden="true">
+  <div class="logout-modal__overlay" data-close-logout-modal></div>
+  <div class="logout-modal__content" role="dialog" aria-modal="true" aria-labelledby="logoutModalTitle">
+    <h2 class="logout-modal__title" id="logoutModalTitle">Confirm Logout</h2>
+    <p class="logout-modal__text">Are you sure you want to log out?</p>
+
+    <div class="logout-modal__actions">
+      <button type="button" class="logout-modal__cancel" data-close-logout-modal>Cancel</button>
+      <form method="post" action="../src/config/logout-handler.php">
+        <button type="submit" class="logout-modal__confirm">Logout</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var modal = document.getElementById('logoutModal');
+    var openBtn = document.getElementById('openLogoutModal');
+    var closeBtns = document.querySelectorAll('[data-close-logout-modal]');
+
+    function openModal() {
+      if (!modal) return;
+      modal.classList.add('is-open');
+      modal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeModal() {
+      if (!modal) return;
+      modal.classList.remove('is-open');
+      modal.setAttribute('aria-hidden', 'true');
+    }
+
+    if (openBtn) {
+      openBtn.addEventListener('click', openModal);
+    }
+
+    closeBtns.forEach(function (btn) {
+      btn.addEventListener('click', closeModal);
+    });
+  })();
+</script>
+PHP,
+
+        'src/modals/logout-modal/logout-modal.css' => <<<'CSS'
+@import url('../../assets/css/color.css');
+
+.logout-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  padding: 20px;
+}
+
+.logout-modal.is-open {
+  display: flex;
+}
+
+.logout-modal__overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--muted);
+  opacity: 0.45;
+}
+
+.logout-modal__content {
+  position: relative;
+  width: min(420px, 96vw);
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--stroke);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  z-index: 2;
+  padding: 20px;
+}
+
+.logout-modal__title {
+  margin: 0 0 8px;
+}
+
+.logout-modal__text {
+  margin: 0 0 18px;
+  color: var(--muted);
+}
+
+.logout-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.logout-modal__cancel,
+.logout-modal__confirm {
+  border: 1px solid var(--stroke);
+  border-radius: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+.logout-modal__cancel {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.logout-modal__confirm {
+  background: var(--accent);
+  color: var(--surface);
+  border-color: var(--accent);
+}
+
+.logout-modal__confirm:hover {
+  background: var(--accent-dark);
+}
+CSS,
+
         'src/pages/home/home.php' => <<<'PHP'
-<section class="home-page">
-  <h1>Home Page</h1>
-  <p>Welcome to your scaffolded project.</p>
-</section>
+<?php
+require_once __DIR__ . '/../../controllers/usercontroller.php';
+
+$userController = new UserController();
+$user = $userController->profile();
+
+$displayName = trim((string) (($user['firstname'] ?? '') . ' ' . ($user['lastname'] ?? '')));
+if ($displayName === '') {
+  $displayName = (string) ($user['username'] ?? 'User');
+}
+?>
+<div class="app-layout">
+  <?php require __DIR__ . '/../../templates/sidebar.php'; ?>
+
+  <main class="main-content">
+    <section class="home-page">
+      <h1>Home Page</h1>
+      <p>Welcome, <?= htmlspecialchars($displayName, ENT_QUOTES, 'UTF-8'); ?>.</p>
+      <p>You are now logged in.</p>
+    </section>
+  </main>
+</div>
+
+<?php require __DIR__ . '/../../modals/logout-modal/logout-modal.php'; ?>
 PHP,
 
         'src/pages/home/home.css' => <<<'CSS'
@@ -691,11 +949,204 @@ PHP,
 }
 CSS,
 
-        'public/index.php' => <<<'PHP'
-<?php
+        'src/templates/sidebar.php' => <<<'PHP'
+<aside class="sidebar" id="appSidebar" aria-label="Sidebar">
+  <div class="sidebar__top">
+    <div class="sidebar__brand">
+      <img src="../src/assets/images/logo1.png" alt="Logo" class="sidebar__brand-logo">
+      <div class="sidebar__brand-text">
+        <div class="sidebar__brand-title">Project Title</div>
+        <div class="sidebar__brand-sub">Project Subtitle</div>
+      </div>
+    </div>
+  </div>
 
-declare(strict_types=1);
-?>
+  <div class="sidebar__content">
+    <div class="sidebar__bottom">
+      <button type="button" class="sidebar__logout" id="openLogoutModal" aria-label="Logout">
+        <span class="material-icons" aria-hidden="true">logout</span>
+        <span class="sidebar__logout-label">Logout</span>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<!-- Sidebar expands/collapses on hover (no JS toggle required) -->
+PHP,
+
+        'src/templates/sidebar.css' => <<<'CSS'
+@import url('../assets/css/color.css');
+
+:root {
+  --sidebar-width-expanded: 240px;
+  --sidebar-width-collapsed: 76px;
+}
+
+body {
+  margin: 0;
+}
+
+.app-layout {
+  min-height: 100vh;
+}
+
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: var(--sidebar-width-collapsed);
+  background: var(--accent);
+  color: var(--surface);
+  display: flex;
+  flex-direction: column;
+  transition: width 0.18s ease;
+  box-shadow: var(--shadow);
+  z-index: 100;
+}
+
+.sidebar:hover {
+  width: var(--sidebar-width-expanded);
+}
+
+.sidebar__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 12px;
+  min-height: 80px;
+}
+
+.sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidebar__brand-logo {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: 6px;
+  background: transparent;
+  padding: 0;
+}
+
+.sidebar__brand-text {
+  display: none;
+  line-height: 1.0;
+  white-space: nowrap;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.sidebar:hover .sidebar__brand-text {
+  display: flex;
+}
+
+.sidebar__brand-title {
+  font-size: 14px;
+  color: var(--surface);
+  font-weight: 700;
+}
+
+.sidebar__brand-sub {
+  font-size: 12px;
+  color: var(--surface);
+  opacity: 0.85;
+  margin-top: 2px;
+}
+
+.sidebar__brand-text { /* handled above */ }
+
+.sidebar__toggle {
+  border: 1px solid var(--surface);
+  background: transparent;
+  color: var(--surface);
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.sidebar__content {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  flex: 1 1 auto;
+  padding: 12px;
+}
+
+.sidebar__bottom {
+  border-top: 1px solid var(--stroke);
+  padding-top: 12px;
+}
+
+.sidebar__logout {
+  width: 100%;
+  border: 1px solid var(--surface);
+  background: var(--accent-dark);
+  color: var(--surface);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: background-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.sidebar__logout-label {
+  white-space: nowrap;
+}
+
+.sidebar__logout {
+  justify-content: flex-start;
+}
+
+.sidebar:hover .sidebar__logout {
+  justify-content: flex-start;
+}
+
+.sidebar__logout-label {
+  display: none;
+}
+
+.sidebar:hover .sidebar__logout-label {
+  display: inline-block;
+}
+
+.sidebar__logout:hover {
+  background: var(--accent);
+  transform: translateX(3px);
+  box-shadow: 0 8px 20px rgba(16,24,40,0.12);
+}
+
+.main-content {
+  margin-left: var(--sidebar-width-collapsed);
+  padding: 24px;
+  transition: margin-left 0.18s ease;
+}
+
+.sidebar:hover ~ .main-content,
+.sidebar:hover + .main-content {
+  margin-left: var(--sidebar-width-expanded);
+}
+CSS,
+
+        'public/index.php' => <<<'PHP'
+      <?php
+
+      declare(strict_types=1);
+
+      require_once __DIR__ . '/../src/config/session.php';
+      require_once __DIR__ . '/../src/config/middleware.php';
+      guestOnly();
+      ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -715,6 +1166,33 @@ declare(strict_types=1);
   <?php require __DIR__ . '/components/hero-section.php'; ?>
   <?php require __DIR__ . '/../src/modals/login-modal/login-modal.php'; ?>
   <?php require __DIR__ . '/components/index-footer.php'; ?>
+</body>
+</html>
+PHP,
+
+        'public/home.php' => <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+require_once __DIR__ . '/../src/config/session.php';
+require_once __DIR__ . '/../src/config/middleware.php';
+
+requireAuth();
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home</title>
+  <link rel="stylesheet" href="index.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="../src/templates/sidebar.css">
+  <link rel="stylesheet" href="../src/modals/logout-modal/logout-modal.css">
+</head>
+<body>
+  <?php require __DIR__ . '/../src/pages/home/home.php'; ?>
 </body>
 </html>
 PHP,
@@ -987,6 +1465,10 @@ MD,
         }
     }
 
+    if (!downloadMigrationFiles($projectRoot)) {
+      return false;
+    }
+
     $transparentPng = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9sM5ux8AAAAASUVORK5CYII=', true);
     if ($transparentPng === false) {
       report('file', $projectRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'images', $projectRoot, 'FAILED');
@@ -1049,31 +1531,93 @@ MD,
       }
     }
 
-    $projectFolder = basename($projectRoot);
-    $rewriteBase = '/' . $projectFolder . '/';
-    $htPath = $projectRoot . DIRECTORY_SEPARATOR . '.htaccess';
-    $htContent = "RewriteEngine On\nRewriteBase {$rewriteBase}\nRewriteRule ^$ public/ [R=302,L]\n";
+    return finalizeGeneratedProject($projectRoot);
+}
 
-    if (file_put_contents($htPath, $htContent) === false) {
-        report('file', $htPath, $projectRoot, 'FAILED');
-        return false;
+function finalizeGeneratedProject(string $projectRoot): bool
+{
+  $projectFolder = basename($projectRoot);
+  $rewriteBase = '/' . $projectFolder . '/';
+  $htPath = $projectRoot . DIRECTORY_SEPARATOR . '.htaccess';
+  $htContent = "RewriteEngine On\nRewriteBase {$rewriteBase}\nRewriteRule ^$ public/ [R=302,L]\n";
+
+  if (file_put_contents($htPath, $htContent) === false) {
+    report('file', $htPath, $projectRoot, 'FAILED');
+    return false;
+  }
+  report('file', $htPath, $projectRoot, 'OK');
+
+  $publicHt = $projectRoot . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . '.htaccess';
+  if (file_exists($publicHt)) {
+    try {
+      if (@unlink($publicHt)) {
+        report('file', $publicHt, $projectRoot, 'REMOVED');
+      } else {
+        report('file', $publicHt, $projectRoot, 'FAILED-REMOVE');
+      }
+    } catch (Throwable $e) {
+      report('file', $publicHt, $projectRoot, 'FAILED-REMOVE');
     }
-    report('file', $htPath, $projectRoot, 'OK');
+  }
 
-    $publicHt = $projectRoot . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . '.htaccess';
-    if (file_exists($publicHt)) {
-        try {
-            if (@unlink($publicHt)) {
-                report('file', $publicHt, $projectRoot, 'REMOVED');
-            } else {
-                report('file', $publicHt, $projectRoot, 'FAILED-REMOVE');
-            }
-        } catch (Throwable $e) {
-            report('file', $publicHt, $projectRoot, 'FAILED-REMOVE');
-        }
+  return true;
+}
+
+function downloadMigrationFiles(string $projectRoot): bool
+{
+  $migrationDir = $projectRoot . DIRECTORY_SEPARATOR . 'migration' . DIRECTORY_SEPARATOR . 'userdb';
+  if (!ensureDirectory($migrationDir, $projectRoot)) {
+    return false;
+  }
+
+  $baseRawUrl = 'https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/migration/userdb';
+  $files = ['userdb_users.sql', 'userdb_userlogs.sql'];
+
+  foreach ($files as $fileName) {
+    $url = $baseRawUrl . '/' . $fileName;
+    $target = $migrationDir . DIRECTORY_SEPARATOR . $fileName;
+
+    if (file_exists($target)) {
+      report('file', $target, $projectRoot, 'EXISTS');
+      continue;
     }
 
-    return true;
+    $content = downloadRemoteText($url);
+    if ($content === null) {
+      report('file', $target, $projectRoot, 'FAILED');
+      return false;
+    }
+
+    $written = file_put_contents($target, rtrim($content, "\r\n") . PHP_EOL);
+    report('file', $target, $projectRoot, $written === false ? 'FAILED' : 'OK');
+    if ($written === false) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function downloadRemoteText(string $url): ?string
+{
+  if (function_exists('curl_version')) {
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+    $body = curl_exec($ch);
+    $ok = curl_getinfo($ch, CURLINFO_HTTP_CODE) === 200 && $body !== false;
+    curl_close($ch);
+    return $ok ? (string) $body : null;
+  }
+
+  $opts = stream_context_create(['http' => ['timeout' => 20]]);
+  $body = @file_get_contents($url, false, $opts);
+  if ($body === false) {
+    return null;
+  }
+
+  return $body;
 }
 
 function renderTemplate(string $content, string $projectName, string $projectTitle): string
