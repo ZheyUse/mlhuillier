@@ -199,6 +199,8 @@ exit /b %RC%
 
 :cmd_check_version
 set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/VERSION"
+set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
+set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
 set "TMP_FILE=%TEMP%\ml_remote_version.txt"
 set "REMOTE_VER="
 echo Checking remote ML CLI version from !RAW_URL! ...
@@ -239,6 +241,8 @@ exit /b 0
 
 :cmd_update
 set "VER_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/VERSION"
+set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
+set "VER_URL=!VER_URL!?t=!CACHE_BUST!"
 set "TMP_VER=%TEMP%\ml_remote_version.txt"
 set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml-update.php"
 set "TMP_FILE=%TEMP%\ml-update.php"

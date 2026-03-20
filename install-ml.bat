@@ -48,7 +48,7 @@ set /a PROGRESS=0
 echo Installing Necessary Files...
 echo Progress: %PROGRESS%/%TOTAL%
 
-rem Step 1: download generator stub and CLI batch (grouped)
+rem Step 1: download generator stub and CLI batch (GitHub-only)
 powershell -NoProfile -ExecutionPolicy Bypass -Command "try{ (New-Object Net.WebClient).DownloadFile('%RAW_BASE%/generate-file-remote.php', '%TARGET_DIR%\\generate-file-structure.php'); (New-Object Net.WebClient).DownloadFile('%RAW_BASE%/ml.bat', '%TARGET_DIR%\\ml.bat'); exit 0 } catch { exit 2 }"
 if errorlevel 1 (
   echo [ERROR] Failed to download necessary files
@@ -88,7 +88,7 @@ echo Progress: %PROGRESS%/%TOTAL%
 
 echo Installing Uninstaller...
 
-rem Step 2: download uninstaller
+rem Step 2: download uninstaller (GitHub-only)
 powershell -NoProfile -ExecutionPolicy Bypass -Command "try{ (New-Object Net.WebClient).DownloadFile('%RAW_BASE%/uninstall-ml.bat', '%TARGET_DIR%\\uninstall-ml.bat'); exit 0 } catch { exit 2 }"
 if errorlevel 1 (
   echo [ERROR] Failed to download uninstall-ml.bat
