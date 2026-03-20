@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.4"
+set "ML_VERSION=1.0.5"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -121,7 +121,9 @@ if not defined REMOTE_VER (
 )
 
 if "%REMOTE_VER%"=="%ML_VERSION%" (
+        echo.
         echo Version is up to date.
+        echo Current Version: %ML_VERSION%
         exit /b 0
 )
 
