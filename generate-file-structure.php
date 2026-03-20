@@ -376,6 +376,18 @@ if (!function_exists('redirect')) {
   }
 }
 
+if (!function_exists('appBase')) {
+  function appBase(): string
+  {
+    $script = (string) ($_SERVER['SCRIPT_NAME'] ?? '');
+    $base = preg_replace('#/(?:(?:public)|(?:src))/.*$#', '', $script);
+    if ($base === null) {
+      return '';
+    }
+    return $base === '' ? '' : $base;
+  }
+}
+
 if (!function_exists('guestOnly')) {
   function guestOnly(): void
   {
@@ -383,7 +395,10 @@ if (!function_exists('guestOnly')) {
     $sessionKey = (string) ($auth['session_key'] ?? 'auth_user');
 
     if (!empty($_SESSION[$sessionKey])) {
-      redirect('../../src/pages/home/home.php');
+      $base = appBase();
+      $target = $base . '/src/pages/home/home.php';
+      header('Location: ' . $target);
+      exit;
     }
   }
 }
@@ -395,7 +410,10 @@ if (!function_exists('requireAuth')) {
     $sessionKey = (string) ($auth['session_key'] ?? 'auth_user');
 
     if (empty($_SESSION[$sessionKey])) {
-      redirect('../../public/index.php');
+      $base = appBase();
+      $target = $base . '/public/index.php';
+      header('Location: ' . $target);
+      exit;
     }
   }
 }
@@ -922,7 +940,11 @@ CSS,
 
         'src/pages/home/home.php' => <<<'PHP'
 <?php
+require_once __DIR__ . '/../../config/session.php';
+require_once __DIR__ . '/../../config/middleware.php';
 require_once __DIR__ . '/../../controllers/usercontroller.php';
+
+requireAuth();
 
 $userController = new UserController();
 $user = $userController->profile();
