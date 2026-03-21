@@ -11,9 +11,10 @@
  */
 
 $baseRaw = 'https://raw.githubusercontent.com/ZheyUse/mlhuillier/main';
+$cacheToken = '?t=' . time() . rand(1000,9999);
 $files = [
-    'ml.bat' => $baseRaw . '/ml.bat',
-    'VERSION' => $baseRaw . '/VERSION',
+    'ml.bat' => $baseRaw . '/ml.bat' . $cacheToken,
+    'VERSION' => $baseRaw . '/VERSION' . $cacheToken,
 ];
 
 $targetDir = 'C:\\ML CLI\\Tools';
@@ -24,6 +25,8 @@ function fetchUrl($url)
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_FAILONERROR, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'ML Updater');
         $data = curl_exec($ch);
         $err = curl_error($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -33,7 +36,15 @@ function fetchUrl($url)
         }
         return $data;
     }
-    $data = @file_get_contents($url);
+    $opts = [
+        'http' => [
+            'method' => 'GET',
+            'header' => "User-Agent: ML Updater\r\n",
+            'timeout' => 30,
+        ],
+    ];
+    $context = stream_context_create($opts);
+    $data = @file_get_contents($url, false, $context);
     if ($data === false) {
         throw new RuntimeException('Failed to download ' . $url);
     }
@@ -74,7 +85,7 @@ foreach ($files as $name => $url) {
 }
 
 // version.txt is optional in the repository; generate it if not downloadable.
-$versionTxtUrl = $baseRaw . '/version.txt';
+$versionTxtUrl = $baseRaw . '/version.txt' . $cacheToken;
 $versionTxtData = null;
 try {
     safeEcho('ML Updater: Downloading version.txt ...');
