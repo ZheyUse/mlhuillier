@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.16"
+set "ML_VERSION=1.0.17"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -184,7 +184,9 @@ set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/userdb-co
 set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
 set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
 set "TMP_FILE=%TEMP%\userdb-con-test.php"
-echo Running remote userdb connection test from !RAW_URL! ...
+call :strip_query "!RAW_URL!"
+rem URL hidden from output
+echo Executing test connection to userdb...
 
 where curl >nul 2>&1
 if %ERRORLEVEL%==0 (
@@ -207,7 +209,9 @@ set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/userdb-im
 set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
 set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
 set "TMP_FILE=%TEMP%\userdb-import.php"
-echo Running remote userdb import from !RAW_URL! ...
+call :strip_query "!RAW_URL!"
+rem URL hidden from output
+echo Executing userdb import...
 
 where curl >nul 2>&1
 if %ERRORLEVEL%==0 (
@@ -268,7 +272,7 @@ set "UPDATER_URL=!UPDATER_URL!?t=!CACHE_BUST!"
 set "TMP_FILE=%TEMP%\ml-update.php"
 set "LOCAL_UPDATER=%~dp0ml-update.php"
 
-echo Checking remote ML CLI version from GitHub API (fallback raw) ...
+echo Checking remote ML CLI version from GitHub API...
 
 call :fetch_remote_version "!TMP_VER!"
 if %ERRORLEVEL% neq 0 (
@@ -286,7 +290,9 @@ if %ERRORLEVEL% neq 0 (
         )
 )
 
-echo Updating ML CLI from !UPDATER_URL! ...
+call :strip_query "!UPDATER_URL!"
+rem URL hidden from output
+echo Updating ML CLI...
 
 where curl >nul 2>&1
 if %ERRORLEVEL%==0 (
@@ -335,12 +341,20 @@ if %ERRORLEVEL% neq 0 exit /b 2
 
 exit /b 0
 
+:: Strip query string from a URL and store in DISPLAY_URL
+:strip_query
+set "IN=%~1"
+for /f "delims=?" %%A in ("%IN%") do set "DISPLAY_URL=%%A"
+exit /b 0
+
 :cmd_create_account
 set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/account-insert.php"
 set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
 set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
 set "TMP_FILE=%TEMP%\account-insert.php"
-echo Running remote account creation from !RAW_URL! ...
+call :strip_query "!RAW_URL!"
+rem URL hidden from output
+echo Executing account creation...
 echo.
 
 where curl >nul 2>&1
@@ -364,7 +378,8 @@ set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml-serve.
 set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
 set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
 set "TMP_FILE=%TEMP%\ml-serve.php"
-echo Running remote serve helper from !RAW_URL! ...
+rem URL hidden from output
+echo Executing serve helper...
 echo.
 
 where curl >nul 2>&1
@@ -403,7 +418,9 @@ set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/download-
 set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
 set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
 set "TMP_FILE=%TEMP%\download-installer.php"
-echo Running remote installer downloader from !RAW_URL! ...
+call :strip_query "!RAW_URL!"
+rem URL hidden from output
+echo Executing installer downloader...
 
 where curl >nul 2>&1
 if %ERRORLEVEL%==0 (
