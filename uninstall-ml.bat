@@ -2,7 +2,7 @@
 setlocal EnableExtensions
 
 set "TARGET_DIR=C:\ML CLI\Tools"
-set "UNINSTALL_VERSION=1.1.1"
+set "UNINSTALL_VERSION=1.0.20"
 
 rem Determine installed CLI version from installed VERSION file if present
 set "CLI_VERSION=%UNINSTALL_VERSION%"

@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.1.1"
+set "ML_VERSION=1.0.20"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -234,7 +234,7 @@ if %ERRORLEVEL% neq 0 (
 :cmd_check_version
 set "TMP_FILE=%TEMP%\ml_remote_version.txt"
 set "REMOTE_VER="
-echo Checking remote ML CLI version from GitHub API (fallback raw) ...
+echo Checking remote ML CLI version from GitHub API ...
 
 call :fetch_remote_version "!TMP_FILE!"
 if %ERRORLEVEL% neq 0 (
