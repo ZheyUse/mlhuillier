@@ -84,6 +84,28 @@ foreach ($files as $name => $url) {
     }
 }
 
+// Ensure installed ml.bat reports the downloaded VERSION value
+$installedVersion = null;
+$versionFile = $targetDir . DIRECTORY_SEPARATOR . 'VERSION';
+if (is_file($versionFile)) {
+    $installedVersion = trim(@file_get_contents($versionFile));
+}
+if ($installedVersion) {
+    $mlBatPath = $targetDir . DIRECTORY_SEPARATOR . 'ml.bat';
+    if (is_file($mlBatPath)) {
+        safeEcho('ML Updater: Enforcing ML_VERSION=' . $installedVersion . ' in ' . $mlBatPath . ' ...');
+        $mlBatData = @file_get_contents($mlBatPath);
+        if ($mlBatData !== false) {
+            $newData = preg_replace('/set \"ML_VERSION=.*\"/i', 'set "ML_VERSION=' . addslashes($installedVersion) . '"', $mlBatData, 1);
+            if ($newData !== null && $newData !== $mlBatData) {
+                if (file_put_contents($mlBatPath, $newData) === false) {
+                    safeEcho('ML Updater: Failed to update ML_VERSION in ' . $mlBatPath);
+                }
+            }
+        }
+    }
+}
+
 // version.txt is optional in the repository; generate it if not downloadable.
 $versionTxtUrl = $baseRaw . '/version.txt' . $cacheToken;
 $versionTxtData = null;
