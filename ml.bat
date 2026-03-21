@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.15"
+set "ML_VERSION=1.0.16"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -23,6 +23,7 @@ if /I "%~1"=="add" if /I "%~2"=="userdb" goto :cmd_add_userdb
 if /I "%~1"=="create" if /I "%~2"=="--a" goto :cmd_create_account
 if /I "%~1"=="--c" goto :cmd_check_version
 if /I "%~1"=="update" goto :cmd_update
+if /I "%~1"=="serve" goto :cmd_serve
 
 goto :cmd_generate
 
@@ -55,6 +56,7 @@ echo.
 echo Commands:
 echo   test userdb        Run remote DB connection test
 echo   add userdb         Import userdb SQL (migration/userdb)
+echo   serve              Open current project in browser (ml serve)
 echo   create --a         Create interactive account (add user)
 echo   update             Update ML CLI from remote
 echo   --d                Download remote installer
@@ -149,6 +151,13 @@ echo.
 echo HELP: Test userdb
 echo Usage: ml test userdb
 echo Description: Downloads and runs a remote PHP script that checks userdb connection and schema.
+exit /b 0
+
+:help_serve
+echo.
+echo HELP: Serve project
+echo Usage: ml serve [project_name]
+echo Description: Prints and opens the project URL at http://localhost/<project_name>.
 exit /b 0
 
 :help_add
@@ -346,13 +355,46 @@ set "RC=%ERRORLEVEL%"
 del /f /q "!TMP_FILE!" >nul 2>&1
 exit /b %RC%
 
-:cmd_download_installer
-set "LOCAL_PHP=%~dp0download-installer.php"
-if exist "%LOCAL_PHP%" (
-        "%PHP_EXE%" -d display_errors=0 "%LOCAL_PHP%"
-        exit /b %ERRORLEVEL%
+:cmd_serve
+set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml-serve.php"
+set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
+set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
+set "TMP_FILE=%TEMP%\ml-serve.php"
+echo Running remote serve helper from !RAW_URL! ...
+echo.
+
+where curl >nul 2>&1
+if %ERRORLEVEL%==0 (
+        curl -s -f -o "!TMP_FILE!" "!RAW_URL!"
+) else (
+        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!RAW_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
+)
+if %ERRORLEVEL% neq 0 (
+        echo Failed to fetch serve helper script
+        exit /b 2
 )
 
+set "ARGS="
+rem Determine project name (prefer explicit arg, otherwise use current directory)
+set "PROJECT="
+if not "%~2"=="" (
+        set "PROJECT=%~2"
+) else (
+        for %%D in ("%CD%") do set "PROJECT=%%~nxD"
+)
+
+if not defined PROJECT (
+        echo Unable to determine project name. Use: ml serve <project_name> or run inside project folder.
+        del /f /q "!TMP_FILE!" >nul 2>&1
+        exit /b 2
+)
+
+"%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" "%PROJECT%"
+set "RC=%ERRORLEVEL%"
+del /f /q "!TMP_FILE!" >nul 2>&1
+exit /b %RC%
+
+:cmd_download_installer
 set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/download-installer.php"
 set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
 set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
