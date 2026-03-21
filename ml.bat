@@ -68,6 +68,8 @@ echo   ml --h test userdb
 echo   ml --h --c
 echo   ml --h create --a
 echo   ml --h --d
+echo   ml --h serve
+echo   ml --h add userdb
 exit /b 0
 
 :prepare_help_args
@@ -157,7 +159,9 @@ exit /b 0
 echo.
 echo HELP: Serve project
 echo Usage: ml serve [project_name]
-echo Description: Prints and opens the project URL at http://localhost/<project_name>.
+echo Description: Remote-only helper. Fetches and runs the GitHub-hosted
+echo   ml-serve.php which prints and opens the project URL at
+echo   http://localhost/<project_name>. No local fallback if fetch fails.
 exit /b 0
 
 :help_add
