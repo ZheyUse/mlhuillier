@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.17"
+set "ML_VERSION=1.0.18"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -200,9 +200,10 @@ if %ERRORLEVEL% neq 0 (
 )
 
 "!PHP_EXE!" -d display_errors=0 "!TMP_FILE!"
-set "RC=%ERRORLEVEL%"
-del /f /q "!TMP_FILE!" >nul 2>&1
-exit /b %RC%
+        set "RC=%ERRORLEVEL%"
+        call :maybe_show_update_notice
+        del /f /q "!TMP_FILE!" >nul 2>&1
+        exit /b %RC%
 
 :cmd_add_userdb
 set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/userdb-import.php"
@@ -225,9 +226,10 @@ if %ERRORLEVEL% neq 0 (
 )
 
 "!PHP_EXE!" -d display_errors=0 "!TMP_FILE!"
-set "RC=%ERRORLEVEL%"
-del /f /q "!TMP_FILE!" >nul 2>&1
-exit /b %RC%
+        set "RC=%ERRORLEVEL%"
+        call :maybe_show_update_notice
+        del /f /q "!TMP_FILE!" >nul 2>&1
+        exit /b %RC%
 
 :cmd_check_version
 set "TMP_FILE=%TEMP%\ml_remote_version.txt"
@@ -347,6 +349,25 @@ set "IN=%~1"
 for /f "delims=?" %%A in ("%IN%") do set "DISPLAY_URL=%%A"
 exit /b 0
 
+:: Check remote VERSION and print a short update notice if newer
+:maybe_show_update_notice
+set "TMP_VER=%TEMP%\ml_remote_version.txt"
+call :fetch_remote_version "!TMP_VER!" >nul 2>&1
+if %ERRORLEVEL% neq 0 (
+        del /f /q "!TMP_VER!" >nul 2>&1
+        exit /b 0
+)
+set /p REMOTE_VER=<"!TMP_VER!"
+del /f /q "!TMP_VER!" >nul 2>&1
+if defined REMOTE_VER if not "%REMOTE_VER%"=="%ML_VERSION%" (
+        echo.
+        echo New Version is available!!!
+        echo Version: %REMOTE_VER%
+        echo run: ml update  - to update to the latest version
+        echo.
+)
+exit /b 0
+
 :cmd_create_account
 set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/account-insert.php"
 set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
@@ -370,6 +391,7 @@ if %ERRORLEVEL% neq 0 (
 
 "%PHP_EXE%" -d display_errors=0 "!TMP_FILE!"
 set "RC=%ERRORLEVEL%"
+call :maybe_show_update_notice
 del /f /q "!TMP_FILE!" >nul 2>&1
 exit /b %RC%
 
@@ -435,14 +457,19 @@ if %ERRORLEVEL% neq 0 (
 
 "%PHP_EXE%" -d display_errors=0 "!TMP_FILE!"
 set "RC=%ERRORLEVEL%"
+call :maybe_show_update_notice
 del /f /q "!TMP_FILE!" >nul 2>&1
 exit /b %RC%
 
 :cmd_generate
 if exist "C:\xampp\php\php.exe" (
         "C:\xampp\php\php.exe" "%ML_SCRIPT%" %*
-        exit /b %ERRORLEVEL%
+        set "RC=%ERRORLEVEL%"
+        call :maybe_show_update_notice
+        exit /b %RC%
 )
 
 php "%ML_SCRIPT%" %*
-exit /b %ERRORLEVEL%
+set "RC=%ERRORLEVEL%"
+call :maybe_show_update_notice
+exit /b %RC%
