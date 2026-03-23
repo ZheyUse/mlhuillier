@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.22"
+set "ML_VERSION=1.0.23"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -24,6 +24,7 @@ if /I "%~1"=="create" if /I "%~2"=="--a" goto :cmd_create_account
 if /I "%~1"=="--c" goto :cmd_check_version
 if /I "%~1"=="update" goto :cmd_update
 if /I "%~1"=="serve" goto :cmd_serve
+if /I "%~1"=="nav" goto :cmd_nav
 
 goto :cmd_generate
 
@@ -57,6 +58,7 @@ echo Commands:
 echo   test userdb        Run remote DB connection test
 echo   add userdb         Import userdb SQL (migration/userdb)
 echo   serve              Open current project in browser (ml serve)
+echo   nav                Interactive navigation for htdocs projects
 echo   create --a         Create interactive account (add user)
 echo   update             Update ML CLI from remote
 echo   --d                Download remote installer
@@ -99,6 +101,7 @@ if /I "%CMD%"=="create" if /I "%SUB%"=="--a" goto :help_create_account
 if /I "%CMD%"=="create" goto :help_create
 if /I "%CMD%"=="test" goto :help_test
 if /I "%CMD%"=="add" goto :help_add
+if /I "%CMD%"=="nav" goto :help_nav
 
 echo No help available for '%CMD%'.
 exit /b 2
@@ -177,6 +180,15 @@ echo.
 echo HELP: Add userdb
 echo Usage: ml add userdb
 echo Description: Downloads/imports migration/userdb SQL files to create the userdb schema and tables.
+exit /b 0
+
+:help_nav
+echo.
+echo HELP: Navigation helper
+echo Usage: ml nav [--new] [--<project_name>] [--remote]
+echo Description: Interactive helper to change directories to projects under C:\xampp\htdocs.
+echo   Use --new to go to C:\xampp\htdocs. Use --remote or set ML_REMOTE=1 to avoid opening
+echo   VSCode from the remote environment.
 exit /b 0
 
 :cmd_test_userdb
@@ -433,6 +445,54 @@ if not defined PROJECT (
 "%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" "%PROJECT%"
 set "RC=%ERRORLEVEL%"
 del /f /q "!TMP_FILE!" >nul 2>&1
+exit /b %RC%
+
+:cmd_nav
+set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml-nav.php"
+set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
+set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
+set "TMP_FILE=%TEMP%\ml-nav.php"
+set "TMP_OUT=%TEMP%\ml-nav.out"
+call :strip_query "!RAW_URL!"
+rem URL hidden from output
+echo Executing navigation helper...
+echo.
+
+where curl >nul 2>&1
+if %ERRORLEVEL%==0 (
+        curl -s -f -o "!TMP_FILE!" "!RAW_URL!"
+) else (
+        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!RAW_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
+)
+if %ERRORLEVEL% neq 0 (
+        echo Failed to fetch navigation script
+        exit /b 2
+)
+
+"%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" %* > "!TMP_OUT!" 2>&1
+set "RC=%ERRORLEVEL%"
+
+set "CD_TO="
+for /f "usebackq tokens=1* delims=:" %%A in ("!TMP_OUT!") do (
+        if /I "%%A"=="CD_TO" set "CD_TO=%%B"
+)
+
+rem Trim leading space
+if defined CD_TO (
+        if "!CD_TO:~0,1!"==" " set "CD_TO=!CD_TO:~1!"
+)
+
+if defined CD_TO (
+        if exist "!CD_TO!" (
+                cd /d "!CD_TO!"
+                echo Now in !CD_TO!
+        ) else (
+                echo Target folder not found: !CD_TO!
+        )
+)
+
+call :maybe_show_update_notice
+del /f /q "!TMP_FILE!" "!TMP_OUT!" >nul 2>&1
 exit /b %RC%
 
 :cmd_download_installer
