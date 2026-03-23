@@ -520,22 +520,53 @@ rem Ensure wrappers exist in the installed tools folder so navigation can change
 set "WRAPPER_CMD=%ML_INSTALLED_DIR%ml.cmd"
 set "WRAPPER_PS=%ML_INSTALLED_DIR%ml.ps1"
 if not exist "%WRAPPER_CMD%" (
-        echo Wrapper not found in %ML_INSTALLED_DIR% - attempting to install wrappers...
+        echo Wrapper not found in %ML_INSTALLED_DIR% - attempting to install wrappers via remote installer...
         if not exist "%ML_INSTALLED_DIR%" (
                 mkdir "%ML_INSTALLED_DIR%" 2>nul
         )
+        set "INSTALLER_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/install-wrappers-auto.ps1"
+        set "TMP_INSTALL=%TEMP%\install-wrappers-auto.ps1"
+        set "DLERR=0"
         where curl >nul 2>&1
         if %ERRORLEVEL%==0 (
-                curl -s -f -o "%WRAPPER_CMD%" "https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml.cmd" || set "DLERR=1"
-                curl -s -f -o "%WRAPPER_PS%" "https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml.ps1" || set "DLERR=1"
+                curl -s -f -o "!TMP_INSTALL!" "!INSTALLER_URL!" || set "DLERR=1"
         ) else (
-                powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml.cmd','%WRAPPER_CMD%'); (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml.ps1','%WRAPPER_PS%'); exit 0 } Catch { exit 2 }"
+                powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!INSTALLER_URL!','!TMP_INSTALL!'); exit 0 } Catch { exit 2 }"
                 if %ERRORLEVEL% neq 0 set "DLERR=1"
         )
-        if defined DLERR (
-                echo Failed to download wrappers to %ML_INSTALLED_DIR% (continuing without wrappers)
-                set "DLERR="
+        if "%DLERR%"=="0" (
+                echo Running remote wrapper installer...
+                        set "TMP_INSTALL_OUT=%TEMP%\install-wrappers-out.txt"
+                        powershell -NoProfile -ExecutionPolicy Bypass -File "!TMP_INSTALL!" >"!TMP_INSTALL_OUT!" 2>&1
+                        set "RC_INSTALL=%ERRORLEVEL%"
+                        if NOT "!RC_INSTALL!"=="0" (
+                                echo Remote installer returned an error (exit !RC_INSTALL!)
+                                type "!TMP_INSTALL_OUT!" 2>nul
+                        ) else (
+                                echo Remote installer executed successfully
+                                type "!TMP_INSTALL_OUT!" 2>nul
+                        )
+                        del /f /q "!TMP_INSTALL!" "!TMP_INSTALL_OUT!" >nul 2>&1
         ) else (
+                echo Failed to download remote installer, will attempt direct wrapper fetch...
+                set "DLERR=0"
+                where curl >nul 2>&1
+                if %ERRORLEVEL%==0 (
+                        curl -s -f -o "%WRAPPER_CMD%" "https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml.cmd" || set "DLERR=1"
+                        curl -s -f -o "%WRAPPER_PS%" "https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml.ps1" || set "DLERR=1"
+                ) else (
+                        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml.cmd','%WRAPPER_CMD%'); (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml.ps1','%WRAPPER_PS%'); exit 0 } Catch { exit 2 }"
+                        if %ERRORLEVEL% neq 0 set "DLERR=1"
+                )
+                if defined DLERR (
+                        echo Failed to download wrappers to %ML_INSTALLED_DIR% (continuing without wrappers)
+                        set "DLERR="
+                ) else (
+                        echo Installed wrappers to %ML_INSTALLED_DIR%
+                )
+        )
+        rem If installer created wrappers in the tools folder, report it
+        if exist "%WRAPPER_CMD%" if exist "%WRAPPER_PS%" (
                 echo Installed wrappers to %ML_INSTALLED_DIR%
         )
 )
