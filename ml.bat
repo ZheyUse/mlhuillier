@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.23"
+set "ML_VERSION=1.0.24"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -469,7 +469,7 @@ if %ERRORLEVEL% neq 0 (
         exit /b 2
 )
 
-"%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" %* > "!TMP_OUT!" 2>&1
+"%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" %* --remote > "!TMP_OUT!" 2>&1
 set "RC=%ERRORLEVEL%"
 
 set "CD_TO="
