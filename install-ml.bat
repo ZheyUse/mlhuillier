@@ -42,7 +42,7 @@ if not exist "%TARGET_DIR%" (
 )
 
 rem Progress state
-set "TOTAL=3"
+set "TOTAL=4"
 set /a PROGRESS=0
 
 echo Installing Necessary Files...
@@ -93,6 +93,19 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "try{ (New-Object Net.Web
 if errorlevel 1 (
   echo [ERROR] Failed to download uninstall-ml.bat
   exit /b 1
+)
+
+set /a PROGRESS+=1
+echo Progress: %PROGRESS%/%TOTAL%
+
+echo Installing shell wrappers (ml.cmd, ml.ps1) and helper installer...
+
+rem Step: download wrappers and installer helper into the target folder
+powershell -NoProfile -ExecutionPolicy Bypass -Command "try{ (New-Object Net.WebClient).DownloadFile('%RAW_BASE%/ml.cmd?t=%RANDOM%%RANDOM%%RANDOM%', '%TARGET_DIR%\ml.cmd'); (New-Object Net.WebClient).DownloadFile('%RAW_BASE%/ml.ps1?t=%RANDOM%%RANDOM%%RANDOM%', '%TARGET_DIR%\ml.ps1'); (New-Object Net.WebClient).DownloadFile('%RAW_BASE%/install-wrappers-auto.ps1?t=%RANDOM%%RANDOM%%RANDOM%', '%TARGET_DIR%\install-wrappers-auto.ps1'); exit 0 } catch { exit 2 }"
+if errorlevel 1 (
+  echo [WARN] Failed to download one or more wrapper files (continuing)
+) else (
+  echo Installed wrappers and helper into %TARGET_DIR%
 )
 
 set /a PROGRESS+=1
