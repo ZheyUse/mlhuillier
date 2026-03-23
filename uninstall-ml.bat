@@ -4,6 +4,9 @@ setlocal EnableExtensions
 set "TARGET_DIR=C:\ML CLI\Tools"
 set "USER_BIN=%USERPROFILE%\bin"
 set "USER_ML_CMD=%USER_BIN%\ml.cmd"
+set "USER_ML_BAT=%USER_BIN%\ml.bat"
+set "USER_ML_PS1=%USER_BIN%\ml.ps1"
+set "USER_WRAPPER_HELPER=%USER_BIN%\install-wrappers-auto.ps1"
 set "UNINSTALL_VERSION=1.0.32"
 
 rem Determine installed CLI version from installed VERSION file if present
@@ -48,19 +51,28 @@ if /I "%PATH_RESULT%"=="PATH_REMOVED" (
   echo User PATH is empty or unchanged.
 )
 
-if exist "%USER_ML_CMD%" (
-  del /f /q "%USER_ML_CMD%" >nul 2>&1
-  if exist "%USER_ML_CMD%" (
-    echo [WARN] Could not remove %USER_ML_CMD%
+echo Cleaning user wrappers in %USER_BIN%...
+for %%F in ("%USER_ML_CMD%" "%USER_ML_BAT%" "%USER_ML_PS1%" "%USER_WRAPPER_HELPER%") do (
+  if exist "%%~F" (
+    del /f /q "%%~F" >nul 2>&1
+    if exist "%%~F" (
+      echo [WARN] Could not remove %%~F
+    ) else (
+      echo Removed %%~F
+    )
   ) else (
-    echo Removed %USER_ML_CMD%
+    echo %%~F not found.
   )
-) else (
-  echo %USER_ML_CMD% not found.
 )
+
+echo Cleaning PowerShell profile shim (function ml) if present...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$profiles=@($PROFILE.CurrentUserAllHosts, (Join-Path $HOME 'Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1'), (Join-Path $HOME 'Documents\PowerShell\Microsoft.PowerShell_profile.ps1')) | Select-Object -Unique; foreach($pf in $profiles){ if(-not $pf){ continue }; if(-not (Test-Path -LiteralPath $pf)){ Write-Output ('PROFILE_NOT_FOUND:' + $pf); continue }; $raw=Get-Content -LiteralPath $pf -Raw -ErrorAction SilentlyContinue; if($null -eq $raw){ $raw='' }; $updated=[Regex]::Replace($raw,'(?s)function\s+ml\s*\{.*?ml wrapper not found.*?\r?\n\}',''); if($updated -ne $raw){ Set-Content -LiteralPath $pf -Value $updated -Encoding UTF8; Write-Output ('PROFILE_ML_REMOVED:' + $pf) } else { Write-Output ('PROFILE_ML_NOT_FOUND:' + $pf) } }" > "%TEMP%\ml_uninstall_profile_result.txt"
+for /f "usebackq delims=" %%L in ("%TEMP%\ml_uninstall_profile_result.txt") do echo %%L
+del "%TEMP%\ml_uninstall_profile_result.txt" >nul 2>&1
 
 if not exist "%TARGET_DIR%" (
   echo [SUCCESS] Uninstall complete. Directory already removed.
+  echo Open a new terminal so PATH/profile updates are reflected.
   exit /b 0
 )
 
