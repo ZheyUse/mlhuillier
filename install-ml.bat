@@ -42,7 +42,7 @@ if not exist "%TARGET_DIR%" (
 )
 
 rem Progress state
-set "TOTAL=4"
+set "TOTAL=5"
 set /a PROGRESS=0
 
 echo Installing Necessary Files...
@@ -106,6 +106,21 @@ if errorlevel 1 (
   echo [WARN] Failed to download one or more wrapper files (continuing)
 ) else (
   echo Installed wrappers and helper into %TARGET_DIR%
+)
+
+set /a PROGRESS+=1
+echo Progress: %PROGRESS%/%TOTAL%
+
+echo Injecting PowerShell profile function...
+if exist "%TARGET_DIR%\install-wrappers-auto.ps1" (
+  powershell -NoProfile -ExecutionPolicy Bypass -File "%TARGET_DIR%\install-wrappers-auto.ps1"
+  if errorlevel 1 (
+    echo [WARN] Failed to inject/update PowerShell profile function (continuing)
+  ) else (
+    echo PowerShell profile function injected/verified.
+  )
+) else (
+  echo [WARN] install-wrappers-auto.ps1 not found; skipping profile injection.
 )
 
 set /a PROGRESS+=1

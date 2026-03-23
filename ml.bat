@@ -571,16 +571,12 @@ if not exist "%WRAPPER_CMD%" (
         )
 )
 
-rem If running inside PowerShell, ensure a shell wrapper is present in the user's profile
-if defined PSModulePath (
-        powershell -NoProfile -ExecutionPolicy Bypass -Command "try { if(Test-Path '%ML_INSTALLED_DIR%ml.ps1') { if(-not (Test-Path $PROFILE)) { New-Item -ItemType File -Force -Path $PROFILE | Out-Null }; $line = '. ''%ML_INSTALLED_DIR%ml.ps1'''; $c=''; try { $c = Get-Content -Path $PROFILE -Raw } catch {}; if($c -notmatch [regex]::Escape($line)) { Add-Content -Path $PROFILE -Value $line; Write-Output ('ML wrapper added to profile: ' + $PROFILE) } }; exit 0 } catch { exit 2 }"
-
 echo Executing navigation helper...
 echo.
 
 rem If running inside PowerShell, ensure a shell wrapper is present in the user's profile
 set "MLBAT=%~dp0ml.bat"
-if defined PSModulePath powershell -NoProfile -ExecutionPolicy Bypass -Command "if(-not (Test-Path $PROFILE)) { New-Item -ItemType File -Force -Path $PROFILE | Out-Null }; $line = '. ''%~dp0ml.ps1'''; $c = ''; try { $c = Get-Content -Path $PROFILE -Raw } catch {}; if($c -notmatch [regex]::Escape($line)) { Add-Content -Path $PROFILE -Value $line; Write-Output ('ML wrapper added to profile: ' + $PROFILE) }"
+if defined PSModulePath powershell -NoProfile -ExecutionPolicy Bypass -Command "if (Test-Path '%ML_INSTALLED_DIR%ml.ps1') { if(-not (Test-Path $PROFILE)) { New-Item -ItemType File -Force -Path $PROFILE | Out-Null }; $line = '. ''%ML_INSTALLED_DIR%ml.ps1'''; $c=''; try { $c = Get-Content -Path $PROFILE -Raw } catch {}; if($c -notmatch [regex]::Escape($line)) { Add-Content -Path $PROFILE -Value $line; Write-Output 'ML wrapper added to profile' } }"
 
 where curl >nul 2>&1
 if %ERRORLEVEL%==0 (
