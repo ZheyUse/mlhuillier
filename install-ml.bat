@@ -7,7 +7,7 @@ set "MODE=INSTALL"
 if /I "%~1"=="--update" set "MODE=UPDATE"
 
 rem Determine CLI version from local VERSION file if present (fallback 1.0.3)
-set "CLI_VERSION=1.0.33"
+set "CLI_VERSION=1.0.34"
 if exist "%SOURCE_DIR%VERSION" (
   for /f "usebackq delims=" %%v in ("%SOURCE_DIR%VERSION") do set "CLI_VERSION=%%v"
 )
@@ -183,12 +183,17 @@ echo Writing metadata...
 
 rem Write the "Made By" ASCII art into the installed CLI folder (safe batch write)
 (
-  echo ML CLI Installer
-  echo.
-  echo Installed by: ZheyUse
-  echo.
+  echo ┏┳┓┏━┓╺┳┓┏━╸   ┏┓ ╻ ╻
+  echo ┃┃┃┣━┫ ┃┃┣╸    ┣┻┓┗┳┛
+  echo ╹ ╹╹ ╹╺┻┛┗━╸   ┗━┛ ╹
+  echo  ██████╗ ██████╗ ██████╗ ███████╗███████╗
+  echo ██╔════╝██╔═══██╗██╔══██╗██╔════╝╚══███╔╝
+  echo ██║     ██║   ██║██║  ██║█████╗    ███╔╝
+  echo ██║     ██║   ██║██║  ██║██╔══╝   ███╔╝
+  echo ╚██████╗╚██████╔╝██████╔╝███████╗███████╗
+  echo  ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝╚══════╝
   echo Follow: https://github.com/ZheyUse
-) > "%TARGET_DIR%\made-by.txt"
+)> "%TARGET_DIR%\made-by.txt"
 
 if errorlevel 1 (
   echo [!] Could not write made-by.txt
