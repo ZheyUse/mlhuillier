@@ -1,5 +1,4 @@
 @echo off
-setlocal
 
 set "OUTFILE=%TEMP%\ml_out_%RANDOM%.txt"
 "%~dp0ml.bat" %* > "%OUTFILE%" 2>&1
@@ -15,4 +14,3 @@ if defined CD (
 
 type "%OUTFILE%"
 del /f /q "%OUTFILE%"
-endlocal
