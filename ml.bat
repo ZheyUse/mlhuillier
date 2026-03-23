@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.24"
+set "ML_VERSION=1.0.25"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -10,6 +10,12 @@ if /I "%~1"=="--v" goto :show_version
 if /I "%~1"=="--h" if "%~2"=="" goto :show_help
 if /I "%~1"=="--h" goto :prepare_help_args
 if /I "%~1"=="--d" goto :cmd_download_installer
+
+rem If the first argument is a long flag (starts with --) but not recognized above, show help
+set "ARG1=%~1"
+if not "%ARG1%"=="" (
+        if "!ARG1:~0,2!"=="--" goto :show_help
+)
 
 echo.
 echo ==============================
@@ -457,6 +463,12 @@ call :strip_query "!RAW_URL!"
 rem URL hidden from output
 echo Executing navigation helper...
 echo.
+
+rem If running inside PowerShell, ensure a shell wrapper is present in the user's profile
+set "MLBAT=%~dp0ml.bat"
+if defined PSModulePath (
+        powershell -NoProfile -Command " $p = $PROFILE; if(-not (Test-Path $p)){ New-Item -ItemType File -Force -Path $p | Out-Null }; $c = ''; try{ $c = Get-Content $p -Raw } catch {}; if($c -notmatch 'function\s+ml\s*\{'){ $func = \"function ml { param([Parameter(ValueFromRemainingArguments=\$true)] \$Args) \$out = & '%MLBAT%' @Args 2>&1; foreach (\$line in \$out) { if (\$line -match '^CD_TO:\\s*(.+)$') { Set-Location \\$Matches[1]; return } } \\$out | ForEach-Object { Write-Output \\$_ } }\"; Add-Content -Path $p -Value $func; Write-Output 'ML wrapper added to profile: ' + $p }"
+)
 
 where curl >nul 2>&1
 if %ERRORLEVEL%==0 (
