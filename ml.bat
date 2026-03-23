@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.29"
+set "ML_VERSION=1.0.30"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -264,7 +264,7 @@ where curl >nul 2>&1
 if %ERRORLEVEL%==0 (
         curl -s -f -o "!TMP_FILE!" "!RAW_URL!"
 ) else (
-        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!RAW_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
+        powershell -NoProfile -Command "Try { Invoke-WebRequest -Uri '!RAW_URL!' -OutFile '!TMP_FILE!' -UseBasicParsing; exit 0 } Catch { exit 2 }"
 )
 if %ERRORLEVEL% neq 0 (
         echo Failed to fetch remote test script
@@ -290,7 +290,7 @@ where curl >nul 2>&1
 if %ERRORLEVEL%==0 (
         curl -s -f -o "!TMP_FILE!" "!RAW_URL!"
 ) else (
-        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!RAW_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
+        powershell -NoProfile -Command "Try { Invoke-WebRequest -Uri '!RAW_URL!' -OutFile '!TMP_FILE!' -UseBasicParsing; exit 0 } Catch { exit 2 }"
 )
 if %ERRORLEVEL% neq 0 (
         echo Failed to fetch remote import script
@@ -372,7 +372,7 @@ where curl >nul 2>&1
 if %ERRORLEVEL%==0 (
         curl -s -f -o "!TMP_FILE!" "!UPDATER_URL!"
 ) else (
-        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!UPDATER_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
+        powershell -NoProfile -Command "Try { Invoke-WebRequest -Uri '!UPDATER_URL!' -OutFile '!TMP_FILE!' -UseBasicParsing; exit 0 } Catch { exit 2 }"
 )
 
 if %ERRORLEVEL%==0 (
@@ -409,7 +409,7 @@ where curl >nul 2>&1
 if %ERRORLEVEL%==0 (
         curl -s -f -o "%OUT_FILE%" "%FETCH_RAW_URL%"
 ) else (
-        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('%FETCH_RAW_URL%','%OUT_FILE%'); exit 0 } Catch { exit 2 }"
+        powershell -NoProfile -Command "Try { Invoke-WebRequest -Uri '%FETCH_RAW_URL%' -OutFile '%OUT_FILE%' -UseBasicParsing; exit 0 } Catch { exit 2 }"
 )
 if %ERRORLEVEL% neq 0 exit /b 2
 
@@ -454,7 +454,7 @@ where curl >nul 2>&1
 if %ERRORLEVEL%==0 (
         curl -s -f -o "!TMP_FILE!" "!RAW_URL!"
 ) else (
-        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!RAW_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
+        powershell -NoProfile -Command "Try { Invoke-WebRequest -Uri '!RAW_URL!' -OutFile '!TMP_FILE!' -UseBasicParsing; exit 0 } Catch { exit 2 }"
 )
 if %ERRORLEVEL% neq 0 (
         echo Failed to fetch remote account script
@@ -480,7 +480,7 @@ where curl >nul 2>&1
 if %ERRORLEVEL%==0 (
         curl -s -f -o "!TMP_FILE!" "!RAW_URL!"
 ) else (
-        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!RAW_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
+        powershell -NoProfile -Command "Try { Invoke-WebRequest -Uri '!RAW_URL!' -OutFile '!TMP_FILE!' -UseBasicParsing; exit 0 } Catch { exit 2 }"
 )
 if %ERRORLEVEL% neq 0 (
         echo Failed to fetch serve helper script
@@ -531,7 +531,7 @@ if not exist "%WRAPPER_CMD%" (
         if %ERRORLEVEL%==0 (
                 curl -s -f -o "!TMP_INSTALL!" "!INSTALLER_URL!" || set "DLERR=1"
         ) else (
-                powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!INSTALLER_URL!','!TMP_INSTALL!'); exit 0 } Catch { exit 2 }"
+                powershell -NoProfile -Command "Try { Invoke-WebRequest -Uri '!INSTALLER_URL!' -OutFile '!TMP_INSTALL!' -UseBasicParsing; exit 0 } Catch { exit 2 }"
                 if %ERRORLEVEL% neq 0 set "DLERR=1"
         )
         if "%DLERR%"=="0" (
@@ -555,7 +555,7 @@ if not exist "%WRAPPER_CMD%" (
                         curl -s -f -o "%WRAPPER_CMD%" "https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml.cmd" || set "DLERR=1"
                         curl -s -f -o "%WRAPPER_PS%" "https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml.ps1" || set "DLERR=1"
                 ) else (
-                        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml.cmd','%WRAPPER_CMD%'); (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml.ps1','%WRAPPER_PS%'); exit 0 } Catch { exit 2 }"
+                        powershell -NoProfile -Command "Try { Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml.cmd' -OutFile '%WRAPPER_CMD%' -UseBasicParsing; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml.ps1' -OutFile '%WRAPPER_PS%' -UseBasicParsing; exit 0 } Catch { exit 2 }"
                         if %ERRORLEVEL% neq 0 set "DLERR=1"
                 )
                 if defined DLERR (
@@ -582,7 +582,7 @@ where curl >nul 2>&1
 if %ERRORLEVEL%==0 (
         curl -s -f -o "!TMP_FILE!" "!RAW_URL!"
 ) else (
-        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!RAW_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
+        powershell -NoProfile -Command "Try { Invoke-WebRequest -Uri '!RAW_URL!' -OutFile '!TMP_FILE!' -UseBasicParsing; exit 0 } Catch { exit 2 }"
 )
 if %ERRORLEVEL% neq 0 (
         echo Failed to fetch navigation script
@@ -641,7 +641,7 @@ where curl >nul 2>&1
 if %ERRORLEVEL%==0 (
         curl -s -f -o "!TMP_FILE!" "!RAW_URL!"
 ) else (
-        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!RAW_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
+        powershell -NoProfile -Command "Try { Invoke-WebRequest -Uri '!RAW_URL!' -OutFile '!TMP_FILE!' -UseBasicParsing; exit 0 } Catch { exit 2 }"
 )
 if %ERRORLEVEL% neq 0 (
         echo Failed to fetch downloader script
