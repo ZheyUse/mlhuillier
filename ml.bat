@@ -246,9 +246,9 @@ exit /b 0
 :help_nav
 echo.
 echo HELP: Navigation helper
-echo Usage: ml nav [--new] [--<project_name>] [--remote]
+echo Usage: ml nav [--new] [--^<project_name^>] [--remote]
 echo Description: Interactive helper to change directories to projects under C:\xampp\htdocs.
-echo   Use --new to go to C:\xampp\htdocs or --<project_name> to jump to a project (e.g. ml nav --olok).
+echo   Use --new to go to C:\xampp\htdocs or --^<project_name^> to jump to a project (e.g. ml nav --olok).
 echo   The helper will prompt to open the selected project in VSCode (Y/N). If VSCode is already
 echo   running the CLI will prefer opening the project in a new window. Use --remote or set
 echo   ML_REMOTE=1 to skip opening editors from remote environments.
