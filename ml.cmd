@@ -1,15 +1,22 @@
 @echo off
 
-set "OUTFILE=%TEMP%\ml_out_%RANDOM%.txt"
-"%~dp0ml.bat" %* > "%OUTFILE%" 2>&1
-
-for /f "usebackq tokens=1* delims=:" %%A in ("%OUTFILE%") do (
-    if /I "%%A"=="CD_TO" set "CD=%%B"
+set "BAT=%~dp0ml.bat"
+if not exist "%BAT%" set "BAT=C:\ML CLI\Tools\ml.bat"
+if not exist "%BAT%" (
+    echo ML CLI is not installed. Expected ml.bat in "%~dp0" or "C:\ML CLI\Tools".
+    exit /b 2
 )
 
-if defined CD (
-    if "%CD:~0,1%"==" " set "CD=%CD:~1%"
-    cd /d "%CD%"
+set "OUTFILE=%TEMP%\ml_out_%RANDOM%.txt"
+"%BAT%" %* > "%OUTFILE%" 2>&1
+
+for /f "usebackq tokens=1* delims=:" %%A in ("%OUTFILE%") do (
+    if /I "%%A"=="CD_TO" set "CD_TO=%%B"
+)
+
+if defined CD_TO (
+    if "%CD_TO:~0,1%"==" " set "CD_TO=%CD_TO:~1%"
+    cd /d "%CD_TO%"
 )
 
 type "%OUTFILE%"

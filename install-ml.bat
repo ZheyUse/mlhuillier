@@ -5,7 +5,7 @@ set "TARGET_DIR=C:\ML CLI\Tools"
 set "SOURCE_DIR=%~dp0"
 
 rem Determine CLI version from local VERSION file if present (fallback 1.0.3)
-set "CLI_VERSION=1.0.31"
+set "CLI_VERSION=1.0.32"
 if exist "%SOURCE_DIR%VERSION" (
   for /f "usebackq delims=" %%v in ("%SOURCE_DIR%VERSION") do set "CLI_VERSION=%%v"
 )
@@ -98,10 +98,10 @@ if errorlevel 1 (
 set /a PROGRESS+=1
 echo Progress: %PROGRESS%/%TOTAL%
 
-echo Installing shell wrappers (ml.cmd, ml.ps1) and helper installer...
+echo Installing shell wrappers (ml.cmd) and helper installer...
 
 rem Step: download wrappers and installer helper into the target folder
-powershell -NoProfile -ExecutionPolicy Bypass -Command "try{ (New-Object Net.WebClient).DownloadFile('%RAW_BASE%/ml.cmd?t=%RANDOM%%RANDOM%%RANDOM%', '%TARGET_DIR%\ml.cmd'); (New-Object Net.WebClient).DownloadFile('%RAW_BASE%/ml.ps1?t=%RANDOM%%RANDOM%%RANDOM%', '%TARGET_DIR%\ml.ps1'); (New-Object Net.WebClient).DownloadFile('%RAW_BASE%/install-wrappers-auto.ps1?t=%RANDOM%%RANDOM%%RANDOM%', '%TARGET_DIR%\install-wrappers-auto.ps1'); exit 0 } catch { exit 2 }"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "try{ (New-Object Net.WebClient).DownloadFile('%RAW_BASE%/ml.cmd?t=%RANDOM%%RANDOM%%RANDOM%', '%TARGET_DIR%\ml.cmd'); (New-Object Net.WebClient).DownloadFile('%RAW_BASE%/install-wrappers-auto.ps1?t=%RANDOM%%RANDOM%%RANDOM%', '%TARGET_DIR%\install-wrappers-auto.ps1'); if(Test-Path '%TARGET_DIR%\ml.ps1'){ Remove-Item -Force '%TARGET_DIR%\ml.ps1' }; exit 0 } catch { exit 2 }"
 if errorlevel 1 (
   echo [WARN] Failed to download one or more wrapper files (continuing)
 ) else (
