@@ -1,4 +1,5 @@
 @echo off
+setlocal EnableExtensions DisableDelayedExpansion
 
 set "BAT=%~dp0ml.bat"
 if not exist "%BAT%" set "BAT=C:\ML CLI\Tools\ml.bat"
@@ -11,7 +12,7 @@ set "OUTFILE=%TEMP%\ml_out_%RANDOM%.txt"
 call "%BAT%" %* > "%OUTFILE%" 2>&1
 set "ML_EXIT=%ERRORLEVEL%"
 
-for /f "usebackq tokens=1* delims=:" %%A in ("%OUTFILE%") do (
+for /f "tokens=1* delims=:" %%A in ("%OUTFILE%") do (
     if /I "%%A"=="CD_TO" set "CD_TO=%%B"
 )
 

@@ -1,5 +1,5 @@
 @echo off
-setlocal EnableDelayedExpansion
+setlocal EnableExtensions EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
 set "ML_VERSION=1.0.32"
