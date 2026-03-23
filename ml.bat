@@ -154,7 +154,7 @@ exit /b 0
 echo.
 echo HELP: Update ML CLI
 echo Usage: ml update
-echo Description: Downloads and runs the remote updater to replace installed CLI files.
+echo Description: Downloads and runs the remote installer update flow to refresh all CLI runtime files.
 exit /b 0
 
 :help_download_installer
@@ -340,10 +340,11 @@ exit /b 0
 :cmd_update
 set "TMP_VER=%TEMP%\ml_remote_version.txt"
 set "REMOTE_VER="
-set "UPDATER_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml-update.php"
+set "INSTALLER_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/install-ml.bat"
 set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
-set "UPDATER_URL=!UPDATER_URL!?t=!CACHE_BUST!"
-set "TMP_FILE=%TEMP%\ml-update.php"
+set "INSTALLER_URL=!INSTALLER_URL!?t=!CACHE_BUST!"
+set "TMP_FILE=%TEMP%\install-ml-update.bat"
+set "LOCAL_INSTALLER=%~dp0install-ml.bat"
 set "LOCAL_UPDATER=%~dp0ml-update.php"
 
 echo Checking remote ML CLI version from GitHub API...
@@ -364,37 +365,48 @@ if %ERRORLEVEL% neq 0 (
         )
 )
 
-call :strip_query "!UPDATER_URL!"
+call :strip_query "!INSTALLER_URL!"
 rem URL hidden from output
 echo Updating ML CLI...
 
 where curl >nul 2>&1
 if %ERRORLEVEL%==0 (
-        curl -s -f -o "!TMP_FILE!" "!UPDATER_URL!"
+        curl -s -f -o "!TMP_FILE!" "!INSTALLER_URL!"
 ) else (
-        powershell -NoProfile -Command "Try { Invoke-WebRequest -Uri '!UPDATER_URL!' -OutFile '!TMP_FILE!' -UseBasicParsing; exit 0 } Catch { exit 2 }"
+        powershell -NoProfile -Command "Try { Invoke-WebRequest -Uri '!INSTALLER_URL!' -OutFile '!TMP_FILE!' -UseBasicParsing; exit 0 } Catch { exit 2 }"
 )
 
 if %ERRORLEVEL%==0 (
-        "!PHP_EXE!" -d display_errors=0 "!TMP_FILE!"
+        cmd /c ""!TMP_FILE!" --update"
         set "RC=%ERRORLEVEL%"
         del /f /q "!TMP_FILE!" >nul 2>&1
         if "!RC!"=="0" exit /b 0
+        if exist "!LOCAL_INSTALLER!" (
+                echo Remote installer update failed, trying local installer...
+                cmd /c ""!LOCAL_INSTALLER!" --update"
+                exit /b %ERRORLEVEL%
+        )
         if exist "!LOCAL_UPDATER!" (
-                echo Remote updater returned an error, trying local updater...
+                echo Installer update failed, trying legacy local updater...
                 "!PHP_EXE!" -d display_errors=0 "!LOCAL_UPDATER!"
                 exit /b %ERRORLEVEL%
         )
         exit /b !RC!
 )
 
+if exist "!LOCAL_INSTALLER!" (
+        echo Remote installer fetch failed, trying local installer...
+        cmd /c ""!LOCAL_INSTALLER!" --update"
+        exit /b %ERRORLEVEL%
+)
+
 if exist "!LOCAL_UPDATER!" (
-        echo Remote update fetch failed, trying local updater...
+        echo Remote installer fetch failed, trying legacy local updater...
         "!PHP_EXE!" -d display_errors=0 "!LOCAL_UPDATER!"
         exit /b %ERRORLEVEL%
 )
 
-echo Failed to fetch remote updater and no local updater was found.
+echo Failed to fetch installer and no local fallback was found.
 exit /b 2
 
 :fetch_remote_version
