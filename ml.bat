@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.30"
+set "ML_VERSION=1.0.31"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -570,6 +570,10 @@ if not exist "%WRAPPER_CMD%" (
                 echo Installed wrappers to %ML_INSTALLED_DIR%
         )
 )
+
+rem If running inside PowerShell, ensure a shell wrapper is present in the user's profile
+if defined PSModulePath (
+        powershell -NoProfile -ExecutionPolicy Bypass -Command "try { if(Test-Path '%ML_INSTALLED_DIR%ml.ps1') { if(-not (Test-Path $PROFILE)) { New-Item -ItemType File -Force -Path $PROFILE | Out-Null }; $line = '. ''%ML_INSTALLED_DIR%ml.ps1'''; $c=''; try { $c = Get-Content -Path $PROFILE -Raw } catch {}; if($c -notmatch [regex]::Escape($line)) { Add-Content -Path $PROFILE -Value $line; Write-Output ('ML wrapper added to profile: ' + $PROFILE) } }; exit 0 } catch { exit 2 }"
 
 echo Executing navigation helper...
 echo.
