@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.25"
+set "ML_VERSION=1.0.26"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -467,7 +467,18 @@ echo.
 rem If running inside PowerShell, ensure a shell wrapper is present in the user's profile
 set "MLBAT=%~dp0ml.bat"
 if defined PSModulePath (
-        powershell -NoProfile -Command " $p = $PROFILE; if(-not (Test-Path $p)){ New-Item -ItemType File -Force -Path $p | Out-Null }; $c = ''; try{ $c = Get-Content $p -Raw } catch {}; if($c -notmatch 'function\s+ml\s*\{'){ $func = \"function ml { param([Parameter(ValueFromRemainingArguments=\$true)] \$Args) \$out = & '%MLBAT%' @Args 2>&1; foreach (\$line in \$out) { if (\$line -match '^CD_TO:\\s*(.+)$') { Set-Location \\$Matches[1]; return } } \\$out | ForEach-Object { Write-Output \\$_ } }\"; Add-Content -Path $p -Value $func; Write-Output 'ML wrapper added to profile: ' + $p }"
+        set "TMP_PS=%TEMP%\ml_profile_check.ps1"
+        >"%TMP_PS%" echo $p = $PROFILE
+        >>"%TMP_PS%" echo if(-not (Test-Path $p)){ New-Item -ItemType File -Force -Path $p | Out-Null }
+        >>"%TMP_PS%" echo $c = ''
+        >>"%TMP_PS%" echo try{ $c = Get-Content $p -Raw } catch {}
+        >>"%TMP_PS%" echo if($c -notmatch 'function\s+ml\s*\{') {
+        >>"%TMP_PS%" echo $func = 'function ml { param([Parameter(ValueFromRemainingArguments=$true)] $Args) $out = & ''%MLBAT%'' @Args 2>&1; foreach ($line in $out) { if ($line -match ''^CD_TO:\s*(.+)$'') { Set-Location $Matches[1]; return } } $out | ForEach-Object { Write-Output $_ } }'
+        >>"%TMP_PS%" echo Add-Content -Path $p -Value $func
+        >>"%TMP_PS%" echo Write-Output 'ML wrapper added to profile: ' + $p
+        >>"%TMP_PS%" echo }
+        powershell -NoProfile -ExecutionPolicy Bypass -File "%TMP_PS%"
+        del /f /q "%TMP_PS%" >nul 2>&1
 )
 
 where curl >nul 2>&1
