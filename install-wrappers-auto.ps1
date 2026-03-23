@@ -26,23 +26,15 @@ try {
         $pathChanged = $true
     } else { Write-Output "PATH_OK: $bin already in User PATH"; $pathChanged = $false }
 
-    # Update PowerShell profile (function shim only; do not dot-source ml.ps1)
-    $profileDir = Split-Path $PROFILE -Parent
-    if (-not (Test-Path $profileDir)) { New-Item -ItemType Directory -Path $profileDir -Force | Out-Null }
-    if (-not (Test-Path $PROFILE)) {
-        New-Item -ItemType File -Path $PROFILE -Force | Out-Null
-        Write-Output "PROFILE_CREATED: $PROFILE"
-        $profileChanged = $true
-    } else {
-        Write-Output "PROFILE_OK: $PROFILE exists"
-        $profileChanged = $false
-    }
+    # Update PowerShell profiles (function shim only; do not dot-source ml.ps1)
+    $profileTargets = @(
+        $PROFILE,
+        (Join-Path $HOME 'Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1'),
+        (Join-Path $HOME 'Documents\WindowsPowerShell\profile.ps1')
+    ) | Where-Object { $_ } | Select-Object -Unique
 
     # Add a lightweight PowerShell shim function `ml` that forwards to ml.cmd when present.
-    # This ensures `ml nav` works even when script execution is restricted.
-    try { $profileContent = Get-Content -Path $PROFILE -Raw -ErrorAction SilentlyContinue } catch { $profileContent = '' }
-    if ($profileContent -notmatch 'function\s+ml') {
-        $shim = @'
+    $shimTemplate = @'
 function ml {
     param([Parameter(ValueFromRemainingArguments=$true)][object[]]$Args)
     if ($Args.Count -gt 0 -and [string]$Args[0] -eq 'nav') {
@@ -80,11 +72,11 @@ function ml {
         }
         return
     }
-    $cmd = Join-Path "{0}" 'ml.cmd'
+    $cmd = Join-Path "__BIN__" 'ml.cmd'
     if (Test-Path $cmd) {
         & $cmd @Args
     } else {
-        $ps = Join-Path "{0}" 'ml.ps1'
+        $ps = Join-Path "__BIN__" 'ml.ps1'
         if (Test-Path $ps) {
             & $ps @Args
         } else {
@@ -92,11 +84,41 @@ function ml {
         }
     }
 }
-'@ -f $bin
-        Add-Content -Path $PROFILE -Value $shim
-        Write-Output "PROFILE_SHIM_ADDED: ml function"
-    } else {
-        Write-Output "PROFILE_SHIM_OK: function ml exists"
+'@
+    $shim = $shimTemplate.Replace('__BIN__', $bin)
+
+    $profileChanged = $false
+    foreach ($profilePath in $profileTargets) {
+        $profileDir = Split-Path $profilePath -Parent
+        if (-not (Test-Path $profileDir)) { New-Item -ItemType Directory -Path $profileDir -Force | Out-Null }
+        if (-not (Test-Path $profilePath)) {
+            New-Item -ItemType File -Path $profilePath -Force | Out-Null
+            Write-Output "PROFILE_CREATED: $profilePath"
+        } else {
+            Write-Output "PROFILE_OK: $profilePath exists"
+        }
+
+        try { $profileContent = Get-Content -Path $profilePath -Raw -ErrorAction SilentlyContinue } catch { $profileContent = '' }
+        if ($profileContent -notmatch 'function\s+ml') {
+            Add-Content -Path $profilePath -Value $shim
+            Write-Output "PROFILE_SHIM_ADDED: ml function in $profilePath"
+            $profileChanged = $true
+        } else {
+            Write-Output "PROFILE_SHIM_OK: function ml exists in $profilePath"
+        }
+    }
+
+    # Ensure profile scripts can load for CurrentUser so `ml` function is available in new PS sessions.
+    try {
+        $currentPolicy = Get-ExecutionPolicy -Scope CurrentUser
+        if ($currentPolicy -in @('Undefined','Restricted')) {
+            Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force
+            Write-Output "EXEC_POLICY_UPDATED: CurrentUser=RemoteSigned"
+        } else {
+            Write-Output "EXEC_POLICY_OK: CurrentUser=$currentPolicy"
+        }
+    } catch {
+        Write-Output "EXEC_POLICY_WARN: $($_.Exception.Message)"
     }
 
     Write-Output "RESULT: copied:$copied skipped:$skipped copiedTools:$copiedTools skippedTools:$skippedTools PATH_CHANGED:$pathChanged PROFILE_CHANGED:$profileChanged"

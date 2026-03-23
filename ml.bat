@@ -564,8 +564,8 @@ if defined CD_TO (
 
 if defined CD_TO (
         if exist "!CD_TO!" (
-                cd /d "!CD_TO!"
-                echo Now in !CD_TO!
+                del /f /q "!TMP_FILE!" "!TMP_OUT!" >nul 2>&1
+                for %%D in ("!CD_TO!") do endlocal & cd /d "%%~fD" & echo Now in %%~fD & exit /b 0
         ) else (
                 echo Target folder not found: !CD_TO!
         )
