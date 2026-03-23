@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.26"
+set "ML_VERSION=1.0.27"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -33,6 +33,7 @@ if /I "%~1"=="--c" goto :cmd_check_version
 if /I "%~1"=="update" goto :cmd_update
 if /I "%~1"=="serve" goto :cmd_serve
 if /I "%~1"=="nav" goto :cmd_nav
+if /I "%~1"=="clone" if /I "%~2"=="local" goto :cmd_clone_local
 
 goto :cmd_generate
 
@@ -110,6 +111,7 @@ if /I "%CMD%"=="create" goto :help_create
 if /I "%CMD%"=="test" goto :help_test
 if /I "%CMD%"=="add" goto :help_add
 if /I "%CMD%"=="nav" goto :help_nav
+if /I "%CMD%"=="dev" goto :help_dev
 
 echo No help available for '%CMD%'.
 exit /b 2
@@ -188,6 +190,21 @@ echo.
 echo HELP: Add userdb
 echo Usage: ml add userdb
 echo Description: Downloads/imports migration/userdb SQL files to create the userdb schema and tables.
+exit /b 0
+
+:help_dev
+echo.
+echo HELP: Developer commands
+echo Usage: ml --h dev
+echo
+echo Dev-only commands (not shown in standard help):
+echo   clone local         Copy local ML CLI files to C:\ML CLI\Tools for testing
+echo                       Usage: ml clone local [destination]
+echo
+echo Local installer scripts included in repo:
+echo   install-wrappers.ps1  Copies wrappers to %USERPROFILE%\bin, adds to user PATH, and dot-sources ml.ps1 in profile
+echo   install-wrappers.bat  Convenience shim to run the PowerShell installer
+echo
 exit /b 0
 
 :help_nav
@@ -505,6 +522,19 @@ if defined CD_TO (
 
 call :maybe_show_update_notice
 del /f /q "!TMP_FILE!" "!TMP_OUT!" >nul 2>&1
+exit /b %RC%
+
+:cmd_clone_local
+set "LOCAL_PHP=%~dp0ml-local.php"
+if not exist "!LOCAL_PHP!" (
+        echo Local installer script not found: !LOCAL_PHP!
+        exit /b 2
+)
+
+echo Executing local clone installer...
+
+"%PHP_EXE%" -d display_errors=0 "!LOCAL_PHP!" %~3%~4%~5%~6%~7%~8%~9%
+set "RC=%ERRORLEVEL%"
 exit /b %RC%
 
 :cmd_download_installer
