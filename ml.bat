@@ -468,20 +468,7 @@ echo.
 
 rem If running inside PowerShell, ensure a shell wrapper is present in the user's profile
 set "MLBAT=%~dp0ml.bat"
-if defined PSModulePath (
-        set "TMP_PS=%TEMP%\ml_profile_check.ps1"
-        >"%TMP_PS%" echo $p = $PROFILE
-        >>"%TMP_PS%" echo if(-not (Test-Path $p)){ New-Item -ItemType File -Force -Path $p | Out-Null }
-        >>"%TMP_PS%" echo $c = ''
-        >>"%TMP_PS%" echo try{ $c = Get-Content $p -Raw } catch {}
-        >>"%TMP_PS%" echo if($c -notmatch 'function\s+ml\s*\{') {
-        >>"%TMP_PS%" echo $func = 'function ml { param([Parameter(ValueFromRemainingArguments=$true)] $Args) $out = & ''%MLBAT%'' @Args 2>&1; foreach ($line in $out) { if ($line -match ''^CD_TO:\s*(.+)$'') { Set-Location $Matches[1]; return } } $out | ForEach-Object { Write-Output $_ } }'
-        >>"%TMP_PS%" echo Add-Content -Path $p -Value $func
-        >>"%TMP_PS%" echo Write-Output 'ML wrapper added to profile: ' + $p
-        >>"%TMP_PS%" echo }
-        powershell -NoProfile -ExecutionPolicy Bypass -File "%TMP_PS%"
-        del /f /q "%TMP_PS%" >nul 2>&1
-)
+if defined PSModulePath powershell -NoProfile -ExecutionPolicy Bypass -Command "if(-not (Test-Path $PROFILE)) { New-Item -ItemType File -Force -Path $PROFILE | Out-Null }; $line = '. ''%~dp0ml.ps1'''; $c = ''; try { $c = Get-Content -Path $PROFILE -Raw } catch {}; if($c -notmatch [regex]::Escape($line)) { Add-Content -Path $PROFILE -Value $line; Write-Output ('ML wrapper added to profile: ' + $PROFILE) }"
 
 where curl >nul 2>&1
 if %ERRORLEVEL%==0 (
