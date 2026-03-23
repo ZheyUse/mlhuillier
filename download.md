@@ -1,1 +1,1 @@
-curl -L https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/install-ml.bat -o install-ml.bat && install-ml.bat
+curl -L https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/install-ml.bat -o install-ml.bat && install-ml.batn
