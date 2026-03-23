@@ -39,6 +39,32 @@ try {
         if ($content -notmatch [regex]::Escape("ml.ps1")) { Add-Content -Path $PROFILE -Value $dotLine; Write-Output "PROFILE_UPDATED: appended dot-source"; $profileChanged = $true } else { Write-Output "PROFILE_OK: already sources ml.ps1"; $profileChanged = $false }
     }
 
+    # Add a lightweight PowerShell shim function `ml` that forwards to ml.cmd when present.
+    # This ensures `ml nav` works even when script execution is restricted.
+    try { $profileContent = Get-Content -Path $PROFILE -Raw -ErrorAction SilentlyContinue } catch { $profileContent = '' }
+    if ($profileContent -notmatch 'function\s+ml') {
+        $shim = @'
+function ml {
+    param([Parameter(ValueFromRemainingArguments=$true)][object[]]$Args)
+    $cmd = Join-Path "{0}" 'ml.cmd'
+    if (Test-Path $cmd) {
+        & $cmd @Args
+    } else {
+        $ps = Join-Path "{0}" 'ml.ps1'
+        if (Test-Path $ps) {
+            & $ps @Args
+        } else {
+            Write-Output 'ml wrapper not found'
+        }
+    }
+}
+'@ -f $bin
+        Add-Content -Path $PROFILE -Value $shim
+        Write-Output "PROFILE_SHIM_ADDED: ml function"
+    } else {
+        Write-Output "PROFILE_SHIM_OK: function ml exists"
+    }
+
     Write-Output "RESULT: copied:$copied skipped:$skipped copiedTools:$copiedTools skippedTools:$skippedTools PATH_CHANGED:$pathChanged PROFILE_CHANGED:$profileChanged"
     exit 0
 } catch {
