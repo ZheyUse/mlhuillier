@@ -38,6 +38,14 @@ try {
 function ml {
     param([Parameter(ValueFromRemainingArguments=$true)][object[]]$Args)
     if ($Args.Count -gt 0 -and [string]$Args[0] -eq 'nav') {
+        Write-Output ''
+        Write-Output '=============================='
+        Write-Output 'ML CLI - M LHUILLIER FILE GENERATOR'
+        Write-Output 'https://github.com/ZheyUse'
+        Write-Output '=============================='
+        Write-Output ''
+        Write-Output 'Executing navigation helper...'
+        Write-Output ''
         $htdocsPath = 'C:\xampp\htdocs'
         $navArg = if ($Args.Count -gt 1) { [string]$Args[1] } else { '' }
         if ([string]::IsNullOrWhiteSpace($navArg)) {
@@ -63,8 +71,15 @@ function ml {
             $openVsCode = Read-Host "Open $projectName in VSCode? (Y/N)"
             if ($openVsCode -match '^(?i)y(es)?$') {
                 $codeCmd = Get-Command code -ErrorAction SilentlyContinue
-                if ($null -ne $codeCmd) {
-                    & $codeCmd.Source $projectPath | Out-Null
+                if ($null -eq $codeCmd) {
+                    Write-Output 'VSCode CLI (code) not found in PATH.'
+                } else {
+                    $isCodeRunning = @(Get-Process -Name Code -ErrorAction SilentlyContinue).Count -gt 0
+                    if ($isCodeRunning) {
+                        & $codeCmd.Source '--new-window' $projectPath | Out-Null
+                    } else {
+                        & $codeCmd.Source $projectPath | Out-Null
+                    }
                 }
             }
         } else {

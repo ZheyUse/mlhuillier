@@ -11,6 +11,7 @@ set "ML_INSTALLED_DIR=C:\ML CLI\Tools\"
 rem Allow certain repo-scoped dev commands to run from the repo copy (e.g. "ml clone local").
 set "SKIP_DELEGATE=0"
 if /I "%~1"=="clone" if /I "%~2"=="local" set "SKIP_DELEGATE=1"
+if /I "%~1"=="nav" set "SKIP_DELEGATE=1"
 if defined ML_REPO set "SKIP_DELEGATE=1"
 
 if /I not "%~dp0"=="%ML_INSTALLED_DIR%" (
@@ -247,8 +248,10 @@ echo.
 echo HELP: Navigation helper
 echo Usage: ml nav [--new] [--<project_name>] [--remote]
 echo Description: Interactive helper to change directories to projects under C:\xampp\htdocs.
-echo   Use --new to go to C:\xampp\htdocs. Use --remote or set ML_REMOTE=1 to avoid opening
-echo   VSCode from the remote environment.
+echo   Use --new to go to C:\xampp\htdocs or --<project_name> to jump to a project (e.g. ml nav --olok).
+echo   The helper will prompt to open the selected project in VSCode (Y/N). If VSCode is already
+echo   running the CLI will prefer opening the project in a new window. Use --remote or set
+echo   ML_REMOTE=1 to skip opening editors from remote environments.
 exit /b 0
 
 :cmd_test_userdb
@@ -520,6 +523,43 @@ del /f /q "!TMP_FILE!" >nul 2>&1
 exit /b %RC%
 
 :cmd_nav
+set "HTDOCS_DIR=C:\xampp\htdocs"
+if /I "%~2"=="--new" (
+        for %%D in ("%HTDOCS_DIR%") do endlocal & cd /d "%%~fD" & echo Now in %%~fD & exit /b 0
+)
+
+set "NAV_ARG=%~2"
+if not "%NAV_ARG%"=="" (
+        if "%NAV_ARG:~0,2%"=="--" (
+                set "PROJECT_NAME=%NAV_ARG:~2%"
+                if defined PROJECT_NAME (
+                        set "PROJECT_PATH=%HTDOCS_DIR%\!PROJECT_NAME!"
+                        if exist "!PROJECT_PATH!" (
+                                echo Now in !PROJECT_PATH!
+                                set "OPEN_IN_VSCODE="
+                                set /p OPEN_IN_VSCODE=Do you want to open !PROJECT_NAME! in VSCode? ^(Y/N^): 
+                                if /I "!OPEN_IN_VSCODE:~0,1!"=="Y" (
+                                        where code >nul 2>&1
+                                        if errorlevel 1 (
+                                                echo VSCode CLI ^(code^) not found in PATH.
+                                        ) else (
+                                                tasklist /FI "IMAGENAME eq Code.exe" | find /I "Code.exe" >nul
+                                                if errorlevel 1 (
+                                                        code "!PROJECT_PATH!" >nul 2>&1
+                                                ) else (
+                                                        code --new-window "!PROJECT_PATH!" >nul 2>&1
+                                                )
+                                        )
+                                )
+                                for %%D in ("!PROJECT_PATH!") do endlocal & cd /d "%%~fD" & exit /b 0
+                        ) else (
+                                echo Project not found: !PROJECT_PATH!
+                                exit /b 2
+                        )
+                )
+        )
+)
+
 set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml-nav.php"
 set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
 set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"

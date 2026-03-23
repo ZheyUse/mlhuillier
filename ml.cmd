@@ -8,5 +8,18 @@ if not exist "%BAT%" (
     exit /b 2
 )
 
-call "%BAT%" %*
-exit /b %ERRORLEVEL%
+set "OUTFILE=%TEMP%\ml_out_%RANDOM%.txt"
+call "%BAT%" %* > "%OUTFILE%" 2>&1
+set "ML_EXIT=%ERRORLEVEL%"
+
+set "CD_TO="
+for /f "tokens=1,2,* delims= " %%A in ('findstr /B /C:"Now in " "%OUTFILE%"') do set "CD_TO=%%C"
+
+type "%OUTFILE%"
+del /f /q "%OUTFILE%" >nul 2>&1
+
+if defined CD_TO (
+    for %%D in ("%CD_TO%") do endlocal & cd /d "%%~fD" >nul 2>&1 & exit /b %ML_EXIT%
+)
+
+endlocal & exit /b %ML_EXIT%
