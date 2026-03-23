@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.28"
+set "ML_VERSION=1.0.29"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -17,7 +17,7 @@ if /I not "%~dp0"=="%ML_INSTALLED_DIR%" (
         if exist "%ML_INSTALLED_DIR%ml.bat" (
                 if not defined ML_DEV (
                         if "%SKIP_DELEGATE%"=="0" (
-                                "%ML_INSTALLED_DIR%ml.bat" %*
+                                call "%ML_INSTALLED_DIR%ml.bat" %*
                                 exit /b %ERRORLEVEL%
                         )
                 )
@@ -515,6 +515,31 @@ set "TMP_FILE=%TEMP%\ml-nav.php"
 set "TMP_OUT=%TEMP%\ml-nav.out"
 call :strip_query "!RAW_URL!"
 rem URL hidden from output
+
+rem Ensure wrappers exist in the installed tools folder so navigation can change the caller shell.
+set "WRAPPER_CMD=%ML_INSTALLED_DIR%ml.cmd"
+set "WRAPPER_PS=%ML_INSTALLED_DIR%ml.ps1"
+if not exist "%WRAPPER_CMD%" (
+        echo Wrapper not found in %ML_INSTALLED_DIR% - attempting to install wrappers...
+        if not exist "%ML_INSTALLED_DIR%" (
+                mkdir "%ML_INSTALLED_DIR%" 2>nul
+        )
+        where curl >nul 2>&1
+        if %ERRORLEVEL%==0 (
+                curl -s -f -o "%WRAPPER_CMD%" "https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml.cmd" || set "DLERR=1"
+                curl -s -f -o "%WRAPPER_PS%" "https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml.ps1" || set "DLERR=1"
+        ) else (
+                powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml.cmd','%WRAPPER_CMD%'); (New-Object Net.WebClient).DownloadFile('https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml.ps1','%WRAPPER_PS%'); exit 0 } Catch { exit 2 }"
+                if %ERRORLEVEL% neq 0 set "DLERR=1"
+        )
+        if defined DLERR (
+                echo Failed to download wrappers to %ML_INSTALLED_DIR% (continuing without wrappers)
+                set "DLERR="
+        ) else (
+                echo Installed wrappers to %ML_INSTALLED_DIR%
+        )
+)
+
 echo Executing navigation helper...
 echo.
 
