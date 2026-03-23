@@ -2,9 +2,36 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.27"
+set "ML_VERSION=1.0.28"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
+
+rem Prefer installed CLI in C:\ML CLI\Tools when invoked from a project folder
+set "ML_INSTALLED_DIR=C:\ML CLI\Tools\"
+rem Allow certain repo-scoped dev commands to run from the repo copy (e.g. "ml clone local").
+set "SKIP_DELEGATE=0"
+if /I "%~1"=="clone" if /I "%~2"=="local" set "SKIP_DELEGATE=1"
+if defined ML_REPO set "SKIP_DELEGATE=1"
+
+if /I not "%~dp0"=="%ML_INSTALLED_DIR%" (
+        if exist "%ML_INSTALLED_DIR%ml.bat" (
+                if not defined ML_DEV (
+                        if "%SKIP_DELEGATE%"=="0" (
+                                "%ML_INSTALLED_DIR%ml.bat" %*
+                                exit /b %ERRORLEVEL%
+                        )
+                )
+        )
+)
+
+rem If caller asked to clone local, prefer a local ml-local.php in the current directory (PowerShell often runs installed ml.bat)
+if /I "%~1"=="clone" if /I "%~2"=="local" (
+        if exist "%CD%\ml-local.php" (
+                echo Found local ml-local.php in %CD% - running local installer
+                "%PHP_EXE%" -d display_errors=0 "%CD%\ml-local.php" %~3 %~4 %~5 %~6 %~7 %~8 %~9
+                exit /b %ERRORLEVEL%
+        )
+)
 
 if /I "%~1"=="--v" goto :show_version
 if /I "%~1"=="--h" if "%~2"=="" goto :show_help
@@ -198,12 +225,20 @@ echo HELP: Developer commands
 echo Usage: ml --h dev
 echo
 echo Dev-only commands (not shown in standard help):
-echo   clone local         Copy local ML CLI files to C:\ML CLI\Tools for testing
-echo                       Usage: ml clone local [destination]
+echo   clone local [destination]  Copy local ML CLI files to C:\ML CLI\Tools for testing
+echo                             If no destination is provided, the default is C:\ML CLI\Tools
 echo
-echo Local installer scripts included in repo:
-echo   install-wrappers.ps1  Copies wrappers to %USERPROFILE%\bin, adds to user PATH, and dot-sources ml.ps1 in profile
+echo Environment flags useful for development/testing:
+echo   ML_DEV=1    Force use of the local developer copy (runs the local %~dp0ml.bat instead of installed CLI)
+echo   ML_REPO=1   Indicate commands are running from the repository workspace (used by dev helpers)
+echo
+echo Local installer scripts included in repo (opt-in):
+echo   install-wrappers.ps1  Copies wrappers to %USERPROFILE%\bin, adds to user PATH, and dot-sources ml.ps1 into PowerShell profile
 echo   install-wrappers.bat  Convenience shim to run the PowerShell installer
+echo
+echo Notes:
+echo   - The normal installer (install-ml.bat) intentionally only installs the runtime files (ml.bat, generate-file-structure.php, uninstall-ml.bat).
+echo   - Wrappers and repo helpers are optional and should be installed via the wrapper installer if you need interactive shell integration.
 echo
 exit /b 0
 
