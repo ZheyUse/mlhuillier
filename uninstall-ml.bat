@@ -2,6 +2,8 @@
 setlocal EnableExtensions
 
 set "TARGET_DIR=C:\ML CLI\Tools"
+set "USER_BIN=%USERPROFILE%\bin"
+set "USER_ML_CMD=%USER_BIN%\ml.cmd"
 set "UNINSTALL_VERSION=1.0.32"
 
 rem Determine installed CLI version from installed VERSION file if present
@@ -44,6 +46,17 @@ if /I "%PATH_RESULT%"=="PATH_REMOVED" (
   echo C:\ML CLI\Tools was not found in User PATH.
 ) else (
   echo User PATH is empty or unchanged.
+)
+
+if exist "%USER_ML_CMD%" (
+  del /f /q "%USER_ML_CMD%" >nul 2>&1
+  if exist "%USER_ML_CMD%" (
+    echo [WARN] Could not remove %USER_ML_CMD%
+  ) else (
+    echo Removed %USER_ML_CMD%
+  )
+) else (
+  echo %USER_ML_CMD% not found.
 )
 
 if not exist "%TARGET_DIR%" (

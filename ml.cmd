@@ -8,7 +8,8 @@ if not exist "%BAT%" (
 )
 
 set "OUTFILE=%TEMP%\ml_out_%RANDOM%.txt"
-"%BAT%" %* > "%OUTFILE%" 2>&1
+call "%BAT%" %* > "%OUTFILE%" 2>&1
+set "ML_EXIT=%ERRORLEVEL%"
 
 for /f "usebackq tokens=1* delims=:" %%A in ("%OUTFILE%") do (
     if /I "%%A"=="CD_TO" set "CD_TO=%%B"
@@ -21,3 +22,4 @@ if defined CD_TO (
 
 type "%OUTFILE%"
 del /f /q "%OUTFILE%"
+exit /b %ML_EXIT%

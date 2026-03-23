@@ -123,6 +123,19 @@ if exist "%TARGET_DIR%\install-wrappers-auto.ps1" (
   echo [WARN] install-wrappers-auto.ps1 not found; skipping profile injection.
 )
 
+echo Ensuring ml.cmd is installed in %%USERPROFILE%%\bin...
+if not exist "%USERPROFILE%\bin" mkdir "%USERPROFILE%\bin" >nul 2>&1
+if exist "%TARGET_DIR%\ml.cmd" (
+  copy /Y "%TARGET_DIR%\ml.cmd" "%USERPROFILE%\bin\ml.cmd" >nul
+  if errorlevel 1 (
+    echo [WARN] Could not copy ml.cmd to %%USERPROFILE%%\bin
+  ) else (
+    echo Installed ml.cmd to %%USERPROFILE%%\bin
+  )
+) else (
+  echo [WARN] %TARGET_DIR%\ml.cmd not found; cannot copy to %%USERPROFILE%%\bin
+)
+
 set /a PROGRESS+=1
 echo Progress: %PROGRESS%/%TOTAL%
 
