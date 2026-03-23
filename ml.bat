@@ -11,10 +11,12 @@ if /I "%~1"=="--h" if "%~2"=="" goto :show_help
 if /I "%~1"=="--h" goto :prepare_help_args
 if /I "%~1"=="--d" goto :cmd_download_installer
 
-rem If the first argument is a long flag (starts with --) but not recognized above, show help
+rem If the first argument is a long flag (starts with --) but not a recognized global flag, show help
 set "ARG1=%~1"
 if not "%ARG1%"=="" (
-        if "!ARG1:~0,2!"=="--" goto :show_help
+        if "!ARG1:~0,2!"=="--" (
+                if /I not "%ARG1%"=="--v" if /I not "%ARG1%"=="--h" if /I not "%ARG1%"=="--d" if /I not "%ARG1%"=="--c" goto :show_help
+        )
 )
 
 echo.
