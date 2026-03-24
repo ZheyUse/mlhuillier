@@ -1,0 +1,67 @@
+Mirror Audit — Instruction
+
+Purpose:
+- Verify `test/` folder is fully mirrored by the scaffolder templates in `generate-file-structure.php`, identify missing/changed files, and produce actionable patches.
+- Keep all audit outputs under a single deletable folder: `audit/`.
+
+Prerequisites:
+- Run from repository root (where `generate-file-structure.php` lives).
+- PHP CLI and PowerShell available (Windows).
+- Working copy of `test/` is authoritative.
+
+Quick steps (copy/paste):
+
+1) Run the mirror audit script
+
+```powershell
+Push-Location "C:\xampp\htdocs\mlhuillier"
+\.\mirror-audit.ps1
+Pop-Location
+```
+
+2) Review audit outputs (all inside `audit/`)
+
+```powershell
+Push-Location "C:\xampp\htdocs\mlhuillier"
+Get-ChildItem .\audit -Recurse
+Pop-Location
+```
+
+3) Key files
+- `audit/test-files.txt`
+- `audit/scaffold_templates/`
+- `audit/audit-path-report.txt`
+- `audit/audit-diffs-list.txt`
+- `audit/diffs/`
+- `audit/audit-summary.txt`
+
+4) Generate a temp project to validate generator output (optional)
+
+```powershell
+$target = "C:\xampp\htdocs\mlhuillier\mirror-temp"
+Remove-Item -Recurse -Force $target -ErrorAction SilentlyContinue
+php generate-file-structure.php create mirror-temp
+```
+
+5) Remediation guidance (how to fix mismatches)
+- If `MISSING-IN-SCAFFOLD: path`: add a new key in `generate-file-structure.php` with that relative path and the file content as a heredoc.
+- If `DIFF: path`: inspect `audit/diffs/` and update the scaffolder template to match `test/` (preferred).
+
+6) Re-run generator + verify
+- Run `php generate-file-structure.php create <projectName>` and re-run the comparison steps.
+
+7) Optional final step — sync served project
+- To immediately fix a live project (e.g., `del`):
+
+```powershell
+robocopy C:\xampp\htdocs\mlhuillier\test C:\xampp\htdocs\del /MIR /COPY:DAT /R:2 /W:1
+```
+
+Notes & Best Practices:
+- Back up `generate-file-structure.php` before large edits.
+- Prefer updating scaffolder templates rather than ad-hoc generated projects.
+- Keep only `audit/` for audit history and CI checks.
+
+---
+
+Saved by assistant.

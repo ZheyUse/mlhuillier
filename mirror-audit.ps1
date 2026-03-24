@@ -4,35 +4,39 @@
 $repoPath = (Get-Location).Path
 Write-Output "Repo: $repoPath"
 $src = Join-Path $repoPath 'test'
+$auditRoot = Join-Path $repoPath 'audit'
+$scaffoldDir = Join-Path $auditRoot 'scaffold_templates'
+$diffsDir = Join-Path $auditRoot 'diffs'
+$testFilesPath = Join-Path $auditRoot 'test-files.txt'
+$pathReportPath = Join-Path $auditRoot 'audit-path-report.txt'
+$diffListPath = Join-Path $auditRoot 'audit-diffs-list.txt'
+$summaryPath = Join-Path $auditRoot 'audit-summary.txt'
 
 # Clean old outputs
-Remove-Item -Recurse -Force scaffold_templates -ErrorAction SilentlyContinue
-Remove-Item -Recurse -Force diffs -ErrorAction SilentlyContinue
-Remove-Item -Force test-files.txt -ErrorAction SilentlyContinue
-Remove-Item -Force audit-path-report.txt -ErrorAction SilentlyContinue
-Remove-Item -Force audit-diffs-list.txt -ErrorAction SilentlyContinue
+Remove-Item -Recurse -Force $auditRoot -ErrorAction SilentlyContinue
+New-Item -ItemType Directory -Force -Path $auditRoot | Out-Null
 
 # 1) Export test file list
 Write-Output "Exporting test file list..."
 Get-ChildItem -Path $src -Recurse -File | ForEach-Object {
   $p = $_.FullName.Substring($src.Length+1).TrimStart('\')
   ($p -replace '\\','/')
-} | Sort-Object | Out-File test-files.txt -Encoding utf8
-Write-Output "Wrote test-files.txt"
+} | Sort-Object | Out-File $testFilesPath -Encoding utf8
+Write-Output "Wrote $testFilesPath"
 
 # 2) Extract scaffolder templates
 Write-Output "Extracting scaffolder templates (via --dump-templates)..."
-php generate-file-structure.php --dump-templates scaffold_templates
+php generate-file-structure.php --dump-templates audit/scaffold_templates
 if ($LASTEXITCODE -ne 0) {
   throw "Template dump failed."
 }
-Write-Output "scaffold_templates/ created (or updated)"
+Write-Output "$scaffoldDir created (or updated)"
 
 # 3) Path-level comparison
 Write-Output "Running path-level comparison..."
-$test = Get-Content test-files.txt
-$scaffold = Get-ChildItem -Recurse -File scaffold_templates | ForEach-Object{
-  $_.FullName.Substring((Get-Location).Path.Length+1) -replace '\\','/'
+$test = Get-Content $testFilesPath
+$scaffold = Get-ChildItem -Recurse -File $scaffoldDir | ForEach-Object{
+  $_.FullName.Substring($scaffoldDir.Length+1) -replace '\\','/'
 } | Sort-Object
 $scaffold = @($scaffold)
 $test = @($test)
@@ -41,14 +45,14 @@ $missing = Compare-Object -ReferenceObject $test -DifferenceObject $scaffold | W
 $extra = Compare-Object -ReferenceObject $test -DifferenceObject $scaffold | Where-Object { $_.SideIndicator -eq '=>' }
 foreach($m in $missing){ $report += "MISSING-IN-SCAFFOLD: $($m.InputObject)" }
 foreach($e in $extra){ $report += "EXTRA-IN-SCAFFOLD: $($e.InputObject)" }
-$report | Out-File audit-path-report.txt -Encoding utf8
-Write-Output "Wrote audit-path-report.txt"
+$report | Out-File $pathReportPath -Encoding utf8
+Write-Output "Wrote $pathReportPath"
 
 # 4) Content diffs for matching paths
 Write-Output "Checking content diffs for matching paths..."
-New-Item -ItemType Directory -Force -Path diffs | Out-Null
+New-Item -ItemType Directory -Force -Path $diffsDir | Out-Null
 $baseTest = $src
-$baseScaffold = Join-Path $repoPath 'scaffold_templates'
+$baseScaffold = $scaffoldDir
 
 foreach($rel in (Get-ChildItem $baseTest -Recurse -File | ForEach-Object { $_.FullName.Substring($baseTest.Length+1) -replace '\\','/' })){
   $a = Join-Path $baseTest ($rel -replace '/','\\')
@@ -59,18 +63,18 @@ foreach($rel in (Get-ChildItem $baseTest -Recurse -File | ForEach-Object { $_.Fu
     if($aa -ne $bb){
       Write-Output "DIFF: $rel"
       $safe = $rel -replace '/','__'
-      cmd /c fc "$a" "$b" | Out-File -FilePath (Join-Path 'diffs' ($safe + '.diff')) -Encoding utf8
-      Add-Content -Path audit-diffs-list.txt -Value $rel
+      cmd /c fc "$a" "$b" | Out-File -FilePath (Join-Path $diffsDir ($safe + '.diff')) -Encoding utf8
+      Add-Content -Path $diffListPath -Value $rel
     }
   }
 }
-Write-Output "Diffs written to diffs/ and audit-diffs-list.txt (if any)"
+Write-Output "Diffs written to $diffsDir and $diffListPath (if any)"
 
 # 5) Summary counts
-$missingCount = (Get-Content audit-path-report.txt -ErrorAction SilentlyContinue | Select-String 'MISSING-IN-SCAFFOLD' -SimpleMatch).Count
-$extraCount = (Get-Content audit-path-report.txt -ErrorAction SilentlyContinue | Select-String 'EXTRA-IN-SCAFFOLD' -SimpleMatch).Count
-$diffCount = (Get-Content audit-diffs-list.txt -ErrorAction SilentlyContinue | Measure-Object).Count
-"SUMMARY: Missing=$missingCount; Extra=$extraCount; Diffs=$diffCount" | Out-File audit-summary.txt -Encoding utf8
-Write-Output "Wrote audit-summary.txt"
+$missingCount = (Get-Content $pathReportPath -ErrorAction SilentlyContinue | Select-String 'MISSING-IN-SCAFFOLD' -SimpleMatch).Count
+$extraCount = (Get-Content $pathReportPath -ErrorAction SilentlyContinue | Select-String 'EXTRA-IN-SCAFFOLD' -SimpleMatch).Count
+$diffCount = (Get-Content $diffListPath -ErrorAction SilentlyContinue | Measure-Object).Count
+"SUMMARY: Missing=$missingCount; Extra=$extraCount; Diffs=$diffCount" | Out-File $summaryPath -Encoding utf8
+Write-Output "Wrote $summaryPath"
 
-Write-Output "Mirror audit complete. Files produced: test-files.txt, scaffold_templates/, audit-path-report.txt, audit-diffs-list.txt, diffs/, audit-summary.txt"
+Write-Output "Mirror audit complete. Files produced under: $auditRoot"
