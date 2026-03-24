@@ -503,12 +503,31 @@ if %ERRORLEVEL% neq 0 (
 )
 
 set "ARGS="
-rem Determine project name (prefer explicit arg, otherwise use current directory)
+rem Determine project name (prefer explicit arg, otherwise use path relative to htdocs)
 set "PROJECT="
 if not "%~2"=="" (
         set "PROJECT=%~2"
 ) else (
-        for %%D in ("%CD%") do set "PROJECT=%%~nxD"
+        for %%D in ("%CD%") do set "FULL=%%~fD"
+        set "HTDOCS_DIR=C:\xampp\htdocs"
+        setlocal ENABLEDELAYEDEXPANSION
+        set "PROJECT_REL=!FULL:%HTDOCS_DIR%\=!"
+        endlocal & set "PROJECT=%PROJECT_REL%" & setlocal ENABLEDELAYEDEXPANSION
+        if "!PROJECT!"=="!FULL!" (
+                for %%D in ("%CD%") do endlocal & set "PROJECT=%%~nxD"
+        ) else (
+                rem Remove any leading backslash
+                if "!PROJECT:~0,1!"=="\" set "PROJECT=!PROJECT:~1!"
+                rem Convert backslashes to forward slashes
+                set "PROJECT=!PROJECT:\=/!"
+                rem If a public folder exists under the current folder, append it
+                if exist "%FULL%\public" (
+                        if not "!PROJECT:~-1!"=="/" set "PROJECT=!PROJECT!/"
+                        set "PROJECT=!PROJECT!public/"
+                )
+                endlocal & set "PROJECT=%PROJECT%"
+        )
+        endlocal
 )
 
 if not defined PROJECT (
