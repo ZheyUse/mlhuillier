@@ -510,24 +510,18 @@ if not "%~2"=="" (
 ) else (
         for %%D in ("%CD%") do set "FULL=%%~fD"
         set "HTDOCS_DIR=C:\xampp\htdocs"
-        setlocal ENABLEDELAYEDEXPANSION
         set "PROJECT_REL=!FULL:%HTDOCS_DIR%\=!"
-        endlocal & set "PROJECT=%PROJECT_REL%" & setlocal ENABLEDELAYEDEXPANSION
-        if "!PROJECT!"=="!FULL!" (
-                for %%D in ("%CD%") do endlocal & set "PROJECT=%%~nxD"
+        if "!PROJECT_REL!"=="!FULL!" (
+                for %%D in ("%CD%") do set "PROJECT=%%~nxD"
         ) else (
-                rem Remove any leading backslash
+                set "PROJECT=!PROJECT_REL!"
                 if "!PROJECT:~0,1!"=="\" set "PROJECT=!PROJECT:~1!"
-                rem Convert backslashes to forward slashes
                 set "PROJECT=!PROJECT:\=/!"
-                rem If a public folder exists under the current folder, append it
-                if exist "%FULL%\public" (
+                if exist "!FULL!\public" (
                         if not "!PROJECT:~-1!"=="/" set "PROJECT=!PROJECT!/"
                         set "PROJECT=!PROJECT!public/"
                 )
-                endlocal & set "PROJECT=%PROJECT%"
         )
-        endlocal
 )
 
 if not defined PROJECT (
