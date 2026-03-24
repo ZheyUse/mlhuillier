@@ -25,6 +25,23 @@ if ($command === '--help' || $command === '-h') {
     exit(0);
 }
 
+if ($command === '--dump-templates') {
+  $outputDir = $argv[2] ?? 'scaffold_templates';
+  $cwd = getcwd();
+  if ($cwd === false) {
+    fwrite(STDERR, "Unable to detect current working directory.\n");
+    exit(1);
+  }
+
+  $targetRoot = $outputDir;
+  if (!preg_match('/^[A-Za-z]:\\\\|^\\\\\\\\|^\//', $outputDir)) {
+    $targetRoot = $cwd . DIRECTORY_SEPARATOR . $outputDir;
+  }
+
+  $ok = dumpTemplatesFromSource(__FILE__, $targetRoot);
+  exit($ok ? 0 : 1);
+}
+
 if ($command === null) {
     $cwd = getcwd();
     if ($cwd === false) {
@@ -104,6 +121,7 @@ function printUsage(string $scriptName): void
     echo "Usage:\n";
     echo "  php {$scriptName} create <project_name>\n";
     echo "  ml create <project_name>\n";
+  echo "  php {$scriptName} --dump-templates [output_dir]\n";
     echo "  php {$scriptName}                # legacy scaffold in current directory\n";
     echo "\n";
     echo "Reserved commands:\n";
@@ -111,6 +129,58 @@ function printUsage(string $scriptName): void
     echo "  ml make:component <name>\n";
     echo "  ml serve\n";
 }
+
+  function dumpTemplatesFromSource(string $scriptFile, string $outputRoot): bool
+  {
+    $source = @file_get_contents($scriptFile);
+    if ($source === false) {
+      fwrite(STDERR, "Unable to read source file: {$scriptFile}\n");
+      return false;
+    }
+
+    $matched = preg_match('/\$templates\s*=\s*(\[.*?\]);\s*foreach\s*\(\$templates\s+as\s+\$relativeFile\s*=>\s*\$content\)\s*\{/s', $source, $matches);
+    if ($matched !== 1 || !isset($matches[1])) {
+      fwrite(STDERR, "Unable to locate templates array block in source.\n");
+      return false;
+    }
+
+    $arrayCode = $matches[1];
+
+    try {
+      $templates = eval('return ' . $arrayCode . ';');
+    } catch (Throwable $e) {
+      fwrite(STDERR, "Failed to evaluate template array: {$e->getMessage()}\n");
+      return false;
+    }
+
+    if (!is_array($templates)) {
+      fwrite(STDERR, "Parsed templates are not an array.\n");
+      return false;
+    }
+
+    if (!is_dir($outputRoot) && !mkdir($outputRoot, 0777, true) && !is_dir($outputRoot)) {
+      fwrite(STDERR, "Unable to create output directory: {$outputRoot}\n");
+      return false;
+    }
+
+    foreach ($templates as $relativePath => $content) {
+      $relativePath = ltrim((string) $relativePath, '/\\');
+      $absolutePath = rtrim($outputRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
+      $dir = dirname($absolutePath);
+      if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) {
+        fwrite(STDERR, "Unable to create directory: {$dir}\n");
+        return false;
+      }
+
+      if (@file_put_contents($absolutePath, (string) $content) === false) {
+        fwrite(STDERR, "Unable to write template file: {$absolutePath}\n");
+        return false;
+      }
+    }
+
+    echo "Templates dumped to: {$outputRoot}\n";
+    return true;
+  }
 
 function scaffoldProject(string $projectRoot, string $projectName): bool
 {
@@ -1851,6 +1921,14 @@ $user = $userController->profile();
 $username = htmlspecialchars(strtoupper((string) ($user['username'] ?? 'Guest')), ENT_QUOTES, 'UTF-8');
 $role = htmlspecialchars((string) ($user['role'] ?? ''), ENT_QUOTES, 'UTF-8');
 $appBaseUrl = isset($appBaseUrl) ? rtrim((string) $appBaseUrl, '/') : '';
+// Fallback: if the including page didn't set `$appBaseUrl`, derive a sensible base from the
+// current script name so asset links (CSS/images) resolve correctly when this template is
+// included from different paths.
+if ($appBaseUrl === '') {
+  $scriptName = (string) ($_SERVER['SCRIPT_NAME'] ?? '');
+  $appBaseUrl = preg_replace('#/src/.*$#', '', $scriptName);
+  $appBaseUrl = rtrim((string) $appBaseUrl, '/');
+}
 $logoSrc = ($appBaseUrl !== '' ? $appBaseUrl : '') . '/src/assets/images/logo1.png';
 ?>
 
@@ -1885,7 +1963,7 @@ $logoSrc = ($appBaseUrl !== '' ? $appBaseUrl : '') . '/src/assets/images/logo1.p
             <span class="material-icons sidebar__nav-chev" aria-hidden="true">expand_more</span>
           </button>
           <ul class="sidebar__submenu">
-            <li class="sidebar__submenu-item"><a href="#" class="sidebar__submenu-link"><span class="sidebar__submenu-label">Account Management</span></a></li>
+            <li class="sidebar__submenu-item"><a href="<?= htmlspecialchars(($appBaseUrl !== '' ? $appBaseUrl : '') . '/src/pages/maintenance/accountmanagement/accountmanagement.php', ENT_QUOTES, 'UTF-8'); ?>" class="sidebar__submenu-link"><span class="sidebar__submenu-label">Account Management</span></a></li>
           </ul>
         </li>
       </ul>
@@ -2286,10 +2364,23 @@ body {
 }
 
 /* show submenu only when sidebar expanded AND parent is active (aria-expanded) */
+.sidebar__nav-item.has-submenu .sidebar__nav-link[aria-expanded="true"]+.sidebar__submenu {
+  /* allow submenu to open when parent is toggled via JS (aria-expanded) */
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .sidebar:hover .sidebar__nav-item.has-submenu .sidebar__nav-link[aria-expanded="true"]+.sidebar__submenu {
-    display: block;
-    opacity: 1;
-    transform: translateY(0);
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Ensure chevron is visible when the parent link is expanded, even if the
+   sidebar is collapsed (not hovered). */
+.sidebar__nav-link[aria-expanded="true"] .sidebar__nav-chev {
+  display: inline-block;
 }
 
 .sidebar__nav-item.has-submenu .sidebar__submenu::before {

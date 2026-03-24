@@ -1,0 +1,100 @@
+Mirror Audit — Instruction
+
+Purpose:
+- Verify `test/` folder is fully mirrored by the scaffolder templates in `generate-file-structure.php`, identify missing/changed files, and produce actionable patches.
+
+Prerequisites:
+- Run from repository root (where `generate-file-structure.php` lives).
+- PHP CLI and PowerShell available (Windows).
+- Working copy of `test/` is authoritative.
+
+Quick steps (copy/paste):
+
+1) Export `test/` file list (relative paths)
+
+```powershell
+$src = "C:\xampp\htdocs\mlhuillier\test"
+Push-Location "C:\xampp\htdocs\mlhuillier"
+Get-ChildItem -Path $src -Recurse -File | ForEach-Object {
+  $p = $_.FullName.Substring($src.Length+1).TrimStart('\'); $p -replace '\\','/'
+} | Sort-Object > test-files.txt
+Pop-Location
+```
+
+2) Extract scaffolder template keys and write them to disk for comparison
+
+```powershell
+Push-Location "C:\xampp\htdocs\mlhuillier"
+php -r '
+$tpl = include "generate-file-structure.php";
+foreach($tpl as $k=>$v){
+  $path = "scaffold_templates/".ltrim($k,"/");
+  @mkdir(dirname($path), 0777, true);
+  file_put_contents($path, $v);
+}
+echo "Wrote scaffold_templates/";'
+Pop-Location
+```
+
+3) Produce path-level report: missing in scaffold, extra in scaffold
+
+```powershell
+$test = Get-Content test-files.txt
+$scaffold = Get-ChildItem -Recurse -File scaffold_templates | ForEach-Object{
+  $_.FullName.Substring((Get-Location).Path.Length+1) -replace '\\','/'
+} | Sort-Object
+# Missing in scaffold:
+Compare-Object -ReferenceObject $test -DifferenceObject $scaffold | Where-Object { $_.SideIndicator -eq "<=" } | ForEach-Object { "MISSING-IN-SCAFFOLD: $($_.InputObject)" }
+# Extra in scaffold:
+Compare-Object -ReferenceObject $test -DifferenceObject $scaffold | Where-Object { $_.SideIndicator -eq "=>" } | ForEach-Object { "EXTRA-IN-SCAFFOLD: $($_.InputObject)" }
+```
+
+4) Content diffs for matching paths (produces unified diff files)
+
+```powershell
+$baseTest = "C:\xampp\htdocs\mlhuillier\test"
+$baseScaffold = "C:\xampp\htdocs\mlhuillier\scaffold_templates"
+New-Item -ItemType Directory -Force -Path diffs | Out-Null
+foreach($rel in (Get-ChildItem $baseTest -Recurse -File | ForEach-Object { $_.FullName.Substring($baseTest.Length+1) -replace '\\','/' })){
+  $a = Join-Path $baseTest ($rel -replace '/','\\')
+  $b = Join-Path $baseScaffold ($rel -replace '/','\\')
+  if(Test-Path $b){
+    if((Get-Content $a -Raw) -ne (Get-Content $b -Raw)){
+      Write-Output "DIFF: $rel"
+      $safe = $rel -replace '/','__'
+      fc $a $b | Out-File -FilePath (Join-Path 'diffs' ($safe + '.diff')) -Encoding utf8
+    }
+  }
+}
+```
+
+5) Generate a temp project to validate generator output (optional)
+
+```powershell
+$target = "C:\xampp\htdocs\mlhuillier\mirror-temp"
+Remove-Item -Recurse -Force $target -ErrorAction SilentlyContinue
+php generate-file-structure.php create mirror-temp
+```
+
+6) Remediation guidance (how to fix mismatches)
+- If `MISSING-IN-SCAFFOLD: path`: add a new key in `generate-file-structure.php` with that relative path and the file content as a heredoc.
+- If `DIFF: path`: inspect the `diffs/` file and update the scaffolder template to match `test/` (preferred).
+
+7) Re-run generator + verify
+- Run `php generate-file-structure.php create <projectName>` and re-run the comparison steps.
+
+8) Optional final step — sync served project
+- To immediately fix a live project (e.g., `del`):
+
+```powershell
+robocopy C:\xampp\htdocs\mlhuillier\test C:\xampp\htdocs\del /MIR /COPY:DAT /R:2 /W:1
+```
+
+Notes & Best Practices:
+- Back up `generate-file-structure.php` before large edits.
+- Prefer updating scaffolder templates rather than ad-hoc generated projects.
+- Keep `scaffold_templates/` and `diffs/` for audit history and CI checks.
+
+---
+
+Saved by assistant.
