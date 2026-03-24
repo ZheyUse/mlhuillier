@@ -5,14 +5,6 @@ if ($Args.Count -gt 0 -and [string]$Args[0] -eq 'nav') {
     $navArg = if ($Args.Count -gt 1) { [string]$Args[1] } else { '' }
 
     if ([string]::IsNullOrWhiteSpace($navArg)) {
-        $navArg = Read-Host 'Where do you want to go?'
-    }
-
-    if ([string]::IsNullOrWhiteSpace($navArg)) {
-        return
-    }
-
-    if ($navArg -eq '--new') {
         Set-Location $htdocsPath
         Write-Output "Now in $htdocsPath"
         return

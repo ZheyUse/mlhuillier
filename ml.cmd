@@ -1,8 +1,8 @@
 @echo off
-setlocal EnableExtensions DisableDelayedExpansion
-
 set "BAT=%~dp0ml.bat"
 if not exist "%BAT%" set "BAT=C:\ML CLI\Tools\ml.bat"
+if defined ML_DEBUG echo [ml.cmd] wrapper: %~f0
+if defined ML_DEBUG echo [ml.cmd] using bat: %BAT%
 if not exist "%BAT%" (
     echo ML CLI is not installed. Expected ml.bat in "%~dp0" or "C:\ML CLI\Tools".
     exit /b 2
@@ -10,44 +10,26 @@ if not exist "%BAT%" (
 
 if /I not "%~1"=="nav" (
     call "%BAT%" %*
-    set "ML_EXIT=%ERRORLEVEL%"
-    endlocal & exit /b %ML_EXIT%
+    exit /b %ERRORLEVEL%
 )
 
-if /I "%~2"=="--new" (
-    call "%BAT%" %*
-    set "ML_EXIT=%ERRORLEVEL%"
-    for %%D in ("C:\xampp\htdocs") do endlocal & cd /d "%%~fD" >nul 2>&1 & exit /b %ML_EXIT%
-)
-
-set "NAV_ARG=%~2"
-if not "%NAV_ARG%"=="" (
-    if "%NAV_ARG:~0,2%"=="--" (
-        set "PROJECT_NAME=%NAV_ARG:~2%"
-        if defined PROJECT_NAME (
-            set "PROJECT_PATH=C:\xampp\htdocs\%PROJECT_NAME%"
-            call "%BAT%" %*
-            set "ML_EXIT=%ERRORLEVEL%"
-            if exist "%PROJECT_PATH%" (
-                for %%D in ("%PROJECT_PATH%") do endlocal & cd /d "%%~fD" >nul 2>&1 & exit /b %ML_EXIT%
-            )
-            endlocal & exit /b %ML_EXIT%
-        )
-    )
-)
-
-set "OUTFILE=%TEMP%\ml_out_%RANDOM%.txt"
-call "%BAT%" %* > "%OUTFILE%" 2>&1
+call "%BAT%" %*
 set "ML_EXIT=%ERRORLEVEL%"
+set "FINAL_CD="
 
-set "CD_TO="
-for /f "tokens=1,2,* delims= " %%A in ('findstr /B /C:"Now in " "%OUTFILE%"') do set "CD_TO=%%C"
+if "%~2"=="" if exist "C:\xampp\htdocs" set "FINAL_CD=C:\xampp\htdocs"
+if not "%~2"=="" call :resolveNavTarget "%~2"
 
-type "%OUTFILE%"
-del /f /q "%OUTFILE%" >nul 2>&1
-
-if defined CD_TO (
-    for %%D in ("%CD_TO%") do endlocal & cd /d "%%~fD" >nul 2>&1 & exit /b %ML_EXIT%
+if defined FINAL_CD (
+    if defined ML_DEBUG echo [ml.cmd] final cd target: %FINAL_CD%
+    cd /d "%FINAL_CD%" >nul 2>&1
 )
 
-endlocal & exit /b %ML_EXIT%
+exit /b %ML_EXIT%
+
+:resolveNavTarget
+set "PROJECT_NAME=%~1"
+if "%PROJECT_NAME:~0,2%"=="--" set "PROJECT_NAME=%PROJECT_NAME:~2%"
+if "%PROJECT_NAME%"=="" exit /b 0
+if exist "C:\xampp\htdocs\%PROJECT_NAME%" set "FINAL_CD=C:\xampp\htdocs\%PROJECT_NAME%"
+exit /b 0

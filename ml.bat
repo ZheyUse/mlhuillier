@@ -246,9 +246,10 @@ exit /b 0
 :help_nav
 echo.
 echo HELP: Navigation helper
-echo Usage: ml nav [--new] [--^<project_name^>] [--remote]
+echo Usage: ml nav [--^<project_name^>] [--remote]
 echo Description: Interactive helper to change directories to projects under C:\xampp\htdocs.
-echo   Use --new to go to C:\xampp\htdocs or --^<project_name^> to jump to a project (e.g. ml nav --olok).
+echo   Running `ml nav` now goes directly to C:\xampp\htdocs.
+echo   Use --^<project_name^> to jump to a project (e.g. ml nav --olok).
 echo   The helper will prompt to open the selected project in VSCode (Y/N). If VSCode is already
 echo   running the CLI will prefer opening the project in a new window. Use --remote or set
 echo   ML_REMOTE=1 to skip opening editors from remote environments.
@@ -509,18 +510,24 @@ if not "%~2"=="" (
         set "PROJECT=%~2"
 ) else (
         for %%D in ("%CD%") do set "FULL=%%~fD"
-        set "HTDOCS_DIR=C:\xampp\htdocs"
-        set "PROJECT_REL=!FULL:%HTDOCS_DIR%\=!"
-        if "!PROJECT_REL!"=="!FULL!" (
+        rem Normalize to forward slashes
+        set "FULL_SLASH=!FULL:\=/!"
+        rem Attempt to strip up to xampp/htdocs/ to produce web-relative path
+        set "PROJECT_TMP=!FULL_SLASH:*xampp/htdocs/=!"
+        rem If pattern wasn't found, PROJECT_TMP equals FULL_SLASH; fallback to folder name
+        if "!PROJECT_TMP!"=="!FULL_SLASH!" (
                 for %%D in ("%CD%") do set "PROJECT=%%~nxD"
         ) else (
-                set "PROJECT=!PROJECT_REL!"
-                if "!PROJECT:~0,1!"=="\" set "PROJECT=!PROJECT:~1!"
-                set "PROJECT=!PROJECT:\=/!"
-                if exist "!FULL!\public" (
-                        if not "!PROJECT:~-1!"=="/" set "PROJECT=!PROJECT!/"
-                        set "PROJECT=!PROJECT!public/"
-                )
+                set "PROJECT=!PROJECT_TMP!"
+        )
+        rem If still empty, fallback to current folder name
+        if "!PROJECT!"=="" (
+                for %%D in ("%CD%") do set "PROJECT=%%~nxD"
+        )
+        rem Append public/ if a public folder exists under the current folder
+        if exist "!FULL!\public" (
+                if not "!PROJECT:~-1!"=="/" set "PROJECT=!PROJECT!/"
+                set "PROJECT=!PROJECT!public/"
         )
 )
 
@@ -537,8 +544,8 @@ exit /b %RC%
 
 :cmd_nav
 set "HTDOCS_DIR=C:\xampp\htdocs"
-if /I "%~2"=="--new" (
-        for %%D in ("%HTDOCS_DIR%") do endlocal & cd /d "%%~fD" & echo Now in %%~fD & exit /b 0
+if "%~2"=="" (
+        for %%D in ("%HTDOCS_DIR%") do cd /d "%%~fD" & echo Now in %%~fD & exit /b 0
 )
 
 set "NAV_ARG=%~2"
@@ -564,7 +571,7 @@ if not "%NAV_ARG%"=="" (
                                                 )
                                         )
                                 )
-                                for %%D in ("!PROJECT_PATH!") do endlocal & cd /d "%%~fD" & exit /b 0
+                                for %%D in ("!PROJECT_PATH!") do cd /d "%%~fD" & exit /b 0
                         ) else (
                                 echo Project not found: !PROJECT_PATH!
                                 exit /b 2
@@ -618,7 +625,7 @@ if defined CD_TO (
 if defined CD_TO (
         if exist "!CD_TO!" (
                 del /f /q "!TMP_FILE!" "!TMP_OUT!" >nul 2>&1
-                for %%D in ("!CD_TO!") do endlocal & cd /d "%%~fD" & echo Now in %%~fD & exit /b 0
+                for %%D in ("!CD_TO!") do cd /d "%%~fD" & echo Now in %%~fD & exit /b 0
         ) else (
                 echo Target folder not found: !CD_TO!
         )

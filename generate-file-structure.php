@@ -1955,7 +1955,7 @@ connections.
 - Environment loader (`src/config/env.php`) with `.env` support
 - Secure PDO connection helper (`src/config/db.php`) via `userDbConnection()`
 - Pre-built UI components: header, centered hero, footer, and login modal
-- Root `.htaccess` with `RewriteBase` configured by the generator for XAMPP/Apache
+  - Root `.htaccess` using a relative redirect to `public/` (preserves parent path)
 
 ## Requirements
 
@@ -2001,9 +2001,10 @@ C:\xampp\php\php.exe generate-file-structure.php
 
 ## Web Server Notes
 
-- The generator writes a root `.htaccess` with `RewriteBase /<project-folder>/`
-  to ensure redirects work correctly under XAMPP/Apache. If you move the
-  project, regenerate the `.htaccess` or update `RewriteBase` accordingly.
+- The generator writes a root `.htaccess` that redirects requests for the
+  project root to `public/` using a relative rule. This preserves the full
+  parent path (useful when the project is served under a subpath). If you
+  move the project, regenerate the `.htaccess` to update behavior if needed.
 
 ## Troubleshooting
 
@@ -2124,10 +2125,8 @@ MD,
 
 function finalizeGeneratedProject(string $projectRoot): bool
 {
-  $projectFolder = basename($projectRoot);
-  $rewriteBase = '/' . $projectFolder . '/';
   $htPath = $projectRoot . DIRECTORY_SEPARATOR . '.htaccess';
-  $htContent = "RewriteEngine On\nRewriteBase {$rewriteBase}\nRewriteRule ^$ public/ [R=302,L]\n";
+  $htContent = "RewriteEngine On\nRewriteRule ^$ public/ [R=302,L]\n";
 
   if (file_put_contents($htPath, $htContent) === false) {
     report('file', $htPath, $projectRoot, 'FAILED');

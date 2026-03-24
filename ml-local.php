@@ -28,7 +28,10 @@ $want = [
     // generator stub (installer downloads generate-file-remote.php and saves as generate-file-structure.php)
     'generate-file-structure.php',
     'ml.bat',
-    'uninstall-ml.bat'
+    'uninstall-ml.bat',
+    // CLI wrappers for different shells
+    'ml.cmd',
+    'ml.ps1'
 ];
 
 // If we only have the remote loader locally, copy it as the installed generator name
