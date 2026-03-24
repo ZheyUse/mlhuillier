@@ -20,6 +20,21 @@ if (PHP_SAPI !== 'cli') {
 $scriptName = basename($argv[0] ?? 'generate-file-structure.php');
 $command = $argv[1] ?? null;
 
+function printUsage(string $scriptName): void
+{
+  echo "ML CLI\n";
+  echo "Usage:\n";
+  echo "  php {$scriptName} create <project_name>\n";
+  echo "  ml create <project_name>\n";
+  echo "  php {$scriptName} --dump-templates [output_dir]\n";
+  echo "  php {$scriptName}                # legacy scaffold in current directory\n";
+  echo "\n";
+  echo "Reserved commands:\n";
+  echo "  ml make:page <name>\n";
+  echo "  ml make:component <name>\n";
+  echo "  ml serve\n";
+}
+
 if ($command === '--help' || $command === '-h') {
     printUsage($scriptName);
     exit(0);
@@ -42,145 +57,102 @@ if ($command === '--dump-templates') {
   exit($ok ? 0 : 1);
 }
 
-if ($command === null) {
-    $cwd = getcwd();
-    if ($cwd === false) {
-        fwrite(STDERR, "Unable to detect current working directory.\n");
-        exit(1);
-    }
-
-    $projectName = basename($cwd);
-    $ok = scaffoldProject($cwd, $projectName);
-    if ($ok) {
-      echo "Project structure successfully generated." . PHP_EOL;
-      printMadeBy();
-      exit(0);
-    }
-
-    echo "Project generation failed." . PHP_EOL;
-    exit(1);
-}
-
 if ($command === 'create') {
-    $projectName = $argv[2] ?? null;
-    if ($projectName === null || trim($projectName) === '') {
-        fwrite(STDERR, "Missing project name.\n\n");
-        printUsage($scriptName);
-        exit(1);
-    }
-
-    if (!preg_match('/^[a-zA-Z0-9][a-zA-Z0-9-_]*$/', $projectName)) {
-        fwrite(STDERR, "Invalid project name '{$projectName}'. Use letters, numbers, dash, underscore only.\n");
-        exit(1);
-    }
-
-    $cwd = getcwd();
-    if ($cwd === false) {
-        fwrite(STDERR, "Unable to detect current working directory.\n");
-        exit(1);
-    }
-
-    $projectRoot = $cwd . DIRECTORY_SEPARATOR . $projectName;
-    if (file_exists($projectRoot)) {
-        fwrite(STDERR, "Target already exists: {$projectRoot}\n");
-        exit(1);
-    }
-
-    echo "Creating project: {$projectName}\n";
-
-    if (!mkdir($projectRoot, 0777, true) && !is_dir($projectRoot)) {
-        fwrite(STDERR, "Failed to create project directory: {$projectRoot}\n");
-        exit(1);
-    }
-
-    report('dir', $projectRoot, $projectRoot, 'OK');
-
-    $ok = scaffoldProject($projectRoot, $projectName);
-    if ($ok) {
-      echo "Project created successfully\n";
-      printMadeBy();
-      exit(0);
-    }
-
-    echo "Project creation finished with errors\n";
-    exit(1);
-}
-
-if (in_array($command, ['make:page', 'make:component', 'serve'], true)) {
-    fwrite(STDERR, "Command '{$command}' is reserved for a future release.\n");
+  $projectName = trim((string) ($argv[2] ?? ''));
+  if ($projectName === '') {
+    fwrite(STDERR, "Missing project name. Usage: php {$scriptName} create <project_name>\n");
     exit(2);
+  }
+
+  if (preg_match('/[\\\\\/]/', $projectName)) {
+    fwrite(STDERR, "Invalid project name. Use a simple folder name without slashes.\n");
+    exit(2);
+  }
+
+  $cwd = getcwd();
+  if ($cwd === false) {
+    fwrite(STDERR, "Unable to detect current working directory.\n");
+    exit(1);
+  }
+
+  $targetRoot = $cwd . DIRECTORY_SEPARATOR . $projectName;
+  $ok = scaffoldProject($targetRoot, $projectName);
+  if ($ok) {
+    printMadeBy();
+  }
+  exit($ok ? 0 : 1);
 }
 
-fwrite(STDERR, "Unknown command: {$command}\n\n");
-printUsage($scriptName);
-exit(1);
+if ($command !== null && $command !== '') {
+  fwrite(STDERR, "Unknown command: {$command}\n");
+  printUsage($scriptName);
+  exit(2);
+}
 
-function printUsage(string $scriptName): void
+$cwd = getcwd();
+if ($cwd === false) {
+  fwrite(STDERR, "Unable to detect current working directory.\n");
+  exit(1);
+}
+
+$legacyProjectName = basename($cwd);
+if (!is_string($legacyProjectName) || $legacyProjectName === '' || $legacyProjectName === '.' || $legacyProjectName === DIRECTORY_SEPARATOR) {
+  $legacyProjectName = 'project';
+}
+
+$ok = scaffoldProject($cwd, $legacyProjectName);
+if ($ok) {
+  printMadeBy();
+}
+exit($ok ? 0 : 1);
+
+function dumpTemplatesFromSource(string $scriptFile, string $outputRoot): bool
 {
-    echo "ML CLI\n";
-    echo "Usage:\n";
-    echo "  php {$scriptName} create <project_name>\n";
-    echo "  ml create <project_name>\n";
-  echo "  php {$scriptName} --dump-templates [output_dir]\n";
-    echo "  php {$scriptName}                # legacy scaffold in current directory\n";
-    echo "\n";
-    echo "Reserved commands:\n";
-    echo "  ml make:page <name>\n";
-    echo "  ml make:component <name>\n";
-    echo "  ml serve\n";
-}
-
-  function dumpTemplatesFromSource(string $scriptFile, string $outputRoot): bool
-  {
-    $source = @file_get_contents($scriptFile);
-    if ($source === false) {
-      fwrite(STDERR, "Unable to read source file: {$scriptFile}\n");
-      return false;
+    // Generate a temporary project using the scaffolder and copy the produced
+    // files into the requested output directory. This is robust and avoids
+    // brittle source parsing of embedded nowdocs/heredocs.
+    $tmp = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'ml_scaffold_dump_' . uniqid('', true);
+    if (!mkdir($tmp, 0777, true) && !is_dir($tmp)) {
+        fwrite(STDERR, "Unable to create temporary directory for scaffold dump: {$tmp}\n");
+        return false;
     }
 
-    $matched = preg_match('/\$templates\s*=\s*(\[.*?\]);\s*foreach\s*\(\$templates\s+as\s+\$relativeFile\s*=>\s*\$content\)\s*\{/s', $source, $matches);
-    if ($matched !== 1 || !isset($matches[1])) {
-      fwrite(STDERR, "Unable to locate templates array block in source.\n");
-      return false;
-    }
-
-    $arrayCode = $matches[1];
-
-    try {
-      $templates = eval('return ' . $arrayCode . ';');
-    } catch (Throwable $e) {
-      fwrite(STDERR, "Failed to evaluate template array: {$e->getMessage()}\n");
-      return false;
-    }
-
-    if (!is_array($templates)) {
-      fwrite(STDERR, "Parsed templates are not an array.\n");
-      return false;
+    $okGen = scaffoldProject($tmp, 'ml_audit_temp');
+    if (!$okGen) {
+        fwrite(STDERR, "Fallback generation failed. Cannot dump templates.\n");
+        return false;
     }
 
     if (!is_dir($outputRoot) && !mkdir($outputRoot, 0777, true) && !is_dir($outputRoot)) {
-      fwrite(STDERR, "Unable to create output directory: {$outputRoot}\n");
-      return false;
+        fwrite(STDERR, "Unable to create output directory: {$outputRoot}\n");
+        return false;
     }
 
-    foreach ($templates as $relativePath => $content) {
-      $relativePath = ltrim((string) $relativePath, '/\\');
-      $absolutePath = rtrim($outputRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
-      $dir = dirname($absolutePath);
-      if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) {
-        fwrite(STDERR, "Unable to create directory: {$dir}\n");
-        return false;
-      }
-
-      if (@file_put_contents($absolutePath, (string) $content) === false) {
-        fwrite(STDERR, "Unable to write template file: {$absolutePath}\n");
-        return false;
-      }
+    $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($tmp, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::SELF_FIRST);
+    foreach ($it as $file) {
+        $relPath = substr($file->getPathname(), strlen($tmp) + 1);
+        $destPath = rtrim($outputRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, str_replace('\\', '/', $relPath));
+        if ($file->isDir()) {
+            if (!is_dir($destPath) && !mkdir($destPath, 0777, true) && !is_dir($destPath)) {
+                fwrite(STDERR, "Unable to create directory: {$destPath}\n");
+                return false;
+            }
+            continue;
+        }
+        $destDir = dirname($destPath);
+        if (!is_dir($destDir) && !mkdir($destDir, 0777, true) && !is_dir($destDir)) {
+            fwrite(STDERR, "Unable to create directory: {$destDir}\n");
+            return false;
+        }
+        if (!@copy($file->getPathname(), $destPath)) {
+            fwrite(STDERR, "Unable to copy file to: {$destPath}\n");
+            return false;
+        }
     }
 
-    echo "Templates dumped to: {$outputRoot}\n";
+    echo "Templates dumped to: {$outputRoot} (via generated scaffold)\n";
     return true;
-  }
+}
 
 function scaffoldProject(string $projectRoot, string $projectName): bool
 {
@@ -220,6 +192,27 @@ function scaffoldProject(string $projectRoot, string $projectName): bool
         }
     }
 
+    function loadTemplatesFromDir(string $dir): array
+    {
+      $result = [];
+      $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir));
+      foreach ($it as $file) {
+        if (!$file->isFile()) {
+          continue;
+        }
+        $path = str_replace('\\', '/', substr($file->getPathname(), strlen($dir) + 1));
+        $content = @file_get_contents($file->getPathname());
+        if ($content === false) {
+          $content = '';
+        }
+        $result[$path] = $content;
+      }
+      return $result;
+    }
+
+    if (is_dir(__DIR__ . '/audit/scaffold_templates')) {
+      $templates = loadTemplatesFromDir(__DIR__ . '/audit/scaffold_templates');
+    } else {
     $templates = [
         '.env' => <<<'ENV'
       APP_NAME="{{PROJECT_TITLE}}"
@@ -2806,6 +2799,7 @@ MD,
 }
 MD,
     ];
+    }
 
     foreach ($templates as $relativeFile => $content) {
         $absoluteFile = $projectRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativeFile);
