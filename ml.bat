@@ -1,8 +1,8 @@
 @echo off
-setlocal EnableDelayedExpansion
+setlocal EnableExtensions EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.30"
+set "ML_VERSION=1.0.35"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -11,6 +11,7 @@ set "ML_INSTALLED_DIR=C:\ML CLI\Tools\"
 rem Allow certain repo-scoped dev commands to run from the repo copy (e.g. "ml clone local").
 set "SKIP_DELEGATE=0"
 if /I "%~1"=="clone" if /I "%~2"=="local" set "SKIP_DELEGATE=1"
+if /I "%~1"=="nav" set "SKIP_DELEGATE=1"
 if defined ML_REPO set "SKIP_DELEGATE=1"
 
 if /I not "%~dp0"=="%ML_INSTALLED_DIR%" (
@@ -154,7 +155,7 @@ exit /b 0
 echo.
 echo HELP: Update ML CLI
 echo Usage: ml update
-echo Description: Downloads and runs the remote updater to replace installed CLI files.
+echo Description: Downloads and runs the remote installer update flow to refresh all CLI runtime files.
 exit /b 0
 
 :help_download_installer
@@ -245,10 +246,13 @@ exit /b 0
 :help_nav
 echo.
 echo HELP: Navigation helper
-echo Usage: ml nav [--new] [--<project_name>] [--remote]
+echo Usage: ml nav [--^<project_name^>] [--remote]
 echo Description: Interactive helper to change directories to projects under C:\xampp\htdocs.
-echo   Use --new to go to C:\xampp\htdocs. Use --remote or set ML_REMOTE=1 to avoid opening
-echo   VSCode from the remote environment.
+echo   Running `ml nav` now goes directly to C:\xampp\htdocs.
+echo   Use --^<project_name^> to jump to a project (e.g. ml nav --olok).
+echo   The helper will prompt to open the selected project in VSCode (Y/N). If VSCode is already
+echo   running the CLI will prefer opening the project in a new window. Use --remote or set
+echo   ML_REMOTE=1 to skip opening editors from remote environments.
 exit /b 0
 
 :cmd_test_userdb
@@ -340,10 +344,11 @@ exit /b 0
 :cmd_update
 set "TMP_VER=%TEMP%\ml_remote_version.txt"
 set "REMOTE_VER="
-set "UPDATER_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml-update.php"
+set "INSTALLER_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/install-ml.bat"
 set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
-set "UPDATER_URL=!UPDATER_URL!?t=!CACHE_BUST!"
-set "TMP_FILE=%TEMP%\ml-update.php"
+set "INSTALLER_URL=!INSTALLER_URL!?t=!CACHE_BUST!"
+set "TMP_FILE=%TEMP%\install-ml-update.bat"
+set "LOCAL_INSTALLER=%~dp0install-ml.bat"
 set "LOCAL_UPDATER=%~dp0ml-update.php"
 
 echo Checking remote ML CLI version from GitHub API...
@@ -364,37 +369,48 @@ if %ERRORLEVEL% neq 0 (
         )
 )
 
-call :strip_query "!UPDATER_URL!"
+call :strip_query "!INSTALLER_URL!"
 rem URL hidden from output
 echo Updating ML CLI...
 
 where curl >nul 2>&1
 if %ERRORLEVEL%==0 (
-        curl -s -f -o "!TMP_FILE!" "!UPDATER_URL!"
+        curl -s -f -o "!TMP_FILE!" "!INSTALLER_URL!"
 ) else (
-        powershell -NoProfile -Command "Try { Invoke-WebRequest -Uri '!UPDATER_URL!' -OutFile '!TMP_FILE!' -UseBasicParsing; exit 0 } Catch { exit 2 }"
+        powershell -NoProfile -Command "Try { Invoke-WebRequest -Uri '!INSTALLER_URL!' -OutFile '!TMP_FILE!' -UseBasicParsing; exit 0 } Catch { exit 2 }"
 )
 
 if %ERRORLEVEL%==0 (
-        "!PHP_EXE!" -d display_errors=0 "!TMP_FILE!"
+        cmd /c ""!TMP_FILE!" --update"
         set "RC=%ERRORLEVEL%"
         del /f /q "!TMP_FILE!" >nul 2>&1
         if "!RC!"=="0" exit /b 0
+        if exist "!LOCAL_INSTALLER!" (
+                echo Remote installer update failed, trying local installer...
+                cmd /c ""!LOCAL_INSTALLER!" --update"
+                exit /b %ERRORLEVEL%
+        )
         if exist "!LOCAL_UPDATER!" (
-                echo Remote updater returned an error, trying local updater...
+                echo Installer update failed, trying legacy local updater...
                 "!PHP_EXE!" -d display_errors=0 "!LOCAL_UPDATER!"
                 exit /b %ERRORLEVEL%
         )
         exit /b !RC!
 )
 
+if exist "!LOCAL_INSTALLER!" (
+        echo Remote installer fetch failed, trying local installer...
+        cmd /c ""!LOCAL_INSTALLER!" --update"
+        exit /b %ERRORLEVEL%
+)
+
 if exist "!LOCAL_UPDATER!" (
-        echo Remote update fetch failed, trying local updater...
+        echo Remote installer fetch failed, trying legacy local updater...
         "!PHP_EXE!" -d display_errors=0 "!LOCAL_UPDATER!"
         exit /b %ERRORLEVEL%
 )
 
-echo Failed to fetch remote updater and no local updater was found.
+echo Failed to fetch installer and no local fallback was found.
 exit /b 2
 
 :fetch_remote_version
@@ -488,12 +504,31 @@ if %ERRORLEVEL% neq 0 (
 )
 
 set "ARGS="
-rem Determine project name (prefer explicit arg, otherwise use current directory)
+rem Determine project name (prefer explicit arg, otherwise use path relative to htdocs)
 set "PROJECT="
 if not "%~2"=="" (
         set "PROJECT=%~2"
 ) else (
-        for %%D in ("%CD%") do set "PROJECT=%%~nxD"
+        for %%D in ("%CD%") do set "FULL=%%~fD"
+        rem Normalize to forward slashes
+        set "FULL_SLASH=!FULL:\=/!"
+        rem Attempt to strip up to xampp/htdocs/ to produce web-relative path
+        set "PROJECT_TMP=!FULL_SLASH:*xampp/htdocs/=!"
+        rem If pattern wasn't found, PROJECT_TMP equals FULL_SLASH; fallback to folder name
+        if "!PROJECT_TMP!"=="!FULL_SLASH!" (
+                for %%D in ("%CD%") do set "PROJECT=%%~nxD"
+        ) else (
+                set "PROJECT=!PROJECT_TMP!"
+        )
+        rem If still empty, fallback to current folder name
+        if "!PROJECT!"=="" (
+                for %%D in ("%CD%") do set "PROJECT=%%~nxD"
+        )
+        rem Append public/ if a public folder exists under the current folder
+        if exist "!FULL!\public" (
+                if not "!PROJECT:~-1!"=="/" set "PROJECT=!PROJECT!/"
+                set "PROJECT=!PROJECT!public/"
+        )
 )
 
 if not defined PROJECT (
@@ -508,6 +543,43 @@ del /f /q "!TMP_FILE!" >nul 2>&1
 exit /b %RC%
 
 :cmd_nav
+set "HTDOCS_DIR=C:\xampp\htdocs"
+if "%~2"=="" (
+        for %%D in ("%HTDOCS_DIR%") do cd /d "%%~fD" & echo Now in %%~fD & exit /b 0
+)
+
+set "NAV_ARG=%~2"
+if not "%NAV_ARG%"=="" (
+        if "%NAV_ARG:~0,2%"=="--" (
+                set "PROJECT_NAME=%NAV_ARG:~2%"
+                if defined PROJECT_NAME (
+                        set "PROJECT_PATH=%HTDOCS_DIR%\!PROJECT_NAME!"
+                        if exist "!PROJECT_PATH!" (
+                                echo Now in !PROJECT_PATH!
+                                set "OPEN_IN_VSCODE="
+                                set /p OPEN_IN_VSCODE=Do you want to open !PROJECT_NAME! in VSCode? ^(Y/N^): 
+                                if /I "!OPEN_IN_VSCODE:~0,1!"=="Y" (
+                                        where code >nul 2>&1
+                                        if errorlevel 1 (
+                                                echo VSCode CLI ^(code^) not found in PATH.
+                                        ) else (
+                                                tasklist /FI "IMAGENAME eq Code.exe" | find /I "Code.exe" >nul
+                                                if errorlevel 1 (
+                                                        code "!PROJECT_PATH!" >nul 2>&1
+                                                ) else (
+                                                        code --new-window "!PROJECT_PATH!" >nul 2>&1
+                                                )
+                                        )
+                                )
+                                for %%D in ("!PROJECT_PATH!") do cd /d "%%~fD" & exit /b 0
+                        ) else (
+                                echo Project not found: !PROJECT_PATH!
+                                exit /b 2
+                        )
+                )
+        )
+)
+
 set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml-nav.php"
 set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
 set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
@@ -518,65 +590,13 @@ rem URL hidden from output
 
 rem Ensure wrappers exist in the installed tools folder so navigation can change the caller shell.
 set "WRAPPER_CMD=%ML_INSTALLED_DIR%ml.cmd"
-set "WRAPPER_PS=%ML_INSTALLED_DIR%ml.ps1"
 if not exist "%WRAPPER_CMD%" (
-        echo Wrapper not found in %ML_INSTALLED_DIR% - attempting to install wrappers via remote installer...
-        if not exist "%ML_INSTALLED_DIR%" (
-                mkdir "%ML_INSTALLED_DIR%" 2>nul
-        )
-        set "INSTALLER_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/install-wrappers-auto.ps1"
-        set "TMP_INSTALL=%TEMP%\install-wrappers-auto.ps1"
-        set "DLERR=0"
-        where curl >nul 2>&1
-        if %ERRORLEVEL%==0 (
-                curl -s -f -o "!TMP_INSTALL!" "!INSTALLER_URL!" || set "DLERR=1"
-        ) else (
-                powershell -NoProfile -Command "Try { Invoke-WebRequest -Uri '!INSTALLER_URL!' -OutFile '!TMP_INSTALL!' -UseBasicParsing; exit 0 } Catch { exit 2 }"
-                if %ERRORLEVEL% neq 0 set "DLERR=1"
-        )
-        if "%DLERR%"=="0" (
-                echo Running remote wrapper installer...
-                        set "TMP_INSTALL_OUT=%TEMP%\install-wrappers-out.txt"
-                        powershell -NoProfile -ExecutionPolicy Bypass -File "!TMP_INSTALL!" >"!TMP_INSTALL_OUT!" 2>&1
-                        set "RC_INSTALL=%ERRORLEVEL%"
-                        if NOT "!RC_INSTALL!"=="0" (
-                                echo Remote installer returned an error (exit !RC_INSTALL!)
-                                type "!TMP_INSTALL_OUT!" 2>nul
-                        ) else (
-                                echo Remote installer executed successfully
-                                type "!TMP_INSTALL_OUT!" 2>nul
-                        )
-                        del /f /q "!TMP_INSTALL!" "!TMP_INSTALL_OUT!" >nul 2>&1
-        ) else (
-                echo Failed to download remote installer, will attempt direct wrapper fetch...
-                set "DLERR=0"
-                where curl >nul 2>&1
-                if %ERRORLEVEL%==0 (
-                        curl -s -f -o "%WRAPPER_CMD%" "https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml.cmd" || set "DLERR=1"
-                        curl -s -f -o "%WRAPPER_PS%" "https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml.ps1" || set "DLERR=1"
-                ) else (
-                        powershell -NoProfile -Command "Try { Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml.cmd' -OutFile '%WRAPPER_CMD%' -UseBasicParsing; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml.ps1' -OutFile '%WRAPPER_PS%' -UseBasicParsing; exit 0 } Catch { exit 2 }"
-                        if %ERRORLEVEL% neq 0 set "DLERR=1"
-                )
-                if defined DLERR (
-                        echo Failed to download wrappers to %ML_INSTALLED_DIR% (continuing without wrappers)
-                        set "DLERR="
-                ) else (
-                        echo Installed wrappers to %ML_INSTALLED_DIR%
-                )
-        )
-        rem If installer created wrappers in the tools folder, report it
-        if exist "%WRAPPER_CMD%" if exist "%WRAPPER_PS%" (
-                echo Installed wrappers to %ML_INSTALLED_DIR%
-        )
+        echo Wrapper not found in %ML_INSTALLED_DIR%.
+        echo Run install-ml.bat to install wrappers, then retry.
 )
 
 echo Executing navigation helper...
 echo.
-
-rem If running inside PowerShell, ensure a shell wrapper is present in the user's profile
-set "MLBAT=%~dp0ml.bat"
-if defined PSModulePath powershell -NoProfile -ExecutionPolicy Bypass -Command "if(-not (Test-Path $PROFILE)) { New-Item -ItemType File -Force -Path $PROFILE | Out-Null }; $line = '. ''%~dp0ml.ps1'''; $c = ''; try { $c = Get-Content -Path $PROFILE -Raw } catch {}; if($c -notmatch [regex]::Escape($line)) { Add-Content -Path $PROFILE -Value $line; Write-Output ('ML wrapper added to profile: ' + $PROFILE) }"
 
 where curl >nul 2>&1
 if %ERRORLEVEL%==0 (
@@ -604,8 +624,8 @@ if defined CD_TO (
 
 if defined CD_TO (
         if exist "!CD_TO!" (
-                cd /d "!CD_TO!"
-                echo Now in !CD_TO!
+                del /f /q "!TMP_FILE!" "!TMP_OUT!" >nul 2>&1
+                for %%D in ("!CD_TO!") do cd /d "%%~fD" & echo Now in %%~fD & exit /b 0
         ) else (
                 echo Target folder not found: !CD_TO!
         )
