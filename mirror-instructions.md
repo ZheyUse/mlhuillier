@@ -52,6 +52,25 @@ Safety and quality notes
   them (match the existing quoting style in `generate-file-structure.php`).
 - Preserve indentation, array order, and existing code formatting.
 
+Critical generator parity rules
+------------------------------
+- When validating scaffold output, run the local generator directly:
+   `php generate-file-structure.php create <project_name>`
+- Do not rely on `ml create` for parity checks unless you have confirmed it is
+   using the local repository copy. The wrapper can delegate to an installed CLI
+   copy in `C:\ML CLI\Tools`, which may use a different generator version.
+- Treat audit results as valid only when the template dump is produced by the
+   same local generator file that will be committed.
+
+Audit interpretation guidance
+----------------------------
+- `Missing`/`Extra` only checks file path presence.
+- `Diffs` means byte-level file content differences exist.
+- `Normal`/`Error` is a post-classification step; `Error` must be `0` before
+   considering mirror complete.
+- If behavior differs but `Missing=0`, inspect the specific generated file
+   contents and compare with `/test` directly.
+
 Examples (user prompts the agent)
 ---------------------------------
 - "Mirror the `/test` folder into the generator" → Agent will collect `/test`

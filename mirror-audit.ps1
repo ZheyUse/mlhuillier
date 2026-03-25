@@ -11,6 +11,12 @@ $testFilesPath = Join-Path $auditRoot 'test-files.txt'
 $pathReportPath = Join-Path $auditRoot 'audit-path-report.txt'
 $diffListPath = Join-Path $auditRoot 'audit-diffs-list.txt'
 $summaryPath = Join-Path $auditRoot 'audit-summary.txt'
+$generatorPath = Join-Path $repoPath 'generate-file-structure.php'
+
+if (-not (Test-Path $generatorPath)) {
+  throw "Local generator not found: $generatorPath"
+}
+Write-Output "Using local generator: $generatorPath"
 
 # Clean old outputs
 Remove-Item -Recurse -Force $auditRoot -ErrorAction SilentlyContinue
@@ -26,7 +32,7 @@ Write-Output "Wrote $testFilesPath"
 
 # 2) Extract scaffolder templates
 Write-Output "Extracting scaffolder templates (via --dump-templates)..."
-php generate-file-structure.php --dump-templates audit/scaffold_templates
+php "$generatorPath" --dump-templates audit/scaffold_templates
 if ($LASTEXITCODE -ne 0) {
   throw "Template dump failed."
 }
@@ -53,6 +59,7 @@ Write-Output "Checking content diffs for matching paths..."
 New-Item -ItemType Directory -Force -Path $diffsDir | Out-Null
 $baseTest = $src
 $baseScaffold = $scaffoldDir
+$script:diffRels = New-Object System.Collections.Generic.List[string]
 
 foreach($rel in (Get-ChildItem $baseTest -Recurse -File | ForEach-Object { $_.FullName.Substring($baseTest.Length+1) -replace '\\','/' })){
   $a = Join-Path $baseTest ($rel -replace '/','\\')
@@ -64,10 +71,11 @@ foreach($rel in (Get-ChildItem $baseTest -Recurse -File | ForEach-Object { $_.Fu
       Write-Output "DIFF: $rel"
       $safe = $rel -replace '/','__'
       cmd /c fc "$a" "$b" | Out-File -FilePath (Join-Path $diffsDir ($safe + '.diff')) -Encoding utf8
-      Add-Content -Path $diffListPath -Value $rel
+      $null = $script:diffRels.Add($rel)
     }
   }
 }
+$script:diffRels | Sort-Object -Unique | Out-File -FilePath $diffListPath -Encoding utf8
 Write-Output "Diffs written to $diffsDir and $diffListPath (if any)"
 # 4.5) Generate & run inline classifier (written to audit folder at runtime)
 Write-Output "Generating classifier script and classifying diffs..."
@@ -146,7 +154,9 @@ if ($LASTEXITCODE -ne 0) { Write-Output "Warning: inline classifier returned err
 $missingCount = (Get-Content $pathReportPath -ErrorAction SilentlyContinue | Select-String 'MISSING-IN-SCAFFOLD' -SimpleMatch).Count
 $extraCount = (Get-Content $pathReportPath -ErrorAction SilentlyContinue | Select-String 'EXTRA-IN-SCAFFOLD' -SimpleMatch).Count
 $diffCount = (Get-Content $diffListPath -ErrorAction SilentlyContinue | Measure-Object).Count
-"SUMMARY: Missing=$missingCount; Extra=$extraCount; Diffs=$diffCount" | Out-File $summaryPath -Encoding utf8
+$normalCount = (Get-Content (Join-Path $auditRoot 'normal-diffs.txt') -ErrorAction SilentlyContinue | Measure-Object).Count
+$errorCount = (Get-Content (Join-Path $auditRoot 'error-diffs.txt') -ErrorAction SilentlyContinue | Measure-Object).Count
+"SUMMARY: Missing=$missingCount; Extra=$extraCount; Diffs=$diffCount; Normal=$normalCount; Error=$errorCount" | Out-File $summaryPath -Encoding utf8
 Write-Output "Wrote $summaryPath"
 
 Write-Output "Mirror audit complete. Files produced under: $auditRoot"
