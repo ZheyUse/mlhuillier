@@ -210,7 +210,10 @@ function scaffoldProject(string $projectRoot, string $projectName): bool
       return $result;
     }
 
-    if (is_dir(__DIR__ . '/audit/scaffold_templates')) {
+    // Use embedded templates by default. External audit templates are opt-in
+    // to avoid stale snapshots silently overriding generator updates.
+    $useAuditTemplates = (getenv('ML_USE_AUDIT_TEMPLATES') === '1');
+    if ($useAuditTemplates && is_dir(__DIR__ . '/audit/scaffold_templates')) {
       $templates = loadTemplatesFromDir(__DIR__ . '/audit/scaffold_templates');
     } else {
     $templates = [
@@ -419,6 +422,8 @@ if ($isEntry) {
 <?php require __DIR__ . '/../../../modals/logout-modal/logout-modal.php'; ?>
 <?php require __DIR__ . '/../../../modals/accountmanagement/add-account-modal.php'; ?>
 <?php require __DIR__ . '/../../../modals/accountmanagement/edit-account-modal.php'; ?>
+<?php require __DIR__ . '/../../../modals/accountmanagement/reset-account-modal.php'; ?>
+<?php require __DIR__ . '/../../../modals/accountmanagement/change-status-modal.php'; ?>
 <?php
 if ($isEntry) {
   echo "</body>\n</html>\n";
