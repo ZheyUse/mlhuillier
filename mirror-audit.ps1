@@ -69,6 +69,78 @@ foreach($rel in (Get-ChildItem $baseTest -Recurse -File | ForEach-Object { $_.Fu
   }
 }
 Write-Output "Diffs written to $diffsDir and $diffListPath (if any)"
+# 4.5) Generate & run inline classifier (written to audit folder at runtime)
+Write-Output "Generating classifier script and classifying diffs..."
+$classifyScript = Join-Path $auditRoot 'classify-diffs.ps1'
+$classifyContent = @'
+param()
+try {
+  $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+  $repoRoot = Resolve-Path (Join-Path $scriptDir '..')
+  $testRoot = Join-Path $repoRoot 'test'
+  $scaffoldDir = Join-Path $scriptDir 'scaffold_templates'
+  $diffListPath = Join-Path $scriptDir 'audit-diffs-list.txt'
+  $normalOut = Join-Path $scriptDir 'normal-diffs.txt'
+  $errorOut = Join-Path $scriptDir 'error-diffs.txt'
+
+  if (-not (Test-Path $diffListPath)) {
+    Write-Error "Diff list not found: $diffListPath"
+    exit 2
+  }
+
+  function Normalize-Content([string]$text){
+    if ($null -eq $text) { return '' }
+    $t = $text -replace "`r`n", "`n"
+    $t = $t -replace '(?mi)^[ \t]*APP_NAME\s*=.*?(?:\n|$)',''
+    $t = $t -replace '(?is)<title>.*?</title>','<title>__TITLE__</title>'
+    $t = $t -replace '(?m)^(#\s*).+','$1__PROJECT__'
+    $lines = ($t -split "`n") | ForEach-Object { ($_ -replace '\\s+',' ') -replace '^[ \t]+|[ \t]+$','' }
+    $lines = $lines | Where-Object { $_ -ne '' }
+    return ($lines -join "`n").ToLowerInvariant()
+  }
+
+  $normal = New-Object System.Collections.Generic.List[string]
+  $errors = New-Object System.Collections.Generic.List[string]
+
+  Get-Content $diffListPath -ErrorAction Stop | ForEach-Object {
+    $rel = $_.Trim()
+    if ($rel -eq '') { return }
+    $testFile = Join-Path $testRoot ($rel -replace '/','\\')
+    $scaffoldFile = Join-Path $scaffoldDir ($rel -replace '/','\\')
+
+    if (-not (Test-Path $testFile) -or -not (Test-Path $scaffoldFile)) {
+      $errors.Add($rel)
+      return
+    }
+
+    $a = Get-Content $testFile -Raw -ErrorAction SilentlyContinue
+    $b = Get-Content $scaffoldFile -Raw -ErrorAction SilentlyContinue
+
+    $na = Normalize-Content $a
+    $nb = Normalize-Content $b
+
+    if ($na -eq $nb) { $normal.Add($rel) } else { $errors.Add($rel) }
+  }
+
+  $normal | Sort-Object | Out-File $normalOut -Encoding utf8
+  $errors | Sort-Object | Out-File $errorOut -Encoding utf8
+
+  Write-Output "Classification complete. Normal=$($normal.Count); Error=$($errors.Count)"
+  Write-Output "Normal diffs: $normalOut"
+  Write-Output "Error diffs: $errorOut"
+  exit 0
+
+} catch {
+  Write-Error "Classification failed: $_"
+  exit 1
+}
+'@
+
+# write the classifier to audit folder so it exists for this run only
+Set-Content -Path $classifyScript -Value $classifyContent -Encoding utf8
+# run it
+powershell -NoProfile -ExecutionPolicy Bypass -File $classifyScript
+if ($LASTEXITCODE -ne 0) { Write-Output "Warning: inline classifier returned error code $LASTEXITCODE" }
 
 # 5) Summary counts
 $missingCount = (Get-Content $pathReportPath -ErrorAction SilentlyContinue | Select-String 'MISSING-IN-SCAFFOLD' -SimpleMatch).Count

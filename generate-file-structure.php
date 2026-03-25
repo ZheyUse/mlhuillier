@@ -3514,6 +3514,29 @@ MD,
     ];
     }
 
+    // Keep critical account-management templates mirrored from /test (source of truth)
+    // when this repository includes it.
+    $testRoot = __DIR__ . DIRECTORY_SEPARATOR . 'test';
+    $syncFromTest = [
+      'src/modals/accountmanagement/add-account-modal.css',
+      'src/modals/accountmanagement/add-account-modal.php',
+      'src/modals/accountmanagement/edit-account-modal.php',
+      'src/pages/maintenance/accountmanagement/accountmanagement.php',
+    ];
+    if (is_dir($testRoot)) {
+      foreach ($syncFromTest as $relativePath) {
+        $sourcePath = $testRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
+        if (!is_file($sourcePath)) {
+          continue;
+        }
+        $content = @file_get_contents($sourcePath);
+        if ($content === false) {
+          continue;
+        }
+        $templates[$relativePath] = $content;
+      }
+    }
+
     foreach ($templates as $relativeFile => $content) {
         $absoluteFile = $projectRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativeFile);
         $compiled = renderTemplate($content, $projectName, $projectTitle);
