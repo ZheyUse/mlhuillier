@@ -2,7 +2,7 @@
 setlocal EnableExtensions EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.37"
+set "ML_VERSION=1.0.38"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -13,6 +13,38 @@ set "SKIP_DELEGATE=0"
 if /I "%~1"=="clone" if /I "%~2"=="local" set "SKIP_DELEGATE=1"
 if /I "%~1"=="nav" set "SKIP_DELEGATE=1"
 if defined ML_REPO set "SKIP_DELEGATE=1"
+
+rem Early validation: catch unknown top-level commands/typo flags before delegating
+set "EARLY_CMD=%~1"
+if not "%EARLY_CMD%"=="" (
+        if /I "%EARLY_CMD%"=="test" goto :early_ok
+        if /I "%EARLY_CMD%"=="add" goto :early_ok
+        if /I "%EARLY_CMD%"=="create" goto :early_ok
+        if /I "%EARLY_CMD%"=="update" goto :early_ok
+        if /I "%EARLY_CMD%"=="serve" goto :early_ok
+        if /I "%EARLY_CMD%"=="nav" goto :early_ok
+        if /I "%EARLY_CMD%"=="clone" goto :early_ok
+        if /I "%EARLY_CMD%"=="--v" goto :early_ok
+        if /I "%EARLY_CMD%"=="--h" goto :early_ok
+        if /I "%EARLY_CMD%"=="--d" goto :early_ok
+        if /I "%EARLY_CMD%"=="--c" goto :early_ok
+        echo %EARLY_CMD% | findstr ":" >nul
+        if not errorlevel 1 goto :early_ok
+        if "%EARLY_CMD:~0,2%"=="--" goto :early_ok
+        if "%EARLY_CMD:~0,1%"=="-" (
+                echo Invalid flag: %EARLY_CMD%
+                echo.
+                call :show_help
+                exit /b 2
+        )
+        echo Unknown command: %EARLY_CMD%
+        echo.
+        call :show_help
+        exit /b 2
+)
+:
+:: fallthrough
+:early_ok
 
 if /I not "%~dp0"=="%ML_INSTALLED_DIR%" (
         if exist "%ML_INSTALLED_DIR%ml.bat" (
@@ -63,6 +95,47 @@ if /I "%~1"=="serve" goto :cmd_serve
 if /I "%~1"=="nav" goto :cmd_nav
 if /I "%~1"=="clone" if /I "%~2"=="local" goto :cmd_clone_local
 
+rem Validate unknown top-level commands/flags before delegating to PHP generator
+set "CMD=%~1"
+if not "%CMD%"=="" (
+        rem Allow known commands and global flags
+        if /I "%CMD%"=="test" goto :cmd_generate_allow
+        if /I "%CMD%"=="add" goto :cmd_generate_allow
+        if /I "%CMD%"=="create" goto :cmd_generate_allow
+        if /I "%CMD%"=="update" goto :cmd_generate_allow
+        if /I "%CMD%"=="serve" goto :cmd_generate_allow
+        if /I "%CMD%"=="nav" goto :cmd_generate_allow
+        if /I "%CMD%"=="clone" goto :cmd_generate_allow
+        if /I "%CMD%"=="--v" goto :cmd_generate_allow
+        if /I "%CMD%"=="--h" goto :cmd_generate_allow
+        if /I "%CMD%"=="--d" goto :cmd_generate_allow
+        if /I "%CMD%"=="--c" goto :cmd_generate_allow
+
+        rem Allow colon-style commands (eg. make:page)
+        echo %CMD% | findstr ":" >nul
+        if not errorlevel 1 goto :cmd_generate_allow
+
+        rem Allow long flags (handled earlier but keep permissive)
+        if "%CMD:~0,2%"=="--" goto :cmd_generate_allow
+
+        rem Single-dash short flags are likely typos; show help
+        if "%CMD:~0,1%"=="-" (
+                echo Invalid flag: %CMD%
+                echo.
+                call :show_help
+                exit /b 2
+        )
+
+        rem Unknown word - show help
+        echo Unknown command: %CMD%
+        echo.
+        call :show_help
+        exit /b 2
+)
+
+goto :cmd_generate
+
+:cmd_generate_allow
 goto :cmd_generate
 
 :show_version
@@ -107,6 +180,7 @@ echo   ml --h test userdb
 echo   ml --h --c
 echo   ml --h create --a
 echo   ml --h --d
+echo   ml --h nav
 echo   ml --h serve
 echo   ml --h add userdb
 exit /b 0
@@ -170,6 +244,9 @@ echo.
 echo HELP: Create project
 echo Usage: ml create ^<project_name^>
 echo Description: Generates project scaffold using generator script.
+echo.
+echo Note: Use the audit pipeline to validate templates before pushing changes.
+echo       Run `powershell -File .\mirror-audit.ps1` from the repo root.
 exit /b 0
 
 :help_create_account
@@ -246,13 +323,19 @@ exit /b 0
 :help_nav
 echo.
 echo HELP: Navigation helper
-echo Usage: ml nav [--^<project_name^>] [--remote]
-echo Description: Interactive helper to change directories to projects under C:\xampp\htdocs.
-echo   Running `ml nav` now goes directly to C:\xampp\htdocs.
-echo   Use --^<project_name^> to jump to a project (e.g. ml nav --olok).
-echo   The helper will prompt to open the selected project in VSCode (Y/N). If VSCode is already
-echo   running the CLI will prefer opening the project in a new window. Use --remote or set
-echo   ML_REMOTE=1 to skip opening editors from remote environments.
+echo Usage: ml nav
+echo.
+echo Arguments:
+echo   1. ml nav --projectname
+echo      Navigates to your created project folder under C:\xampp\htdocs and prompts to open
+echo      the project in VSCode (Y/N).
+echo.
+echo   2. ml nav --projectname --remote
+echo      Runs the remote ml-nav.php helper to perform remote-assisted navigation or actions.
+echo.
+echo Notes:
+echo   - Running `ml nav` with no arguments changes directory to C:\xampp\htdocs and exits.
+echo   - Set `ML_REMOTE=1` to disable editor launches and prompts (useful for CI).
 exit /b 0
 
 :cmd_test_userdb
@@ -550,6 +633,14 @@ if "%~2"=="" (
 
 set "NAV_ARG=%~2"
 if not "%NAV_ARG%"=="" (
+        rem If user provided a single-dash flag (likely a typo), show top-level help
+        if "%NAV_ARG:~0,1%"=="-" if not "%NAV_ARG:~0,2%"=="--" (
+                echo Invalid flag: %NAV_ARG%
+                echo.
+                call :show_help
+                exit /b 2
+        )
+
         if "%NAV_ARG:~0,2%"=="--" (
                 set "PROJECT_NAME=%NAV_ARG:~2%"
                 if defined PROJECT_NAME (
