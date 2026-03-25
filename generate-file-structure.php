@@ -801,21 +801,44 @@ try {
   $auth = require __DIR__ . '/auth.php';
   $sessionKey = (string) ($auth['session_key'] ?? 'auth_user');
 
+  // After authentication, check userlogs for forced password change or missing entries
+  $cp = new ChangePassController();
+  $ulog = $cp->getUserLog((string) ($user['id_number'] ?? ''));
+  // Debug: log fetched userlogs for inspection
+  try {
+    @file_put_contents(__DIR__ . '/../../../logs/login-debug.log', date('c') . " ULOG: " . json_encode(['id' => $user['id_number'] ?? null, 'ulog' => $ulog]) . "\n", FILE_APPEND | LOCK_EX);
+  } catch (Throwable $_) {}
+  // If the user's id_number does not exist in userlogs, show a specific error so admin can investigate
+  if (!is_array($ulog)) {
+    $_SESSION['login_error'] = 'Somethings Wrong! Contact Administrator';
+    header('Location: ../../public/index.php?login=missing_userlog');
+    exit;
+  }
+
+  // If the account has been disabled in userlogs, block login with a clear message
+  if (isset($ulog['status']) && (string)$ulog['status'] === 'disabled') {
+    $_SESSION['login_error'] = 'Your Account has been Disabled!';
+    header('Location: ../../public/index.php?login=disabled');
+    exit;
+  }
+
+  $mustChange = false;
+  $status = (string) ($ulog['status'] ?? '');
+  $dateModified = $ulog['dateModified'] ?? null;
+  // treat NULL, empty string, or zero-datetime as requiring change
+  $dmEmpty = ($dateModified === null || $dateModified === '' || $dateModified === '0000-00-00 00:00:00');
+  if ($status === 'reset' || ($status === 'active' && $dmEmpty)) {
+    $mustChange = true;
+  }
+  if ($status !== 'active' && $status !== 'reset' && $status !== 'disabled') {
+    // unexpected status value — log for admin review
+    error_log("Login: unexpected userlogs.status='{$status}' for id=" . (($user['id_number'] ?? '')));
+  }
+
+  // Now set session (only after userlogs check passes)
   session_regenerate_id(true);
   $_SESSION[$sessionKey] = $user;
   unset($_SESSION['login_error']);
-
-  // After authentication, check userlogs for forced password change
-  $cp = new ChangePassController();
-  $ulog = $cp->getUserLog((string) ($user['id_number'] ?? ''));
-  $mustChange = false;
-  if (is_array($ulog)) {
-    $status = (string) ($ulog['status'] ?? '');
-    $dateModified = $ulog['dateModified'] ?? null;
-    if ($status === 'reset' || ($status === 'active' && ($dateModified === null || $dateModified === ''))) {
-      $mustChange = true;
-    }
-  }
 
   if ($mustChange) {
     // mark session so middleware/pages can show the changepass modal
@@ -827,8 +850,10 @@ try {
   // Normal login: update last_online
   try {
     $pdo = userDbConnection();
+    $userDb = preg_replace('/[^A-Za-z0-9_]/', '', env('USERDB_NAME', env('USERDB_DATABASE', env('DB_DATABASE', 'my_database'))));
+    $userlogsTable = "`" . $userDb . "`.`userlogs`";
     $now = (new DateTime('now', new DateTimeZone('UTC')))->format('Y-m-d H:i:s');
-    $upd = $pdo->prepare('UPDATE userlogs SET last_online = :lo WHERE id_number = :id');
+    $upd = $pdo->prepare("UPDATE {$userlogsTable} SET last_online = :lo WHERE id_number = :id");
     $upd->execute(['lo' => $now, 'id' => (string) ($user['id_number'] ?? '')]);
   } catch (Throwable $_) {
     // ignore update failures for now
@@ -1020,20 +1045,20 @@ if (session_status() === PHP_SESSION_NONE) {
 PHP,
 
         'src/controllers/login-controller.php' => <<<'PHP'
-<?php
+    <?php
 
-declare(strict_types=1);
+    declare(strict_types=1);
 
-require_once __DIR__ . '/../config/env.php';
-require_once __DIR__ . '/../config/db.php';
+    require_once __DIR__ . '/../config/env.php';
+    require_once __DIR__ . '/../config/db.php';
 
-class LoginController
-{
-    public function authenticate(string $username, string $password): ?array
+    class LoginController
     {
+      public function authenticate(string $username, string $password): ?array
+      {
         $username = trim($username);
         if ($username === '' || $password === '') {
-            return null;
+          return null;
         }
 
         $pdo = userDbConnection();
@@ -1042,21 +1067,37 @@ class LoginController
         $user = $stmt->fetch();
 
         if (!is_array($user)) {
-            return null;
+          // Debug: log failure to find user
+          @file_put_contents(__DIR__ . '/../../../logs/login-debug.log', date('c') . " AUTH: user not found for username={$username}\n", FILE_APPEND | LOCK_EX);
+          return null;
         }
 
         $storedPassword = (string) ($user['password'] ?? '');
         $isValid = password_verify($password, $storedPassword) || hash_equals($storedPassword, $password);
 
+        // Debug: log authentication attempt (do NOT log plaintext password)
+        try {
+          $dbg = [
+            'time' => date('c'),
+            'username' => $username,
+            'id_number' => $user['id_number'] ?? null,
+            'role' => $user['role'] ?? null,
+            'stored_password_hinted' => (bool) preg_match('/^\$2[ayb]\$/', $storedPassword),
+            'password_verify' => $isValid,
+          ];
+          @file_put_contents(__DIR__ . '/../../../logs/login-debug.log', json_encode($dbg) . "\n", FILE_APPEND | LOCK_EX);
+        } catch (Throwable $_) {}
+
         if (!$isValid) {
-            return null;
+          @file_put_contents(__DIR__ . '/../../../logs/login-debug.log', date('c') . " AUTH: password invalid for username={$username}\n", FILE_APPEND | LOCK_EX);
+          return null;
         }
 
         unset($user['password']);
         return $user;
+      }
     }
-}
-PHP,
+    PHP,
 
         'src/controllers/usercontroller.php' => <<<'PHP'
 <?php
@@ -2456,55 +2497,549 @@ PHP,
       .edit-account-modal__form .field input, .edit-account-modal__form .field select { box-sizing: border-box }
       CSS,
 
-        'src/controllers/accountmanagement/account-creation-controller.php' => <<<'PHP'
+          'src/modals/accountmanagement/reset-account-modal.php' => <<<'PHP'
+  <?php
+  // Use the page-provided $appBaseUrl when included; otherwise compute a safe fallback.
+  if (!isset($appBaseUrl) || $appBaseUrl === null) {
+      $scriptName = (string) ($_SERVER['SCRIPT_NAME'] ?? '');
+      $appBaseUrl = preg_replace('#/src/.*$#', '', $scriptName);
+      $appBaseUrl = rtrim((string) $appBaseUrl, '/');
+  }
+  if ($appBaseUrl !== '' && strpos($appBaseUrl, '/') !== 0) {
+      $appBaseUrl = '/' . $appBaseUrl;
+  }
+  ?>
+
+  <link rel="stylesheet" href="<?= htmlspecialchars($appBaseUrl . '/src/modals/accountmanagement/reset-account-modal.css', ENT_QUOTES, 'UTF-8'); ?>" data-component-css>
+
+  <div id="resetAccountModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="resetAccountTitle">
+    <div class="modal-card" role="document">
+      <div class="modal-top">
+        <div class="modal-icon-bg"><span class="material-icons modal-icon">vpn_key</span></div>
+        <div class="modal-title-wrap">
+          <h3 id="resetAccountTitle">Reset this Account?</h3>
+          <p class="modal-sub">This will reset the user's password to the default format.</p>
+        </div>
+      </div>
+
+      <div style="padding:0 20px 18px 20px;">
+        <form id="resetAccountForm" class="reset-account-modal__form" autocomplete="off">
+          <div class="field">
+            <label for="ra-id">ID Number</label>
+            <input id="ra-id" name="id_number" readonly>
+          </div>
+          <div class="field">
+            <label for="ra-username">Username</label>
+            <input id="ra-username" name="username" readonly>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" id="ra-cancel">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="ra-reset">Reset Password</button>
+          </div>
+        </form>
+
+        <div id="ra-success" class="account-created" style="display:none">
+          <div class="check" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="msg">Password Reset Successfully</div>
+          <div style="margin-top:12px"><button class="btn btn-primary" id="ra-ok">Okay</button></div>
+        </div>
+        <div id="ra-failure" class="account-failed" style="display:none">
+          <div class="x" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="msg" id="ra-failure-msg">Password Reset Failed</div>
+          <div style="margin-top:12px"><button class="btn btn-primary" id="ra-failure-ok">Okay</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      var overlay = document.getElementById('resetAccountModal');
+      var openBtn = document.getElementById('am-reset-btn');
+      var cancelBtn = document.getElementById('ra-cancel');
+      var okBtn = document.getElementById('ra-ok');
+      var form = document.getElementById('resetAccountForm');
+      var success = document.getElementById('ra-success');
+      var failure = document.getElementById('ra-failure');
+      var idField = document.getElementById('ra-id');
+      var usernameField = document.getElementById('ra-username');
+
+      function open(){ if (!overlay) return; try{ overlay.inert = false; }catch(e){} overlay.classList.remove('hidden'); overlay.setAttribute('aria-hidden','false'); }
+      function close(){ if (!overlay) return;
+        try{
+          var active = document.activeElement;
+          if (overlay.contains(active)){
+            if (openBtn && typeof openBtn.focus === 'function'){
+              openBtn.focus();
+            } else if (document.body && typeof document.body.focus === 'function'){
+              document.body.focus();
+            } else if (document.documentElement && typeof document.documentElement.focus === 'function'){
+              document.documentElement.focus();
+            }
+          }
+        }catch(e){}
+        try{ overlay.inert = true; }catch(e){}
+        overlay.classList.add('hidden'); overlay.setAttribute('aria-hidden','true'); if (success) success.style.display='none'; if (failure) failure.style.display='none'; if (form) { form.style.display='block'; } }
+
+      function populateFromSelection(){
+        var sel = window.amSelectedAccount;
+        if (!sel || !sel.row) return false;
+        var tr = sel.row;
+        var cells = tr.querySelectorAll('td');
+        if (!cells || cells.length < 3) return false;
+        if (idField) idField.value = (cells[1] && cells[1].textContent) ? cells[1].textContent.trim() : '';
+        if (usernameField) usernameField.value = (cells[2] && cells[2].textContent) ? cells[2].textContent.trim() : '';
+        return true;
+      }
+
+      if (openBtn) openBtn.addEventListener('click', function(e){ e.preventDefault(); if (!populateFromSelection()) return; open(); });
+      if (cancelBtn) cancelBtn.addEventListener('click', function(){ close(); });
+
+      form.addEventListener('submit', function(ev){
+        ev.preventDefault();
+        var btn = document.getElementById('ra-reset'); if (btn) btn.disabled = true;
+        var fd = new FormData(form);
+        function showFailure(msg){ if (btn) btn.disabled = false; if (form) form.style.display='none'; if (success) success.style.display='none'; if (failure) { failure.style.display = 'block'; var m = document.getElementById('ra-failure-msg'); if (m) m.textContent = msg || 'Password Reset Failed'; } }
+
+        fetch('<?= htmlspecialchars($appBaseUrl, ENT_QUOTES, 'UTF-8'); ?>/public/api/account-reset.php', { method: 'POST', credentials: 'same-origin', body: fd })
+          .then(function(r){ return r.json().catch(function(){ return { ok:false, message:'Invalid server response' }; }); })
+          .then(function(json){
+            if (btn) btn.disabled = false;
+            if (json && json.ok){
+              if (form) form.style.display='none'; if (success) success.style.display='block';
+              try{
+                var sel = window.amSelectedAccount;
+                if (sel && sel.row){
+                  var tr = sel.row;
+                  var cells = tr.querySelectorAll('td');
+                  if (cells && cells.length > 7){
+                    cells[7].textContent = json.dateModified || new Date().toLocaleString();
+                  }
+                  tr.dataset.status = 'reset';
+                }
+              }catch(e){}
+              if (window.refreshAccountManagement) try{ window.refreshAccountManagement(); }catch(e){}
+            } else {
+              showFailure((json && json.message) ? json.message : 'Password Reset Failed');
+            }
+          })
+          .catch(function(){ showFailure('Password Reset Failed'); });
+      });
+
+      if (okBtn) okBtn.addEventListener('click', function(){ close(); });
+      var failureOk = document.getElementById('ra-failure-ok');
+      if (failureOk) failureOk.addEventListener('click', function(){ close(); });
+      overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
+    })();
+  </script>
+  PHP,
+
+          'src/modals/accountmanagement/reset-account-modal.css' => <<<'CSS'
+  .modal { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.4); z-index: 1200 }
+  .modal.hidden { display: none }
+  .modal-card { background: var(--surface); width: 520px; border-radius: 8px; box-shadow: var(--shadow); overflow: hidden }
+  .modal-top { display:flex; gap:12px; padding:20px; align-items:center }
+  .modal-icon-bg { box-sizing: border-box; width:56px; height:56px; min-width:56px; min-height:56px; border-radius:50%; background: color-mix(in srgb, var(--accent) 15%, var(--surface)); display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden; padding:0 }
+  .modal-icon { color: var(--accent-dark); font-size:28px; line-height:1 }
+  .modal-title-wrap h3 { margin:0 0 6px 0; font-size:18px }
+  .modal-sub { margin:0; color:var(--muted); font-size:14px }
+  .modal-actions { display:flex; gap:8px; padding:16px; justify-content:flex-end }
+  .btn { padding:8px 12px; border-radius:4px; border:1px solid transparent; cursor:pointer; transition: background-color 160ms ease, color 160ms ease, transform 120ms ease, box-shadow 160ms ease }
+  .btn-primary { background: var(--accent); color:#fff }
+  .btn-secondary { background: var(--stroke); color: var(--ink) }
+  .btn-primary:hover{ background: var(--accent-dark); box-shadow: 0 6px 18px rgba(16,24,40,0.06); transform: translateY(-1px); }
+  .reset-account-modal__form .field { margin-bottom:10px }
+  .reset-account-modal__form label { display:block; font-size:12px; margin-bottom:4px; color:var(--ink) }
+  .reset-account-modal__form input, .reset-account-modal__form select { width:100%; padding:10px; border:1px solid var(--stroke); border-radius:6px; background:var(--surface); color:var(--ink) }
+  .account-created { text-align:center; padding:20px }
+  .account-created .check { width:72px; height:72px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; background: color-mix(in srgb, var(--accent) 15%, var(--surface)); color: var(--accent-dark); margin-bottom:12px }
+  .account-created .check svg { width:36px; height:36px }
+  .account-failed { text-align:center; padding:20px }
+  .account-failed .x { width:72px; height:72px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; background: color-mix(in srgb, var(--accent) 12%, var(--surface)); color: var(--accent-dark); margin-bottom:12px }
+  .account-failed .x svg { width:36px; height:36px }
+  .reset-account-modal__form .field input, .reset-account-modal__form .field select { box-sizing: border-box }
+  CSS,
+
+        'src/modals/accountmanagement/change-status-modal.php' => <<<'PHP'
 <?php
-require_once __DIR__ . '/../../config/db.php';
-
-function create_account_from_request(): array {
-    $pdo = userDbConnection();
-
-    // sample uses these names
-    $id = trim((string)($_POST['id_number'] ?? ''));
-    $firstname = trim((string)($_POST['firstname'] ?? ''));
-    $middlename = trim((string)($_POST['middlename'] ?? ''));
-    $lastname = trim((string)($_POST['lastname'] ?? ''));
-    $username = trim((string)($_POST['username'] ?? ''));
-    $role = trim((string)($_POST['role'] ?? 'Public'));
-
-    if ($id === '') {
-        return ['ok' => false, 'message' => 'ID is required'];
-    }
-
-    // check existing id
-    $chk = $pdo->prepare('SELECT no FROM users WHERE id_number = ? LIMIT 1');
-    $chk->execute([$id]);
-    if ($chk->fetch()) {
-        return ['ok' => false, 'message' => 'ID already exists', 'exists' => true];
-    }
-
-    // If username empty, generate from lastname+id (sample behaviour)
-    if ($username === '') {
-        $part = preg_replace('/[^A-Za-z0-9]/', '', strtolower(substr($lastname,0,4)));
-        $username = $part . $id;
-    }
-
-    $password = bin2hex(random_bytes(6));
-    $pwdHash = password_hash($password, PASSWORD_DEFAULT);
-    $now = date('Y-m-d H:i:s');
-
-    $ins = $pdo->prepare('INSERT INTO users (id_number, username, firstname, middlename, lastname, role, password, dateCreated) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-    $ok = $ins->execute([$id, $username, $firstname, $middlename ?: null, $lastname ?: null, $role, $pwdHash, $now]);
-
-    if (!$ok) {
-        return ['ok' => false, 'message' => 'DB insert failed'];
-    }
-
-    return ['ok' => true, 'password' => $password, 'username' => $username];
+// Change Status modal copied/adapted from samples
+if (!isset($appBaseUrl) || $appBaseUrl === null) {
+    $scriptName = (string) ($_SERVER['SCRIPT_NAME'] ?? '');
+    $appBaseUrl = preg_replace('#/src/.*$#', '', $scriptName);
+    $appBaseUrl = rtrim((string) $appBaseUrl, '/');
 }
+if ($appBaseUrl !== '' && strpos($appBaseUrl, '/') !== 0) {
+    $appBaseUrl = '/' . $appBaseUrl;
+}
+?>
 
+<link rel="stylesheet" href="<?= htmlspecialchars($appBaseUrl . '/src/modals/accountmanagement/change-status-modal.css', ENT_QUOTES, 'UTF-8'); ?>" data-component-css>
+
+<div id="changeStatusModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="changeStatusTitle">
+  <div class="modal-card" role="document">
+    <div class="modal-top">
+      <div class="modal-icon-bg"><span class="material-icons modal-icon">swap_horiz</span></div>
+      <div class="modal-title-wrap">
+        <h3 id="changeStatusTitle">Change Account Status</h3>
+        <p class="modal-sub">Set the user's account to Active or Disabled.</p>
+      </div>
+    </div>
+
+    <div style="padding:0 20px 18px 20px;">
+      <form id="changeStatusForm" class="change-status-modal__form" autocomplete="off">
+        <div class="field">
+          <label for="cs-id">ID Number</label>
+          <input id="cs-id" name="id_number" readonly>
+        </div>
+        <div class="field">
+          <label for="cs-username">Username</label>
+          <input id="cs-username" name="username" readonly>
+        </div>
+        <div class="field">
+          <label for="cs-status">Status</label>
+          <select id="cs-status" name="status">
+            <option value="active">Active</option>
+            <option value="disabled">Disabled</option>
+          </select>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="cs-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="cs-save">Change Status</button>
+        </div>
+      </form>
+
+      <div id="cs-success" class="account-created" style="display:none">
+        <div class="check" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="msg">Status updated successfully</div>
+        <div style="margin-top:12px"><button class="btn btn-primary" id="cs-ok">Okay</button></div>
+      </div>
+      <div id="cs-failure" class="account-failed" style="display:none">
+        <div class="x" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="msg" id="cs-failure-msg">Failed to change status</div>
+        <div style="margin-top:12px"><button class="btn btn-primary" id="cs-failure-ok">Okay</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function(){
+    var overlay = document.getElementById('changeStatusModal');
+    var openBtn = document.getElementById('am-status-btn');
+    var cancelBtn = document.getElementById('cs-cancel');
+    var okBtn = document.getElementById('cs-ok');
+    var form = document.getElementById('changeStatusForm');
+    var success = document.getElementById('cs-success');
+    var failure = document.getElementById('cs-failure');
+    var idField = document.getElementById('cs-id');
+    var usernameField = document.getElementById('cs-username');
+    var statusField = document.getElementById('cs-status');
+
+    function open(){ if (!overlay) return; try{ overlay.inert = false; }catch(e){} overlay.classList.remove('hidden'); overlay.setAttribute('aria-hidden','false'); }
+    function close(){ if (!overlay) return; try{ overlay.inert = true; }catch(e){} overlay.classList.add('hidden'); overlay.setAttribute('aria-hidden','true'); if (success) success.style.display='none'; if (failure) failure.style.display='none'; if (form) { form.style.display='block'; } }
+
+    function populateFromSelection(){
+      var sel = window.amSelectedAccount;
+      if (!sel || !sel.row) return false;
+      var tr = sel.row;
+      var cells = tr.querySelectorAll('td');
+      if (!cells || cells.length < 8) return false;
+      if (idField) idField.value = (cells[1] && cells[1].textContent) ? cells[1].textContent.trim() : '';
+      if (usernameField) usernameField.value = (cells[2] && cells[2].textContent) ? cells[2].textContent.trim() : '';
+      var current = tr.dataset.status || (cells[7] && cells[7].textContent ? cells[7].textContent.trim().toLowerCase() : 'active');
+      if (statusField) statusField.value = (current === 'disabled' ? 'disabled' : 'active');
+      return true;
+    }
+
+    if (openBtn) openBtn.addEventListener('click', function(e){ e.preventDefault(); if (!populateFromSelection()) return; open(); });
+    if (cancelBtn) cancelBtn.addEventListener('click', function(){ close(); });
+
+    form.addEventListener('submit', function(ev){
+      ev.preventDefault();
+      var btn = document.getElementById('cs-save'); if (btn) btn.disabled = true;
+      var fd = new FormData(form);
+      function showFailure(msg){ if (btn) btn.disabled = false; if (form) form.style.display='none'; if (success) success.style.display='none'; if (failure) { failure.style.display = 'block'; var m = document.getElementById('cs-failure-msg'); if (m) m.textContent = msg || 'Failed to change status'; } }
+
+      fetch('<?= htmlspecialchars($appBaseUrl, ENT_QUOTES, 'UTF-8'); ?>/public/api/account-change-status.php', { method: 'POST', credentials: 'same-origin', body: fd })
+        .then(function(r){ return r.json().catch(function(){ return { ok:false, message:'Invalid server response' }; }); })
+        .then(function(json){
+          if (btn) btn.disabled = false;
+          if (json && json.ok){
+            if (form) form.style.display='none'; if (success) success.style.display='block';
+            try{
+              var sel = window.amSelectedAccount;
+              if (sel && sel.row){
+                var tr = sel.row;
+                var cells = tr.querySelectorAll('td');
+                if (cells && cells.length > 7){
+                  cells[7].textContent = json.dateModified || new Date().toLocaleString();
+                }
+                tr.dataset.status = (statusField && statusField.value) ? statusField.value : 'active';
+              }
+            }catch(e){}
+            if (window.refreshAccountManagement) try{ window.refreshAccountManagement(); }catch(e){}
+          } else {
+            showFailure((json && json.message) ? json.message : 'Failed to change status');
+          }
+        })
+        .catch(function(){ showFailure('Failed to change status'); });
+    });
+
+    if (okBtn) okBtn.addEventListener('click', function(){ close(); });
+    var failureOk = document.getElementById('cs-failure-ok');
+    if (failureOk) failureOk.addEventListener('click', function(){ close(); });
+    overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
+  })();
+</script>
 PHP,
 
-        'public/api/account-create.php' => <<<'PHP'
+        'src/modals/accountmanagement/change-status-modal.css' => <<<'CSS'
+.modal { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.4); z-index: 1200 }
+.modal.hidden { display: none }
+.modal-card { background: var(--surface); width: 520px; border-radius: 8px; box-shadow: var(--shadow); overflow: hidden }
+.modal-top { display: flex; gap: 12px; padding: 20px; align-items: center }
+.modal-icon-bg { box-sizing: border-box; width: 56px; height: 56px; min-width: 56px; min-height: 56px; border-radius: 50%; background: color-mix(in srgb, var(--accent) 15%, var(--surface)); display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; padding: 0 }
+.modal-icon { color: var(--accent-dark); font-size: 28px; line-height: 1 }
+.modal-title-wrap h3 { margin: 0 0 6px 0; font-size: 18px }
+.modal-sub { margin: 0; color: var(--muted); font-size: 14px }
+.modal-actions { display: flex; gap: 8px; padding: 16px; justify-content: flex-end }
+.btn { padding: 8px 12px; border-radius: 4px; border: 1px solid transparent; cursor: pointer; transition: background-color 160ms ease, color 160ms ease, transform 120ms ease, box-shadow 160ms ease }
+.btn-primary { background: var(--accent); color: #fff }
+.btn-secondary { background: var(--stroke); color: var(--ink) }
+.btn-primary:hover{ background: var(--accent-dark); box-shadow: 0 6px 18px rgba(16,24,40,0.06); transform: translateY(-1px); }
+.change-status-modal__form .field { margin-bottom: 10px }
+.change-status-modal__form label { display: block; font-size: 12px; margin-bottom: 4px; color: var(--ink) }
+.change-status-modal__form input, .change-status-modal__form select { width: 100%; padding: 10px; border: 1px solid var(--stroke); border-radius: 6px; background: var(--surface); color: var(--ink) }
+.account-created { text-align: center; padding: 20px }
+.account-created .check { width: 72px; height: 72px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--accent) 15%, var(--surface)); color: var(--accent-dark); margin-bottom: 12px }
+.account-created .check svg { width: 36px; height: 36px }
+.account-failed { text-align:center; padding:20px }
+.account-failed .x { width:72px; height:72px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; background: color-mix(in srgb, var(--accent) 12%, var(--surface)); color: var(--accent-dark); margin-bottom:12px }
+.account-failed .x svg { width:36px; height:36px }
+.change-status-modal__form .field input, .change-status-modal__form .field select { box-sizing: border-box }
+CSS,
+
+        'src/controllers/accountmanagement/account-change-status-controller.php' => <<<'PHP'
+<?php
+declare(strict_types=1);
+
+require_once __DIR__ . '/../../config/env.php';
+require_once __DIR__ . '/../../config/db.php';
+
+header('Content-Type: application/json; charset=utf-8');
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['ok' => false, 'message' => 'Method not allowed']);
+    exit;
+}
+
+try {
+    $id_number = trim((string)($_POST['id_number'] ?? ''));
+    $status = trim((string)($_POST['status'] ?? ''));
+
+    if ($id_number === '' || $status === '') {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'message' => 'ID Number and status are required']);
+        exit;
+    }
+
+    $allowed = ['active','disabled'];
+    if (!in_array($status, $allowed, true)) {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'message' => 'Invalid status value']);
+        exit;
+    }
+
+    $pdo = userDbConnection();
+    $userDb = preg_replace('/[^A-Za-z0-9_]/', '', env('USERDB_NAME', env('USERDB_DATABASE', env('DB_DATABASE', 'my_database'))));
+    $userlogsTable = "`" . $userDb . "`.`userlogs`";
+
+    $now = date('Y-m-d H:i:s');
+    $pdo->beginTransaction();
+
+    $lstmt = $pdo->prepare("UPDATE {$userlogsTable} SET `status` = :status, `dateModified` = :dt WHERE `id_number` = :id");
+    $lstmt->execute([':status' => $status, ':dt' => $now, ':id' => $id_number]);
+
+    $pdo->commit();
+
+    echo json_encode(['ok' => true, 'message' => 'Status updated', 'dateModified' => $now]);
+    exit;
+
+} catch (Throwable $e) {
+    if (isset($pdo) && $pdo->inTransaction()) $pdo->rollBack();
+    error_log('Account change status failed: ' . $e->getMessage());
+    http_response_code(500);
+    echo json_encode(['ok' => false, 'message' => 'Failed to change status', 'debug' => $e->getMessage()]);
+    exit;
+}
+PHP,
+
+  'public/api/account-change-status.php' => <<<'PHP'
+<?php
+declare(strict_types=1);
+
+require_once __DIR__ . '/../../src/controllers/accountmanagement/account-change-status-controller.php';
+PHP,
+
+        'src/controllers/accountmanagement/account-creation-controller.php' => <<<'PHP'
+    <?php
+    declare(strict_types=1);
+
+    require_once __DIR__ . '/../../config/env.php';
+    require_once __DIR__ . '/../../config/db.php';
+
+    function create_account_from_request(): array {
+      if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        return ['ok' => false, 'message' => 'Method not allowed', 'code' => 405];
+      }
+
+      $id_number = trim((string)($_POST['id_number'] ?? ''));
+      $firstname = trim((string)($_POST['firstname'] ?? ''));
+      $middlename = trim((string)($_POST['middlename'] ?? ''));
+      $lastname = trim((string)($_POST['lastname'] ?? ''));
+      $username = trim((string)($_POST['username'] ?? ''));
+      $role = trim((string)($_POST['role'] ?? 'Public'));
+
+      if ($id_number === '' || $username === '') {
+        return ['ok' => false, 'message' => 'ID Number and Username are required', 'code' => 400];
+      }
+
+      $pdo = userDbConnection();
+      $userDb = preg_replace('/[^A-Za-z0-9_]/', '', env('USERDB_NAME', env('USERDB_DATABASE', env('DB_DATABASE', 'my_database'))));
+      $usersTable = "`" . $userDb . "`.`users`";
+      $userlogsTable = "`" . $userDb . "`.`userlogs`";
+
+      // Default password: first 4 letters of last name + id_number
+      $part = substr($lastname, 0, 4);
+      $defaultPlain = $part . $id_number;
+      $passwordHash = password_hash($defaultPlain, PASSWORD_DEFAULT);
+
+      // access_level mapping: Admin => full (-1), Public => no access (0) by default
+      $access_level = ($role === 'Admin') ? -1 : 0;
+
+      try {
+        $pdo->beginTransaction();
+
+        // Insert into users
+        $ustmt = $pdo->prepare("INSERT INTO {$usersTable} (`id_number`,`username`,`firstname`,`middlename`,`lastname`,`role`,`password`,`dateCreated`) VALUES (:id,:username,:first,:middle,:last,:role,:pw,NOW())");
+        $ustmt->execute([
+          ':id' => $id_number,
+          ':username' => $username,
+          ':first' => $firstname,
+          ':middle' => $middlename,
+          ':last' => $lastname,
+          ':role' => $role,
+          ':pw' => $passwordHash
+        ]);
+
+        // Insert or update userlogs — prefer explicit SELECT then UPDATE/INSERT to avoid duplicate rows
+        $sel = $pdo->prepare("SELECT `id_number` FROM {$userlogsTable} WHERE TRIM(CAST(id_number AS CHAR)) = TRIM(:id) LIMIT 1");
+        $sel->execute([':id' => $id_number]);
+        $exists = $sel->fetch(PDO::FETCH_ASSOC);
+        if ($exists) {
+          $lstmt = $pdo->prepare("UPDATE {$userlogsTable} SET `status` = 'active', `dateModified` = NOW() WHERE TRIM(CAST(id_number AS CHAR)) = TRIM(:id)");
+          $lstmt->execute([':id' => $id_number]);
+        } else {
+          // New account: set `dateModified` to NULL so the workflow requires password change
+          $lstmt = $pdo->prepare("INSERT INTO {$userlogsTable} (`id_number`,`status`,`dateModified`) VALUES (:id,'active', NULL)");
+          $lstmt->execute([':id' => $id_number]);
+        }
+
+        // (No RBAC table in this project) — skip RBAC initialization.
+
+        $pdo->commit();
+
+        return ['ok' => true, 'default_password' => $defaultPlain, 'username' => $username];
+      } catch (Throwable $e) {
+        if (isset($pdo) && $pdo->inTransaction()) $pdo->rollBack();
+        error_log('Account creation failed: ' . $e->getMessage());
+        return ['ok' => false, 'message' => 'Failed to create account', 'debug' => $e->getMessage()];
+      }
+    }
+
+    PHP,
+    'src/controllers/accountmanagement/account-reset-controller.php' => <<<'PHP'
+<?php
+declare(strict_types=1);
+
+require_once __DIR__ . '/../../config/env.php';
+require_once __DIR__ . '/../../config/db.php';
+
+header('Content-Type: application/json; charset=utf-8');
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+  http_response_code(405);
+  echo json_encode(['ok' => false, 'message' => 'Method not allowed']);
+  exit;
+}
+
+try {
+  $id_number = trim((string)($_POST['id_number'] ?? ''));
+
+  if ($id_number === '') {
+    http_response_code(400);
+    echo json_encode(['ok' => false, 'message' => 'ID Number is required']);
+    exit;
+  }
+
+  $pdo = userDbConnection();
+  $userDb = preg_replace('/[^A-Za-z0-9_]/', '', env('USERDB_NAME', env('USERDB_DATABASE', env('DB_DATABASE', 'my_database'))));
+  $usersTable = "`" . $userDb . "`.`users`";
+  $userlogsTable = "`" . $userDb . "`.`userlogs`";
+
+  // fetch lastname to compute default password
+  $q = $pdo->prepare("SELECT `lastname` FROM {$usersTable} WHERE `id_number` = :id LIMIT 1");
+  $q->execute([':id' => $id_number]);
+  $row = $q->fetch(PDO::FETCH_ASSOC);
+  if (!$row) {
+    http_response_code(404);
+    echo json_encode(['ok' => false, 'message' => 'Account not found']);
+    exit;
+  }
+  $lastname = (string)($row['lastname'] ?? '');
+
+  $part = substr($lastname, 0, 4);
+  $defaultPlain = $part . $id_number;
+  $passwordHash = password_hash($defaultPlain, PASSWORD_DEFAULT);
+
+  // use PHP timestamp so we can return the value to the client
+  $now = date('Y-m-d H:i:s');
+
+  $pdo->beginTransaction();
+
+  // some schemas don't have dateModified on users table; only update password here
+  $ustmt = $pdo->prepare("UPDATE {$usersTable} SET `password` = :pw WHERE `id_number` = :id");
+  $ustmt->execute([':pw' => $passwordHash, ':id' => $id_number]);
+
+  $lstmt = $pdo->prepare("UPDATE {$userlogsTable} SET `status` = 'reset', `dateModified` = :dt WHERE `id_number` = :id");
+  $lstmt->execute([':dt' => $now, ':id' => $id_number]);
+
+  $pdo->commit();
+
+  echo json_encode(['ok' => true, 'message' => 'Password reset', 'dateModified' => $now]);
+  exit;
+
+} catch (Throwable $e) {
+  if (isset($pdo) && $pdo->inTransaction()) $pdo->rollBack();
+  error_log('Account reset failed: ' . $e->getMessage());
+  http_response_code(500);
+  echo json_encode(['ok' => false, 'message' => 'Failed to reset password', 'debug' => $e->getMessage()]);
+  exit;
+}
+PHP,
+
+    'public/api/account-create.php' => <<<'PHP'
 <?php
 require_once __DIR__ . '/../../src/config/env.php';
 require_once __DIR__ . '/../../src/controllers/accountmanagement/account-creation-controller.php';
@@ -2512,15 +3047,22 @@ require_once __DIR__ . '/../../src/controllers/accountmanagement/account-creatio
 header('Content-Type: application/json; charset=utf-8');
 
 try {
-    $res = create_account_from_request();
-    echo json_encode($res);
+  $res = create_account_from_request();
+  echo json_encode($res);
 } catch (Throwable $e) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Server error']);
+  http_response_code(500);
+  echo json_encode(['success' => false, 'message' => 'Server error']);
 }
 PHP,
 
-        'public/api/account-edit.php' => <<<'PHP'
+  'public/api/account-reset.php' => <<<'PHP'
+<?php
+declare(strict_types=1);
+
+require_once __DIR__ . '/../../src/controllers/accountmanagement/account-reset-controller.php';
+PHP,
+
+  'public/api/account-edit.php' => <<<'PHP'
 <?php
 declare(strict_types=1);
 
@@ -2808,251 +3350,264 @@ if ($is_direct){
 PHP,
 
         'src/templates/sidebar.css' => <<<'CSS'
-@import url('../assets/css/color.css');
+    @import url('../assets/css/color.css');
 
-:root {
-    --sidebar-width-expanded: 240px;
-    --sidebar-width-collapsed: 76px;
-}
+    :root {
+      --sidebar-width-expanded: 240px;
+      --sidebar-width-collapsed: 76px;
+    }
 
-body {
-    margin: 0;
-}
+    body {
+      margin: 0;
+    }
 
-.app-layout {
-    min-height: 100vh;
-}
+    .app-layout {
+      min-height: 100vh;
+    }
 
 
-.sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    width: var(--sidebar-width-collapsed);
-    background: var(--accent);
-    color: var(--surface);
-    display: flex;
-    flex-direction: column;
-    transition: width 0.18s ease;
-    box-shadow: var(--shadow);
-    z-index: 100;
-}
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: var(--sidebar-width-collapsed);
+      background: var(--accent);
+      color: var(--surface);
+      display: flex;
+      flex-direction: column;
+      transition: width 0.18s ease;
+      box-shadow: var(--shadow);
+      z-index: 100;
+    }
 
-.sidebar:hover {
-    width: var(--sidebar-width-expanded);
-}
+    /* Make the hover hit-area slightly wider to avoid collapsing when the
+       cursor moves over labels that render outside the collapsed width. */
+    .sidebar { overflow: visible; }
+    .sidebar::after {
+      content: '';
+      position: absolute;
+      right: -80px;
+      top: 0;
+      bottom: 0;
+      width: 80px;
+      pointer-events: auto;
+    }
 
-.sidebar__top {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 18px 12px;
-    gap: 14px;
-    min-height: 96px;
-    border-bottom: 0.5px solid var(--accent-dark);
-}
+    .sidebar:hover {
+      width: var(--sidebar-width-expanded);
+    }
 
-.sidebar__brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
+    .sidebar__top {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 18px 12px;
+      gap: 14px;
+      min-height: 96px;
+      border-bottom: 0.5px solid var(--accent-dark);
+    }
 
-.sidebar__brand-logo {
-    width: 40px;
-    height: 40px;
-    object-fit: contain;
-    border-radius: 6px;
-    background: transparent;
-    padding: 0;
-}
+    .sidebar__brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-.sidebar__brand-text {
-    display: none;
-    line-height: 1.0;
-    white-space: nowrap;
-    flex-direction: column;
-    justify-content: center;
-}
+    .sidebar__brand-logo {
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+      border-radius: 6px;
+      background: transparent;
+      padding: 0;
+    }
 
-.sidebar:hover .sidebar__brand-text {
-    display: flex;
-}
+    .sidebar__brand-text {
+      display: none;
+      line-height: 1.0;
+      white-space: nowrap;
+      flex-direction: column;
+      justify-content: center;
+    }
 
-.sidebar__brand-title {
-    font-size: 18px;
-    color: var(--surface);
-    font-weight: 700;
-}
+    .sidebar:hover .sidebar__brand-text {
+      display: flex;
+    }
 
-.sidebar__brand-sub {
-    font-size: 14px;
-    color: var(--surface);
-    opacity: 0.85;
-    margin-top: 2px;
-}
+    .sidebar__brand-title {
+      font-size: 18px;
+      color: var(--surface);
+      font-weight: 700;
+    }
 
-/* User block */
-.sidebar__user {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
+    .sidebar__brand-sub {
+      font-size: 14px;
+      color: var(--surface);
+      opacity: 0.85;
+      margin-top: 2px;
+    }
 
-.sidebar__user-avatar {
-    width: 36px;
-    height: 36px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.06);
-    color: var(--surface);
-}
+    /* User block */
+    .sidebar__user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-.sidebar__user-text {
-    display: none;
-    flex-direction: column;
-    line-height: 1.0;
-}
+    .sidebar__user-avatar {
+      width: 36px;
+      height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--surface);
+    }
 
-.sidebar__user-name {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--surface);
-}
+    .sidebar__user-text {
+      display: none;
+      flex-direction: column;
+      line-height: 1.0;
+    }
 
-.sidebar__user-role {
-    font-size: 11px;
-    color: var(--surface);
-    opacity: 0.85;
-    margin-top: 2px;
-}
+    .sidebar__user-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--surface);
+    }
 
-.sidebar:hover .sidebar__user-text {
-    display: flex;
-}
+    .sidebar__user-role {
+      font-size: 11px;
+      color: var(--surface);
+      opacity: 0.85;
+      margin-top: 2px;
+    }
 
-.sidebar__toggle {
-    border: 1px solid var(--surface);
-    background: transparent;
-    color: var(--surface);
-    border-radius: 8px;
-    width: 36px;
-    height: 36px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-}
+    .sidebar:hover .sidebar__user-text {
+      display: flex;
+    }
 
-.sidebar__content {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    flex: 1 1 auto;
-    padding: 12px;
-}
+    .sidebar__toggle {
+      border: 1px solid var(--surface);
+      background: transparent;
+      color: var(--surface);
+      border-radius: 8px;
+      width: 36px;
+      height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
 
-.sidebar__bottom {
-    border-top: 0.5px solid var(--accent-dark);
-    padding-top: 12px;
-}
+    .sidebar__content {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      flex: 1 1 auto;
+      padding: 12px;
+    }
 
-.sidebar__logout {
-    width: 100%;
-    border: 1px solid var(--surface);
-    background: var(--accent);
-    color: var(--surface);
-    border-radius: 10px;
-    padding: 10px 12px;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    transition: background-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
-}
+    .sidebar__bottom {
+      border-top: 0.5px solid var(--accent-dark);
+      padding-top: 12px;
+    }
 
-.sidebar__logout-label {
-    white-space: nowrap;
-}
+    .sidebar__logout {
+      width: 100%;
+      border: 1px solid var(--surface);
+      background: var(--accent);
+      color: var(--surface);
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: background-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+    }
 
-.sidebar__logout {
-    justify-content: flex-start;
-}
+    .sidebar__logout-label {
+      white-space: nowrap;
+    }
 
-.sidebar:hover .sidebar__logout {
-    justify-content: flex-start;
-}
+    .sidebar__logout {
+      justify-content: flex-start;
+    }
 
-.sidebar__logout-label {
-    display: none;
-}
+    .sidebar:hover .sidebar__logout {
+      justify-content: flex-start;
+    }
 
-.sidebar:hover .sidebar__logout-label {
-    display: inline-block;
-}
+    .sidebar__logout-label {
+      display: none;
+    }
 
-.sidebar__logout:hover {
-    background: var(--accent-dark);
-    transform: translateX(3px);
-    box-shadow: 0 8px 20px rgba(16, 24, 40, 0.12);
-}
+    .sidebar:hover .sidebar__logout-label {
+      display: inline-block;
+    }
 
-/* Navigation (menu + submenu) revamp */
-.sidebar__nav {
-    margin-bottom: auto;
-    padding-top: 4px;
-}
+    .sidebar__logout:hover {
+      background: var(--accent-dark);
+      transform: translateX(3px);
+      box-shadow: 0 8px 20px rgba(16, 24, 40, 0.12);
+    }
 
-.sidebar__nav-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
+    /* Navigation (menu + submenu) revamp */
+    .sidebar__nav {
+      margin-bottom: auto;
+      padding-top: 4px;
+    }
 
-.sidebar__nav-item {
-    display: block;
-    position: relative;
-}
+    .sidebar__nav-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
 
-.sidebar__nav-link {
-    position: relative;
-    width: 100%;
-    text-align: left;
-    background: transparent;
-    border: 1px solid transparent;
-    color: var(--surface);
-    padding: 11px 12px;
-    border-radius: 12px;
-    cursor: pointer;
-    font-weight: 700;
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
-    transition: background 140ms ease, border-color 140ms ease, transform 140ms ease;
-}
+    .sidebar__nav-item {
+      display: block;
+      position: relative;
+    }
 
-.sidebar__nav-link:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.08);
-    transform: translateX(2px);
-}
+    .sidebar__nav-link {
+      position: relative;
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--surface);
+      padding: 11px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      transition: background 140ms ease, border-color 140ms ease, transform 140ms ease;
+    }
 
-.sidebar:hover .sidebar__nav-link[aria-expanded="true"] {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.12);
-}
+    .sidebar__nav-link:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.08);
+      transform: translateX(2px);
+    }
 
-.sidebar__nav-label {
-    display: none;
-    white-space: nowrap;
-}
+    .sidebar:hover .sidebar__nav-link[aria-expanded="true"] {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    .sidebar__nav-label {
+      display: none;
+      white-space: nowrap;
+    }
 
 .sidebar:hover .sidebar__nav-label {
     display: inline-block;
