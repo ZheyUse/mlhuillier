@@ -417,6 +417,8 @@ if ($isEntry) {
 </div>
 
 <?php require __DIR__ . '/../../../modals/logout-modal/logout-modal.php'; ?>
+<?php require __DIR__ . '/../../../modals/accountmanagement/add-account-modal.php'; ?>
+<?php require __DIR__ . '/../../../modals/accountmanagement/edit-account-modal.php'; ?>
 <?php
 if ($isEntry) {
   echo "</body>\n</html>\n";
@@ -591,6 +593,51 @@ try {
     http_response_code(500);
     echo json_encode(['ok' => false, 'message' => 'Failed to load accounts']);
     exit;
+}
+PHP,
+    'src/controllers/accountmanagement/account-edit-controller.php' => <<<'PHP'
+<?php
+declare(strict_types=1);
+
+require_once __DIR__ . '/../../config/env.php';
+require_once __DIR__ . '/../../config/db.php';
+
+function edit_account_from_request(): array {
+  if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    return ['ok' => false, 'message' => 'Method not allowed', 'code' => 405];
+  }
+
+  $id_number = trim((string)($_POST['id_number'] ?? ''));
+  $firstname = trim((string)($_POST['firstname'] ?? ''));
+  $middlename = trim((string)($_POST['middlename'] ?? ''));
+  $lastname = trim((string)($_POST['lastname'] ?? ''));
+
+  if ($id_number === '') {
+    return ['ok' => false, 'message' => 'ID Number is required', 'code' => 400];
+  }
+
+  $pdo = userDbConnection();
+  $userDb = preg_replace('/[^A-Za-z0-9_]/', '', env('USERDB_NAME', env('USERDB_DATABASE', env('DB_DATABASE', 'my_database'))));
+  $usersTable = "`" . $userDb . "`.`users`";
+  $userlogsTable = "`" . $userDb . "`.`userlogs`";
+
+  try {
+    $pdo->beginTransaction();
+
+    // Update name fields (do not assume `dateModified` exists in this schema)
+    $ustmt = $pdo->prepare("UPDATE {$usersTable} SET `firstname` = :first, `middlename` = :middle, `lastname` = :last WHERE `id_number` = :id");
+    $ustmt->execute([':first' => $firstname, ':middle' => $middlename, ':last' => $lastname, ':id' => $id_number]);
+
+    $lstmt = $pdo->prepare("UPDATE {$userlogsTable} SET `dateModified` = NOW() WHERE `id_number` = :id");
+    $lstmt->execute([':id' => $id_number]);
+
+    $pdo->commit();
+    return ['ok' => true, 'message' => 'Account updated'];
+  } catch (Throwable $e) {
+    if ($pdo->inTransaction()) $pdo->rollBack();
+    error_log('Account edit failed: ' . $e->getMessage());
+    return ['ok' => false, 'message' => 'Failed to update account'];
+  }
 }
 PHP,
 
@@ -1841,6 +1888,672 @@ PHP,
 
 .logout-modal__confirm:hover { background: var(--accent-dark); }
 CSS,
+
+        'src/modals/accountmanagement/add-account-modal.php' => <<<'PHP'
+<?php
+// Use the page-provided $appBaseUrl when included; otherwise compute a safe fallback.
+if (!isset($appBaseUrl) || $appBaseUrl === null) {
+    $scriptName = (string) ($_SERVER['SCRIPT_NAME'] ?? '');
+    $appBaseUrl = preg_replace('#/src/.*$#', '', $scriptName);
+    $appBaseUrl = rtrim((string) $appBaseUrl, '/');
+}
+if ($appBaseUrl !== '' && strpos($appBaseUrl, '/') !== 0) {
+    $appBaseUrl = '/' . $appBaseUrl;
+}
+?>
+
+<link rel="stylesheet" href="<?= htmlspecialchars($appBaseUrl . '/src/modals/accountmanagement/add-account-modal.css', ENT_QUOTES, 'UTF-8'); ?>" data-component-css>
+
+<div id="addAccountModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="addAccountTitle">
+  <div class="modal-card" role="document">
+    <div class="modal-top">
+      <div class="modal-icon-bg"><span class="material-icons modal-icon">person_add</span></div>
+      <div class="modal-title-wrap">
+        <h3 id="addAccountTitle">Create Account</h3>
+        <p class="modal-sub">Create a new user account and set initial access level.</p>
+      </div>
+    </div>
+
+    <div style="padding:0 20px 18px 20px;">
+      <form id="addAccountForm" class="add-account-modal__form" autocomplete="off">
+        <div class="field input-with-status">
+          <label for="aa-id">ID Number</label>
+          <input id="aa-id" name="id_number" required>
+          <span id="aa-id-status" class="input-status" aria-hidden="true" style="display:none"></span>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="aa-first">Firstname</label>
+            <input id="aa-first" name="firstname">
+          </div>
+          <div class="field">
+            <label for="aa-middle">Middlename</label>
+            <input id="aa-middle" name="middlename">
+          </div>
+          <div class="field">
+            <label for="aa-last">Lastname</label>
+            <input id="aa-last" name="lastname">
+          </div>
+        </div>
+        <div class="field">
+          <label for="aa-username">Username</label>
+          <input id="aa-username" name="username" required readonly placeholder="will be generated">
+        </div>
+        <div class="field">
+          <label for="aa-role">Role</label>
+          <select id="aa-role" name="role">
+            <option value="Public">Public</option>
+            <option value="Admin">Admin</option>
+          </select>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="aa-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="aa-create">Create Account</button>
+        </div>
+      </form>
+
+      <div id="aa-success" class="account-created" style="display:none">
+        <div class="check" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="msg">Account created successfully</div>
+        <div style="margin-top:12px"><button class="btn btn-primary" id="aa-ok">Okay</button></div>
+      </div>
+      <div id="aa-failure" class="account-failed" style="display:none">
+        <div class="x" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="msg" id="aa-failure-msg">Failed to create account</div>
+        <div style="margin-top:12px"><button class="btn btn-primary" id="aa-failure-ok">Okay</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function(){
+    var overlay = document.getElementById('addAccountModal');
+    var openBtn = document.getElementById('am-add-btn');
+    var cancelBtn = document.getElementById('aa-cancel');
+    var okBtn = document.getElementById('aa-ok');
+    var form = document.getElementById('addAccountForm');
+    var success = document.getElementById('aa-success');
+    var idField = document.getElementById('aa-id');
+    var lastField = document.getElementById('aa-last');
+    var usernameField = document.getElementById('aa-username');
+    var idStatus = document.getElementById('aa-id-status');
+    var createBtn = document.getElementById('aa-create');
+
+    function open(){
+      if (!overlay) return;
+      overlay.classList.remove('hidden');
+      overlay.setAttribute('aria-hidden','false');
+      try{ overlay.inert = false; }catch(e){}
+      setTimeout(function(){ if (idField && typeof idField.focus === 'function') idField.focus(); }, 10);
+    }
+
+    function close(){
+      if (!overlay) return;
+      try{
+        var active = document.activeElement;
+        if (overlay.contains(active)){
+          if (openBtn && typeof openBtn.focus === 'function'){
+            openBtn.focus();
+          } else if (document.body && typeof document.body.focus === 'function'){
+            document.body.focus();
+          } else if (document.documentElement && typeof document.documentElement.focus === 'function'){
+            document.documentElement.focus();
+          }
+        }
+      } catch(e) {}
+
+      overlay.classList.add('hidden');
+      overlay.setAttribute('aria-hidden','true');
+      try{ overlay.inert = true; }catch(e){}
+      if (success) success.style.display='none';
+      if (form) { form.style.display='block'; form.reset(); }
+    }
+
+    if (openBtn) openBtn.addEventListener('click', function(e){ e.preventDefault(); open(); });
+    if (cancelBtn) cancelBtn.addEventListener('click', function(){ close(); });
+
+    function generateUsername(){
+      if (!usernameField) return;
+      var id = idField ? idField.value.trim() : '';
+      var last = lastField ? lastField.value.trim() : '';
+      if (!id || !last) { usernameField.value = ''; return; }
+      var part = last.replace(/[^A-Za-z0-9]/g,'').slice(0,4).toLowerCase();
+      usernameField.value = part + id;
+    }
+
+    function checkIdExists(id){
+      if (!idField || !idStatus) return Promise.resolve({ok:false});
+      if (!id || id.length === 0){ idStatus.style.display='none'; idField.classList.remove('input-valid','input-invalid'); if (createBtn) createBtn.disabled = false; return Promise.resolve({ok:true, exists:false}); }
+      idStatus.style.display='flex'; idStatus.innerHTML = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="#cfcfcf" stroke-width="2"></circle></svg>';
+      return fetch('<?= htmlspecialchars($appBaseUrl, ENT_QUOTES, 'UTF-8'); ?>/public/api/account-check.php?id=' + encodeURIComponent(id), { credentials: 'same-origin' })
+        .then(function(r){ return r.json(); })
+        .then(function(json){
+          if (json && (typeof json.exists !== 'undefined')){
+            if (json.exists){
+              idStatus.innerHTML = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 6L6 18M6 6l12 12" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+              idField.classList.remove('input-valid'); idField.classList.add('input-invalid'); if (createBtn) createBtn.disabled = true;
+            } else {
+              idStatus.innerHTML = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 6L9 17l-5-5" stroke="#2e7d32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+              idField.classList.remove('input-invalid'); idField.classList.add('input-valid'); if (createBtn) createBtn.disabled = false;
+            }
+            return { ok:true, exists: !!json.exists };
+          }
+          idStatus.style.display='none'; idField.classList.remove('input-valid','input-invalid'); if (createBtn) createBtn.disabled = false; return { ok:false };
+        })
+        .catch(function(){ idStatus.style.display='none'; idField.classList.remove('input-valid','input-invalid'); if (createBtn) createBtn.disabled = false; return { ok:false }; });
+    }
+
+    var debouncedCheck = (function(){ var t; return function(id){ clearTimeout(t); t = setTimeout(function(){ checkIdExists(id); }, 300); }; })();
+
+    if (idField) { idField.addEventListener('input', function(e){ generateUsername(); debouncedCheck(idField.value.trim()); }); }
+    if (lastField) lastField.addEventListener('input', generateUsername);
+
+    if (form) form.addEventListener('submit', function(ev){
+      ev.preventDefault();
+      if (createBtn) createBtn.disabled = true;
+      var fd = new FormData(form);
+      function showFailure(msg){ if (createBtn) createBtn.disabled = false; if (form) form.style.display='none'; if (success) success.style.display='none'; var f = document.getElementById('aa-failure'); if (f) { f.style.display = 'block'; var m = document.getElementById('aa-failure-msg'); if (m) m.textContent = msg || 'Failed to create account'; } }
+
+      fetch('<?= htmlspecialchars($appBaseUrl, ENT_QUOTES, 'UTF-8'); ?>/public/api/account-create.php', { method: 'POST', credentials: 'same-origin', body: fd })
+        .then(function(r){ return r.json().catch(function(){ return { ok:false, message:'Invalid server response' }; }); })
+        .then(function(json){
+          if (createBtn) createBtn.disabled = false;
+          if (json && (json.success || json.ok)){
+            if (form) form.style.display='none'; if (success) success.style.display='block';
+            if (window.refreshAccountManagement) try{ window.refreshAccountManagement(); }catch(e){}
+          } else {
+            showFailure((json && json.message) ? json.message : 'Failed to create account');
+          }
+        })
+        .catch(function(){ showFailure('Failed to create account'); });
+    });
+
+    if (okBtn) okBtn.addEventListener('click', function(){ close(); });
+    var failureOk = document.getElementById('aa-failure-ok');
+    if (failureOk) failureOk.addEventListener('click', function(){ close(); });
+    if (overlay) overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
+  })();
+</script>
+PHP,
+
+        'src/modals/accountmanagement/add-account-modal.css' => <<<'CSS'
+    @import url('../../assets/css/color.css');
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 1200;
+    }
+
+    .modal.hidden {
+      display: none;
+    }
+
+    .modal-card {
+      background: var(--surface);
+      width: 520px;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .modal-top {
+      display: flex;
+      gap: 12px;
+      padding: 20px;
+      align-items: center;
+    }
+
+    .modal-icon-bg {
+      box-sizing: border-box;
+      width: 56px;
+      height: 56px;
+      min-width: 56px;
+      min-height: 56px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--accent) 15%, var(--surface));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      padding: 0;
+    }
+
+    .modal-icon {
+      color: var(--accent-dark);
+      font-size: 28px;
+      line-height: 1;
+      display: inline-block;
+    }
+
+    .modal-title-wrap h3 {
+      margin: 0 0 6px 0;
+      font-size: 18px;
+    }
+
+    .modal-sub {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      padding: 16px;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      padding: 8px 12px;
+      border-radius: 4px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: background-color 160ms ease, color 160ms ease, transform 120ms ease, box-shadow 160ms ease;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-danger {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: var(--stroke);
+      color: var(--ink);
+    }
+
+    /* Hover/active states */
+    .btn-primary:hover{ background: var(--accent-dark); box-shadow: 0 6px 18px rgba(16,24,40,0.06); transform: translateY(-1px); }
+    .btn-primary:active{ transform: translateY(0); }
+    .btn-secondary:hover{ background: color-mix(in srgb, var(--accent) 6%, var(--stroke)); }
+    .btn-secondary:active{ transform: translateY(0); }
+
+    .add-account-modal__form .field {
+      margin-bottom: 10px
+    }
+
+    .add-account-modal__form label {
+      display: block;
+      font-size: 12px;
+      margin-bottom: 4px;
+      color: var(--ink)
+    }
+
+    .add-account-modal__form input,
+    .add-account-modal__form select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--stroke);
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--ink)
+    }
+
+    /* ID input status */
+    .input-with-status{ position:relative }
+    .input-status{ position:absolute; right:12px; top:auto; bottom:14px; transform:none; pointer-events:none; display:flex; align-items:center; justify-content:center; }
+    .input-status svg{ width:18px; height:18px }
+    .input-valid{ border-color: color-mix(in srgb, var(--accent) 18%, var(--surface)); }
+    .input-invalid{ border-color: #dc3545; }
+    .input-with-status input{ padding-right:40px; }
+
+    .account-created {
+      text-align: center;
+      padding: 20px
+    }
+
+    .account-created .check {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: color-mix(in srgb, var(--accent) 15%, var(--surface));
+      color: var(--accent-dark);
+      margin-bottom: 12px
+    }
+
+    .account-created .check svg {
+      width: 36px;
+      height: 36px
+    }
+
+    .account-failed { text-align:center; padding:20px }
+    .account-failed .x { width:72px; height:72px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; background: color-mix(in srgb, var(--accent) 12%, var(--surface)); color: var(--accent-dark); margin-bottom:12px }
+    .account-failed .x svg { width:36px; height:36px }
+
+    /* Inline field row for firstname/middlename/lastname */
+    .field-row{ display:flex; gap:16px; margin-bottom:12px; align-items:flex-start }
+    .field-row .field{ flex:1; margin-bottom:0; padding-left:4px; padding-right:4px }
+    @media (max-width:720px){
+      .field-row{ flex-direction:column }
+    }
+
+    .add-account-modal__form .field input, .add-account-modal__form .field select { box-sizing: border-box; }
+    CSS,
+
+        'src/modals/accountmanagement/edit-account-modal.php' => <<<'PHP'
+<?php
+// Use page-provided $appBaseUrl or compute fallback
+if (!isset($appBaseUrl) || $appBaseUrl === null) {
+    $scriptName = (string) ($_SERVER['SCRIPT_NAME'] ?? '');
+    $appBaseUrl = preg_replace('#/src/.*$#', '', $scriptName);
+    $appBaseUrl = rtrim((string) $appBaseUrl, '/');
+}
+if ($appBaseUrl !== '' && strpos($appBaseUrl, '/') !== 0) { $appBaseUrl = '/' . $appBaseUrl; }
+?>
+
+<link rel="stylesheet" href="<?= htmlspecialchars($appBaseUrl . '/src/modals/accountmanagement/edit-account-modal.css', ENT_QUOTES, 'UTF-8'); ?>" data-component-css>
+
+<div id="editAccountModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="editAccountTitle">
+  <div class="modal-card" role="document">
+    <div class="modal-top">
+      <div class="modal-icon-bg"><span class="material-icons modal-icon">edit</span></div>
+      <div class="modal-title-wrap">
+        <h3 id="editAccountTitle">Edit Account</h3>
+        <p class="modal-sub">Update the account's name details.</p>
+      </div>
+    </div>
+
+    <div style="padding:0 20px 18px 20px;">
+      <form id="editAccountForm" class="edit-account-modal__form" autocomplete="off">
+        <div class="field">
+          <label for="ea-id">ID Number</label>
+          <input id="ea-id" name="id_number" readonly>
+        </div>
+        <div class="field">
+          <label for="ea-username">Username</label>
+          <input id="ea-username" name="username" readonly>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="ea-first">Firstname</label>
+            <input id="ea-first" name="firstname">
+          </div>
+          <div class="field">
+            <label for="ea-middle">Middlename</label>
+            <input id="ea-middle" name="middlename">
+          </div>
+          <div class="field">
+            <label for="ea-last">Lastname</label>
+            <input id="ea-last" name="lastname">
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="ea-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="ea-save">Save Changes</button>
+        </div>
+      </form>
+
+      <div id="ea-success" class="account-created" style="display:none">
+        <div class="check" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="msg">Account updated successfully</div>
+        <div style="margin-top:12px"><button class="btn btn-primary" id="ea-ok">Okay</button></div>
+      </div>
+      <div id="ea-failure" class="account-failed" style="display:none">
+        <div class="x" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="msg" id="ea-failure-msg">Failed to update account</div>
+        <div style="margin-top:12px"><button class="btn btn-primary" id="ea-failure-ok">Okay</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function(){
+    var overlay = document.getElementById('editAccountModal');
+    var openBtn = document.getElementById('am-edit-btn');
+    var cancelBtn = document.getElementById('ea-cancel');
+    var okBtn = document.getElementById('ea-ok');
+    var form = document.getElementById('editAccountForm');
+    var success = document.getElementById('ea-success');
+    var idField = document.getElementById('ea-id');
+    var usernameField = document.getElementById('ea-username');
+    var firstField = document.getElementById('ea-first');
+    var middleField = document.getElementById('ea-middle');
+    var lastField = document.getElementById('ea-last');
+    var failure = document.getElementById('ea-failure');
+
+    function open(){
+      if (!overlay) return;
+      overlay.classList.remove('hidden');
+      overlay.setAttribute('aria-hidden','false');
+      try{ overlay.inert = false; }catch(e){}
+      setTimeout(function(){ if (firstField && typeof firstField.focus === 'function') firstField.focus(); }, 10);
+    }
+
+    function close(){
+      if (!overlay) return;
+      try{
+        var active = document.activeElement;
+        if (overlay.contains(active)){
+          if (openBtn && typeof openBtn.focus === 'function'){
+            openBtn.focus();
+          } else if (document.body && typeof document.body.focus === 'function'){
+            document.body.focus();
+          } else if (document.documentElement && typeof document.documentElement.focus === 'function'){
+            document.documentElement.focus();
+          }
+        }
+      } catch(e) {}
+
+      overlay.classList.add('hidden');
+      overlay.setAttribute('aria-hidden','true');
+      try{ overlay.inert = true; }catch(e){}
+      if (success) success.style.display='none';
+      if (failure) failure.style.display='none';
+      if (form) { form.style.display='block'; }
+    }
+
+    function populateFromSelection(){
+      var sel = window.amSelectedAccount;
+      if (!sel || !sel.row) return false;
+      var tr = sel.row;
+      var cells = tr.querySelectorAll('td');
+      if (!cells || cells.length < 6) return false;
+      if (idField) idField.value = (cells[1] && cells[1].textContent) ? cells[1].textContent.trim() : '';
+      if (usernameField) usernameField.value = (cells[2] && cells[2].textContent) ? cells[2].textContent.trim() : '';
+      if (firstField) firstField.value = (cells[3] && cells[3].textContent) ? cells[3].textContent.trim() : '';
+      if (middleField) middleField.value = (cells[4] && cells[4].textContent) ? cells[4].textContent.trim() : '';
+      if (lastField) lastField.value = (cells[5] && cells[5].textContent) ? cells[5].textContent.trim() : '';
+      generateUsername();
+      return true;
+    }
+
+    function generateUsername(){ if (!usernameField) return; var id = idField ? idField.value.trim() : ''; var last = lastField ? lastField.value.trim() : ''; if (!id || !last) { return; } var part = last.replace(/[^A-Za-z0-9]/g,'').slice(0,4).toLowerCase(); usernameField.value = part + id; }
+
+    if (openBtn) openBtn.addEventListener('click', function(e){ e.preventDefault(); if (!populateFromSelection()) return; open(); });
+    if (cancelBtn) cancelBtn.addEventListener('click', function(){ close(); });
+
+    form.addEventListener('submit', function(ev){
+      ev.preventDefault();
+      var btn = document.getElementById('ea-save'); if (btn) btn.disabled = true;
+      var fd = new FormData(form);
+      function showFailure(msg){ if (btn) btn.disabled = false; if (form) form.style.display='none'; if (success) success.style.display='none'; if (failure) { failure.style.display = 'block'; var m = document.getElementById('ea-failure-msg'); if (m) m.textContent = msg || 'Failed to update account'; } }
+
+      fetch('<?= htmlspecialchars($appBaseUrl, ENT_QUOTES, 'UTF-8'); ?>/public/api/account-edit.php', { method: 'POST', credentials: 'same-origin', body: fd })
+        .then(function(r){ return r.json().catch(function(){ return { ok:false, message:'Invalid server response' }; }); })
+        .then(function(json){
+          if (btn) btn.disabled = false;
+          if (json && json.ok){ if (form) form.style.display='none'; if (success) success.style.display='block'; if (window.refreshAccountManagement) try{ window.refreshAccountManagement(); }catch(e){} } else { showFailure((json && json.message) ? json.message : 'Failed to update account'); }
+        })
+        .catch(function(){ showFailure('Failed to update account'); });
+    });
+
+    if (okBtn) okBtn.addEventListener('click', function(){ close(); });
+    var failureOk = document.getElementById('ea-failure-ok'); if (failureOk) failureOk.addEventListener('click', function(){ close(); });
+    if (lastField) lastField.addEventListener('input', generateUsername);
+    if (overlay) overlay.addEventListener('click', function(e){ if (e.target === overlay) close(); });
+  })();
+</script>
+PHP,
+
+        'src/modals/accountmanagement/edit-account-modal.css' => <<<'CSS'
+
+      .modal {
+          position: fixed;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(0, 0, 0, 0.4);
+          z-index: 1200;
+      }
+
+      .modal.hidden { display: none; }
+
+      .modal-card { background: var(--surface); width: 520px; border-radius: 8px; box-shadow: var(--shadow); overflow: hidden; }
+
+      .modal-top { display:flex; gap:12px; padding:20px; align-items:center }
+      .modal-icon-bg { box-sizing: border-box; width:56px; height:56px; min-width:56px; min-height:56px; border-radius:50%; background: color-mix(in srgb, var(--accent) 15%, var(--surface)); display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden; padding:0 }
+      .modal-icon { color: var(--accent-dark); font-size:28px; line-height:1 }
+      .modal-title-wrap h3 { margin:0 0 6px 0; font-size:18px }
+      .modal-sub { margin:0; color:var(--muted); font-size:14px }
+
+      .modal-actions { display:flex; gap:8px; padding:16px; justify-content:flex-end }
+      .btn { padding:8px 12px; border-radius:4px; border:1px solid transparent; cursor:pointer; transition: background-color 160ms ease, color 160ms ease, transform 120ms ease, box-shadow 160ms ease }
+      .btn-primary { background: var(--accent); color:#fff }
+      .btn-secondary { background: var(--stroke); color: var(--ink) }
+      .btn-primary:hover{ background: var(--accent-dark); box-shadow: 0 6px 18px rgba(16,24,40,0.06); transform: translateY(-1px); }
+
+      .edit-account-modal__form .field { margin-bottom:10px }
+      .edit-account-modal__form label { display:block; font-size:12px; margin-bottom:4px; color:var(--ink) }
+      .edit-account-modal__form input, .edit-account-modal__form select { width:100%; padding:10px; border:1px solid var(--stroke); border-radius:6px; background:var(--surface); color:var(--ink) }
+
+      .field-row{ display:flex; gap:16px; margin-bottom:12px; align-items:flex-start }
+      .field-row .field{ flex:1; margin-bottom:0; padding-left:4px; padding-right:4px }
+      @media (max-width:720px){ .field-row{ flex-direction:column } }
+
+      .account-created { text-align:center; padding:20px }
+      .account-created .check { width:72px; height:72px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; background: color-mix(in srgb, var(--accent) 15%, var(--surface)); color: var(--accent-dark); margin-bottom:12px }
+      .account-created .check svg { width:36px; height:36px }
+      .account-failed { text-align:center; padding:20px }
+      .account-failed .x { width:72px; height:72px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; background: color-mix(in srgb, var(--accent) 12%, var(--surface)); color: var(--accent-dark); margin-bottom:12px }
+      .account-failed .x svg { width:36px; height:36px }
+
+      .edit-account-modal__form .field input, .edit-account-modal__form .field select { box-sizing: border-box }
+      CSS,
+
+        'src/controllers/accountmanagement/account-creation-controller.php' => <<<'PHP'
+<?php
+require_once __DIR__ . '/../../config/db.php';
+
+function create_account_from_request(): array {
+    $pdo = userDbConnection();
+
+    // sample uses these names
+    $id = trim((string)($_POST['id_number'] ?? ''));
+    $firstname = trim((string)($_POST['firstname'] ?? ''));
+    $middlename = trim((string)($_POST['middlename'] ?? ''));
+    $lastname = trim((string)($_POST['lastname'] ?? ''));
+    $username = trim((string)($_POST['username'] ?? ''));
+    $role = trim((string)($_POST['role'] ?? 'Public'));
+
+    if ($id === '') {
+        return ['ok' => false, 'message' => 'ID is required'];
+    }
+
+    // check existing id
+    $chk = $pdo->prepare('SELECT no FROM users WHERE id_number = ? LIMIT 1');
+    $chk->execute([$id]);
+    if ($chk->fetch()) {
+        return ['ok' => false, 'message' => 'ID already exists', 'exists' => true];
+    }
+
+    // If username empty, generate from lastname+id (sample behaviour)
+    if ($username === '') {
+        $part = preg_replace('/[^A-Za-z0-9]/', '', strtolower(substr($lastname,0,4)));
+        $username = $part . $id;
+    }
+
+    $password = bin2hex(random_bytes(6));
+    $pwdHash = password_hash($password, PASSWORD_DEFAULT);
+    $now = date('Y-m-d H:i:s');
+
+    $ins = $pdo->prepare('INSERT INTO users (id_number, username, firstname, middlename, lastname, role, password, dateCreated) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+    $ok = $ins->execute([$id, $username, $firstname, $middlename ?: null, $lastname ?: null, $role, $pwdHash, $now]);
+
+    if (!$ok) {
+        return ['ok' => false, 'message' => 'DB insert failed'];
+    }
+
+    return ['ok' => true, 'password' => $password, 'username' => $username];
+}
+
+PHP,
+
+        'public/api/account-create.php' => <<<'PHP'
+<?php
+require_once __DIR__ . '/../../src/config/env.php';
+require_once __DIR__ . '/../../src/controllers/accountmanagement/account-creation-controller.php';
+
+header('Content-Type: application/json; charset=utf-8');
+
+try {
+    $res = create_account_from_request();
+    echo json_encode($res);
+} catch (Throwable $e) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Server error']);
+}
+PHP,
+
+        'public/api/account-edit.php' => <<<'PHP'
+<?php
+declare(strict_types=1);
+
+require_once __DIR__ . '/../../src/config/env.php';
+require_once __DIR__ . '/../../src/controllers/accountmanagement/account-edit-controller.php';
+
+header('Content-Type: application/json; charset=utf-8');
+
+// Delegate to controller function
+$res = edit_account_from_request();
+if (isset($res['code'])) {
+    http_response_code((int)$res['code']);
+}
+echo json_encode($res);
+exit;
+PHP,
+
+        'public/api/account-check.php' => <<<'PHP'
+<?php
+require_once __DIR__ . '/../../src/config/env.php';
+require_once __DIR__ . '/../../src/config/db.php';
+header('Content-Type: application/json; charset=utf-8');
+
+$id = $_GET['id'] ?? null;
+if (!$id) { echo json_encode(['ok'=>true,'exists'=>false]); exit; }
+
+$pdo = userDbConnection();
+$stmt = $pdo->prepare('SELECT no FROM users WHERE id_number = ? LIMIT 1');
+$stmt->execute([$id]);
+$exists = (bool)$stmt->fetch();
+
+echo json_encode(['ok' => true, 'exists' => $exists]);
+PHP,
 
         'src/pages/home/home.php' => <<<'PHP'
 <?php

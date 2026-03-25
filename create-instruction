@@ -1,0 +1,44 @@
+---
+title: create-instruction
+description: |
+  Instruct the agent to include the local instruction files `mirror-instructions.md`
+  and `audit-instruction` when performing "create" or scaffolding-related tasks.
+---
+
+Purpose
+-------
+- Ensure the agent loads and respects the repository-level instruction artifacts
+  used for mirroring `/test` into the scaffolder and for running the mirror audit.
+
+When to use
+-----------
+- Trigger: user asks to "create" or "mirror" scaffolder templates, or requests an
+  audit/mirroring operation for the project.
+
+Behavior
+--------
+1. When the agent receives a `create-instruction` command or equivalent trigger,
+   it MUST first read the following files from the repository root (in this order):
+   - `mirror-instructions.md`
+   - `audit-instruction`
+
+2. After loading those files, proceed with the requested create/mirror/audit
+   workflow as described by the loaded instructions.
+
+3. If either file is missing or unreadable, the agent should stop and report
+   which file is missing and how to proceed (copy file, run from correct root,
+   or set permissions).
+
+Notes
+-----
+- These are repository-level instructions. To use them on another device, copy
+  the files into the workspace root and run the agent from the project root
+  where `generate-file-structure.php` lives.
+- The agent should respect the safety rules inside `mirror-instructions.md`:
+  prefer small, incremental patches and stop for confirmation on ambiguous
+  multi-line edits.
+
+Files referenced
+----------------
+- mirror-instructions.md
+- audit-instruction
