@@ -7,7 +7,7 @@ set "MODE=INSTALL"
 if /I "%~1"=="--update" set "MODE=UPDATE"
 
 rem Determine CLI version from local VERSION file if present (fallback 1.0.3)
-set "CLI_VERSION=1.0.39"
+set "CLI_VERSION=1.0.40"
 if exist "%SOURCE_DIR%VERSION" (
   for /f "usebackq delims=" %%v in ("%SOURCE_DIR%VERSION") do set "CLI_VERSION=%%v"
 )
@@ -30,7 +30,7 @@ rem If local assets are missing, we'll download them from the repository instead
 rem (don't fail the installer just because source assets aren't present).
 
 rem Progress state
-set "TOTAL_STEPS=6"
+set "TOTAL_STEPS=5"
 set /a CURRENT_STEP=0
 call :show_progress %CURRENT_STEP% %TOTAL_STEPS%
 echo.
@@ -122,38 +122,7 @@ set /a CURRENT_STEP+=1
 call :show_progress %CURRENT_STEP% %TOTAL_STEPS%
 echo.
 
-echo [4/6] Installing documentation...
-echo Downloading documentation package and extracting...
-
-rem Step: download only files under the documentation folder via GitHub API
-powershell -NoProfile -ExecutionPolicy Bypass -Command "try{ `
-  $api='https://api.github.com/repos/ZheyUse/mlhuillier/contents/documentation?ref=main'; `
-  function Get-Files([string]$url,[string]$dest){ `
-    $items = Invoke-RestMethod -Headers @{ 'User-Agent'='ml-installer' } -Uri $url; `
-    foreach($i in $items){ `
-      if($i.type -eq 'file'){ `
-        $rel = $i.path.Substring($i.path.IndexOf('documentation')); `
-        $target = Join-Path -Path '%TARGET_DIR%' -ChildPath $rel; `
-        $dir = Split-Path $target; if(-not (Test-Path $dir)){ New-Item -ItemType Directory -Path $dir -Force | Out-Null }; `
-        Invoke-RestMethod -Headers @{ 'User-Agent'='ml-installer' } -Uri $i.download_url -OutFile $target; `
-      } elseIf($i.type -eq 'dir'){ `
-        Get-Files $i.url '%TARGET_DIR%'; `
-      } `
-    } `
-  }; `
-  Get-Files $api '%TARGET_DIR%'; `
-  exit 0 } Catch { exit 2 }"
-if errorlevel 1 (
-  echo [!] Failed to download documentation folder
-) else (
-  echo [OK] Documentation installed to %TARGET_DIR%\documentation
-)
-
-set /a CURRENT_STEP+=1
-call :show_progress %CURRENT_STEP% %TOTAL_STEPS%
-echo.
-
-echo [5/6] Configuring environment...
+echo [4/5] Configuring environment...
 echo Configuring PowerShell profile integration...
 set "PROFILE_INJECT_STATUS=SKIPPED_HELPER_MISSING"
 if exist "%TARGET_DIR%\install-wrappers-auto.ps1" (
@@ -207,7 +176,7 @@ set /a CURRENT_STEP+=1
 call :show_progress %CURRENT_STEP% %TOTAL_STEPS%
 echo.
 
-echo [6/6] Finalizing setup...
+echo [5/5] Finalizing setup...
 
 echo Writing metadata...
 
