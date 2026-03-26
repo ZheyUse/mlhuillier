@@ -2,7 +2,7 @@
 setlocal EnableExtensions EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.38"
+set "ML_VERSION=1.0.39"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -27,6 +27,8 @@ if not "%EARLY_CMD%"=="" (
         if /I "%EARLY_CMD%"=="--v" goto :early_ok
         if /I "%EARLY_CMD%"=="--h" goto :early_ok
         if /I "%EARLY_CMD%"=="--d" goto :early_ok
+        if /I "%EARLY_CMD%"=="doc" goto :early_ok
+        if /I "%EARLY_CMD%"=="docs" goto :early_ok
         if /I "%EARLY_CMD%"=="--c" goto :early_ok
         echo %EARLY_CMD% | findstr ":" >nul
         if not errorlevel 1 goto :early_ok
@@ -70,6 +72,8 @@ if /I "%~1"=="--v" goto :show_version
 if /I "%~1"=="--h" if "%~2"=="" goto :show_help
 if /I "%~1"=="--h" goto :prepare_help_args
 if /I "%~1"=="--d" goto :cmd_download_installer
+if /I "%~1"=="doc" goto :cmd_docs
+if /I "%~1"=="docs" goto :cmd_docs
 
 rem If the first argument is a long flag (starts with --) but not a recognized global flag, show help
 set "ARG1=%~1"
@@ -94,6 +98,8 @@ if /I "%~1"=="update" goto :cmd_update
 if /I "%~1"=="serve" goto :cmd_serve
 if /I "%~1"=="nav" goto :cmd_nav
 if /I "%~1"=="clone" if /I "%~2"=="local" goto :cmd_clone_local
+if /I "%~1"=="doc" goto :cmd_docs
+if /I "%~1"=="docs" goto :cmd_docs
 
 rem Validate unknown top-level commands/flags before delegating to PHP generator
 set "CMD=%~1"
@@ -168,6 +174,7 @@ echo Commands:
 echo   test userdb        Run remote DB connection test
 echo   add userdb         Import userdb SQL (migration/userdb)
 echo   serve              Open current project in browser (ml serve)
+echo   doc                Open installed documentation in browser
 echo   nav                Interactive navigation for htdocs projects
 echo   create --a         Create interactive account (add user)
 echo   update             Update ML CLI from remote
@@ -777,3 +784,25 @@ php "%ML_SCRIPT%" %*
 set "RC=%ERRORLEVEL%"
 call :maybe_show_update_notice
 exit /b %RC%
+
+:cmd_docs
+setlocal
+echo.
+echo Opening ML CLI documentation...
+set "DOC_IN_REPO=%~dp0documentation\index.html"
+set "DOC_INSTALLED=%ML_INSTALLED_DIR%documentation\index.html"
+if exist "%DOC_IN_REPO%" (
+        start "" "%DOC_IN_REPO%"
+        endlocal
+        call :maybe_show_update_notice
+        exit /b 0
+)
+if exist "%DOC_INSTALLED%" (
+        start "" "%DOC_INSTALLED%"
+        endlocal
+        call :maybe_show_update_notice
+        exit /b 0
+)
+echo Documentation not found. Run install-ml.bat or `ml update` to install docs.
+endlocal
+exit /b 2
