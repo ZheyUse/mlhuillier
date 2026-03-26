@@ -1,0 +1,10 @@
+{
+  "name": "mlhuillier-docs",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Dynamic documentation builder for ml.bat",
+  "scripts": {
+    "docs:build": "node scripts/parse-ml.js",
+    "docs:watch": "node scripts/parse-ml.js --watch"
+  }
+}

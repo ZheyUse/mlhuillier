@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ML CLI Docs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+  <div class="bg-glow bg-glow-a"></div>
+  <div class="bg-glow bg-glow-b"></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <span class="brand-kicker">ML CLI</span>
+      <h1>Docs Platform</h1>
+      <p id="cliVersion">Version: loading...</p>
+    </div>
+    <nav id="sideNav" aria-label="Documentation sections"></nav>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Self-updating command reference + tutorials</p>
+        <h2>Learn and Execute Faster</h2>
+      </div>
+      <label class="search-wrap" for="searchInput">
+        <input id="searchInput" type="search" placeholder="Search commands, tutorials, scenarios..." autocomplete="off">
+      </label>
+    </header>
+
+    <section id="intro" class="panel"></section>
+    <section id="first-time-setup" class="panel"></section>
+    <section id="general-usage" class="panel"></section>
+    <section id="commands-reference" class="panel"></section>
+    <section id="scenarios" class="panel"></section>
+    <section id="error-handling" class="panel"></section>
+    <section id="faq-tips" class="panel"></section>
+  </main>
+
+  <script src="assets/js/search.js"></script>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>

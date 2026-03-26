@@ -1,0 +1,520 @@
+{
+  "generatedAt": "2026-03-26T02:33:09.962Z",
+  "source": "ml.bat",
+  "cliVersion": "1.0.38",
+  "commands": [
+    {
+      "name": "ml --c",
+      "description": "Check local CLI version against remote GitHub version.",
+      "syntax": "ml --c",
+      "params": [],
+      "example": "ml --c",
+      "category": "maintenance",
+      "expectedResult": "Displays whether a newer version is available.",
+      "tutorial": {
+        "whenToUse": "When maintaining CLI consistency across machines.",
+        "scenario": "Typical maintenance workflow using ml --c.",
+        "steps": [
+          "Run: ml --c",
+          "Review output and confirm expected result: Displays whether a newer version is available.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml --d",
+      "description": "Download and execute remote installer downloader.",
+      "syntax": "ml --d",
+      "params": [],
+      "example": "ml --d",
+      "category": "maintenance",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical maintenance workflow using ml --d.",
+        "steps": [
+          "Run: ml --d",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml --h",
+      "description": "Show global or command-level help output.",
+      "syntax": "ml --h",
+      "params": [],
+      "example": "ml --h",
+      "category": "general",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml --h.",
+        "steps": [
+          "Run: ml --h",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml --v",
+      "description": "Display currently installed CLI version.",
+      "syntax": "ml --v",
+      "params": [],
+      "example": "ml --v",
+      "category": "maintenance",
+      "expectedResult": "Prints current CLI version number.",
+      "tutorial": {
+        "whenToUse": "When maintaining CLI consistency across machines.",
+        "scenario": "Typical maintenance workflow using ml --v.",
+        "steps": [
+          "Run: ml --v",
+          "Review output and confirm expected result: Prints current CLI version number.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml add userdb",
+      "description": "Import userdb SQL schema and supporting objects.",
+      "syntax": "ml add userdb",
+      "params": [],
+      "example": "ml add userdb",
+      "category": "database",
+      "expectedResult": "Creates/imports required userdb tables and structures.",
+      "tutorial": {
+        "whenToUse": "When userdb schema is missing or corrupted.",
+        "scenario": "Typical database workflow using ml add userdb.",
+        "steps": [
+          "Run: ml add userdb",
+          "Review output and confirm expected result: Creates/imports required userdb tables and structures.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml clone local",
+      "description": "Copy local repository files into CLI tools for development testing.",
+      "syntax": "ml clone local [destination]",
+      "params": [
+        "destination (optional)"
+      ],
+      "example": "ml clone local",
+      "category": "project",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical project workflow using ml clone local.",
+        "steps": [
+          "Run: ml clone local",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml create --a",
+      "description": "Open an interactive account creation flow.",
+      "syntax": "ml create --a",
+      "params": [
+        "interactive prompts: id, first_name, last_name, role"
+      ],
+      "example": "ml create --a",
+      "category": "project",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When starting a new project or account bootstrap flow.",
+        "scenario": "Typical project workflow using ml create --a.",
+        "steps": [
+          "Run: ml create --a",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml create <project_name>",
+      "description": "Generate a new project scaffold from templates.",
+      "syntax": "ml create <project_name>",
+      "params": [
+        "project_name"
+      ],
+      "example": "ml create banking-system",
+      "category": "project",
+      "expectedResult": "Project directory and starter files are generated.",
+      "tutorial": {
+        "whenToUse": "When starting a new project or account bootstrap flow.",
+        "scenario": "Typical project workflow using ml create <project_name>.",
+        "steps": [
+          "Run: ml create banking-system",
+          "Review output and confirm expected result: Project directory and starter files are generated.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml nav",
+      "description": "Navigate to htdocs projects quickly and optionally open VS Code.",
+      "syntax": "ml nav",
+      "params": [
+        "--project_name (optional)",
+        "--remote (optional)"
+      ],
+      "example": "ml nav",
+      "category": "workflow",
+      "expectedResult": "Moves shell to selected project folder under htdocs.",
+      "tutorial": {
+        "whenToUse": "When switching projects often inside htdocs.",
+        "scenario": "Typical workflow workflow using ml nav.",
+        "steps": [
+          "Run: ml nav",
+          "Review output and confirm expected result: Moves shell to selected project folder under htdocs.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml serve",
+      "description": "Run remote serve helper and open project in browser.",
+      "syntax": "ml serve [project_name]",
+      "params": [
+        "project_name (optional)"
+      ],
+      "example": "ml serve",
+      "category": "workflow",
+      "expectedResult": "Opens the local project URL in your browser.",
+      "tutorial": {
+        "whenToUse": "When you need to quickly preview the app in browser.",
+        "scenario": "Typical workflow workflow using ml serve.",
+        "steps": [
+          "Run: ml serve",
+          "Review output and confirm expected result: Opens the local project URL in your browser.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml test userdb",
+      "description": "Execute database connectivity and schema checks for userdb.",
+      "syntax": "ml test userdb",
+      "params": [],
+      "example": "ml test userdb",
+      "category": "database",
+      "expectedResult": "Shows DB connection status and schema check result.",
+      "tutorial": {
+        "whenToUse": "Before development starts or after DB config changes.",
+        "scenario": "Typical database workflow using ml test userdb.",
+        "steps": [
+          "Run: ml test userdb",
+          "Review output and confirm expected result: Shows DB connection status and schema check result.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml update",
+      "description": "Update local CLI runtime files from remote installer assets.",
+      "syntax": "ml update",
+      "params": [],
+      "example": "ml update",
+      "category": "maintenance",
+      "expectedResult": "Downloads latest CLI runtime and refreshes installed tools.",
+      "tutorial": {
+        "whenToUse": "When maintaining CLI consistency across machines.",
+        "scenario": "Typical maintenance workflow using ml update.",
+        "steps": [
+          "Run: ml update",
+          "Review output and confirm expected result: Downloads latest CLI runtime and refreshes installed tools.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    }
+  ],
+  "tutorials": {
+    "firstTimeSetup": [
+      {
+        "step": 1,
+        "command": "ml --v",
+        "explanation": "Verify CLI is installed and available in PATH.",
+        "expectedResult": "Current version is printed, e.g. ML CLI version X.Y.Z."
+      },
+      {
+        "step": 2,
+        "command": "ml nav",
+        "explanation": "Jump directly to C:\\xampp\\htdocs before creating projects.",
+        "expectedResult": "Terminal path changes to C:\\xampp\\htdocs."
+      },
+      {
+        "step": 3,
+        "command": "ml create <project_name>",
+        "explanation": "Generate your first project scaffold.",
+        "expectedResult": "Project structure and starter files are created."
+      },
+      {
+        "step": 4,
+        "command": "ml nav --<project_name>",
+        "explanation": "Enter your new project directory and optionally open VS Code.",
+        "expectedResult": "Terminal is inside your project folder."
+      },
+      {
+        "step": 5,
+        "command": "Y",
+        "explanation": "Accept VS Code prompt when asked by nav helper.",
+        "expectedResult": "Project opens in VS Code."
+      },
+      {
+        "step": 6,
+        "command": "Continue in terminal",
+        "explanation": "Keep using CLI from the project directory.",
+        "expectedResult": "You are ready for checks and serve flow."
+      },
+      {
+        "step": 7,
+        "command": "ml test userdb",
+        "explanation": "Validate DB connection and schema.",
+        "expectedResult": "Connection test passes."
+      },
+      {
+        "step": 8,
+        "command": "ml add userdb",
+        "explanation": "Run this only if test fails to install missing schema.",
+        "expectedResult": "Database objects are imported."
+      },
+      {
+        "step": 9,
+        "command": "ml test userdb",
+        "explanation": "Retry verification after import.",
+        "expectedResult": "Connection test now succeeds."
+      },
+      {
+        "step": 10,
+        "command": "ml serve",
+        "explanation": "Open project in browser and begin development.",
+        "expectedResult": "Browser launches local project URL."
+      }
+    ],
+    "generalUsage": [
+      {
+        "step": 1,
+        "command": "ml nav",
+        "explanation": "Move to htdocs workspace root.",
+        "expectedResult": "Current directory is ready for project operations."
+      },
+      {
+        "step": 2,
+        "command": "ml create <project_name>",
+        "explanation": "Create or scaffold your working app.",
+        "expectedResult": "Project files generated."
+      },
+      {
+        "step": 3,
+        "command": "ml nav --<project_name>",
+        "explanation": "Switch into project quickly.",
+        "expectedResult": "Terminal context set to project."
+      },
+      {
+        "step": 4,
+        "command": "ml serve",
+        "explanation": "Preview the app in browser and continue coding.",
+        "expectedResult": "Project opens at local URL."
+      }
+    ],
+    "commonMistakes": [
+      "Running commands outside C:\\xampp\\htdocs project context.",
+      "Skipping ml test userdb before first run.",
+      "Ignoring version checks and using outdated CLI binaries."
+    ],
+    "commandLevel": [
+      {
+        "command": "ml --c",
+        "whenToUse": "When maintaining CLI consistency across machines.",
+        "scenario": "Typical maintenance workflow using ml --c.",
+        "steps": [
+          "Run: ml --c",
+          "Review output and confirm expected result: Displays whether a newer version is available.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml --d",
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical maintenance workflow using ml --d.",
+        "steps": [
+          "Run: ml --d",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml --h",
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml --h.",
+        "steps": [
+          "Run: ml --h",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml --v",
+        "whenToUse": "When maintaining CLI consistency across machines.",
+        "scenario": "Typical maintenance workflow using ml --v.",
+        "steps": [
+          "Run: ml --v",
+          "Review output and confirm expected result: Prints current CLI version number.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml add userdb",
+        "whenToUse": "When userdb schema is missing or corrupted.",
+        "scenario": "Typical database workflow using ml add userdb.",
+        "steps": [
+          "Run: ml add userdb",
+          "Review output and confirm expected result: Creates/imports required userdb tables and structures.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml clone local",
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical project workflow using ml clone local.",
+        "steps": [
+          "Run: ml clone local",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml create --a",
+        "whenToUse": "When starting a new project or account bootstrap flow.",
+        "scenario": "Typical project workflow using ml create --a.",
+        "steps": [
+          "Run: ml create --a",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml create <project_name>",
+        "whenToUse": "When starting a new project or account bootstrap flow.",
+        "scenario": "Typical project workflow using ml create <project_name>.",
+        "steps": [
+          "Run: ml create banking-system",
+          "Review output and confirm expected result: Project directory and starter files are generated.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml nav",
+        "whenToUse": "When switching projects often inside htdocs.",
+        "scenario": "Typical workflow workflow using ml nav.",
+        "steps": [
+          "Run: ml nav",
+          "Review output and confirm expected result: Moves shell to selected project folder under htdocs.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml serve",
+        "whenToUse": "When you need to quickly preview the app in browser.",
+        "scenario": "Typical workflow workflow using ml serve.",
+        "steps": [
+          "Run: ml serve",
+          "Review output and confirm expected result: Opens the local project URL in your browser.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml test userdb",
+        "whenToUse": "Before development starts or after DB config changes.",
+        "scenario": "Typical database workflow using ml test userdb.",
+        "steps": [
+          "Run: ml test userdb",
+          "Review output and confirm expected result: Shows DB connection status and schema check result.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml update",
+        "whenToUse": "When maintaining CLI consistency across machines.",
+        "scenario": "Typical maintenance workflow using ml update.",
+        "steps": [
+          "Run: ml update",
+          "Review output and confirm expected result: Downloads latest CLI runtime and refreshes installed tools.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    ],
+    "scenarios": [
+      {
+        "title": "Creating your first project",
+        "steps": [
+          "ml --v",
+          "ml nav",
+          "ml create my-app",
+          "ml nav --my-app",
+          "ml serve"
+        ]
+      },
+      {
+        "title": "Fixing database connection issues",
+        "steps": [
+          "ml test userdb",
+          "ml add userdb",
+          "ml test userdb"
+        ]
+      },
+      {
+        "title": "Starting development session",
+        "steps": [
+          "ml --c",
+          "ml update (if needed)",
+          "ml nav --my-app",
+          "ml serve"
+        ]
+      },
+      {
+        "title": "Recovering from setup errors",
+        "steps": [
+          "ml --v",
+          "ml --c",
+          "ml update",
+          "ml test userdb"
+        ]
+      }
+    ],
+    "errors": [
+      {
+        "error": "Command not recognized",
+        "meaning": "CLI not installed in PATH or shell session is stale.",
+        "fix": "Re-run installer, then open a new terminal and run ml --v."
+      },
+      {
+        "error": "Failed to fetch remote script",
+        "meaning": "Network issue or blocked GitHub endpoint.",
+        "fix": "Check internet, proxy, and retry. Then run ml --c to validate connectivity."
+      },
+      {
+        "error": "Database test failed",
+        "meaning": "Schema or credentials are not ready.",
+        "fix": "Run ml add userdb then retry ml test userdb."
+      }
+    ],
+    "faq": [
+      {
+        "q": "How often should I run ml --c?",
+        "a": "Run it at the start of each dev session."
+      },
+      {
+        "q": "Do I need to run ml update every time?",
+        "a": "Only when a newer version is reported."
+      },
+      {
+        "q": "What is the fastest start command sequence?",
+        "a": "ml nav --your-project then ml serve."
+      }
+    ]
+  }
+}
