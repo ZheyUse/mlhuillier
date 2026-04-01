@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.41"
+set "ML_VERSION=1.0.42"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -270,7 +270,11 @@ if %ERRORLEVEL% neq 0 (
         exit /b 2
 )
 
-"%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" "%~2"
+if "%~2"=="" (
+        "%PHP_EXE%" -d display_errors=0 "!TMP_FILE!"
+) else (
+        "%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" "%~2"
+)
 set "RC=%ERRORLEVEL%"
 call :maybe_show_update_notice
 del /f /q "!TMP_FILE!" >nul 2>&1
