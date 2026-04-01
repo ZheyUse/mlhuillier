@@ -27,6 +27,8 @@ if /I "%~1"=="create" if /I "%~2"=="--a" goto :cmd_create_account
 if /I "%~1"=="create" if /I "%~2"=="--config" goto :cmd_create_config
 if /I "%~1"=="--c" goto :cmd_check_version
 if /I "%~1"=="update" goto :cmd_update
+if /I "%~1"=="nav" goto :cmd_nav
+if /I "%~1"=="clone" if /I "%~2"=="local" goto :cmd_clone_local
 if /I "%~1"=="serve" goto :cmd_serve
 
 goto :cmd_generate
@@ -61,6 +63,7 @@ echo.
 echo Commands:
 echo   test userdb        Run remote DB connection test
 echo   add userdb         Import userdb SQL (migration/userdb)
+echo   nav                Navigate or open a project (ml nav)
 echo   serve              Open current project in browser (ml serve)
 echo   doc                Open online documentation (GitHub Pages)
 echo   create --a         Create interactive account (add user)
@@ -77,6 +80,7 @@ echo   ml --h create --a
 echo   ml --h create --config
 echo   ml --h --d
 echo   ml --h serve
+echo   ml --h nav
 echo   ml --h add userdb
 exit /b 0
 
@@ -105,7 +109,9 @@ if /I "%CMD%"=="update" goto :help_update
 if /I "%CMD%"=="--d" goto :help_download_installer
 if /I "%CMD%"=="doc" goto :help_docs
 if /I "%CMD%"=="docs" goto :help_docs
+if /I "%CMD%"=="nav" goto :help_nav
 if /I "%CMD%"=="serve" goto :help_serve
+if /I "%CMD%"=="dev" goto :help_dev
 if /I "%CMD%"=="--b" goto :help_backup
 if /I "%CMD%"=="create" if /I "%SUB%"=="--a" goto :help_create_account
 if /I "%CMD%"=="create" if /I "%SUB%"=="--config" goto :help_create_config
@@ -131,6 +137,11 @@ echo Description: Downloads and runs the remote updater to replace installed CLI
 exit /b 0
 
 :help_download_installer
+echo.
+echo HELP: Download installer
+echo Usage: ml --d
+echo Description: Downloads the remote installer downloader script and runs it to fetch the full installer.
+exit /b 0
 
 :help_docs
 echo.
@@ -141,11 +152,6 @@ echo   By default this opens the hosted docs at:
 echo   https://zheyuse.github.io/mlhuillier/documentation/
 echo   If you have installed the CLI locally the installer also places a
 echo   copy of the documentation under C:\ML CLI\Tools\documentation\
-exit /b 0
-echo.
-echo HELP: Download installer
-echo Usage: ml --d
-echo Description: Downloads the remote installer downloader script and runs it to fetch the full installer.
 exit /b 0
 
 :help_create
@@ -202,6 +208,31 @@ echo Usage: ml serve [project_name]
 echo Description: Remote-only helper. Fetches and runs the GitHub-hosted
 echo   ml-serve.php which prints and opens the project URL at
 echo   http://localhost/<project_name>. No local fallback if fetch fails.
+exit /b 0
+
+:help_nav
+echo.
+echo HELP: Nav
+echo Usage: ml nav [project_name]
+echo Description: Local helper to open or list projects. If no project provided, operates on current folder.
+echo Examples:
+echo   ml nav
+echo   ml nav leah/public
+exit /b 0
+
+:help_dev
+echo.
+echo HELP: Developer commands
+echo Usage: ml --h dev
+echo.
+echo Dev-only commands (not shown in standard help):
+echo   clone local [destination]  Copy local ML CLI files to C:\ML CLI\Tools for testing
+echo                             If no destination is provided, default is C:\ML CLI\Tools
+echo.
+echo Environment flags useful for development/testing:
+echo   ML_DEV=1    Force use of the local developer copy
+echo   ML_REPO=1   Indicate commands are running from the repository workspace
+echo.
 exit /b 0
 
 :help_add
@@ -661,6 +692,43 @@ if "!SERVE_PROJECT!"=="" (
 "%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" "!SERVE_PROJECT!"
 set "RC=%ERRORLEVEL%"
 del /f /q "!TMP_FILE!" >nul 2>&1
+exit /b %RC%
+:cmd_nav
+rem Navigation helper - delegates to ml-nav.php in repo
+set "NAV_SCRIPT=%~dp0ml-nav.php"
+echo.
+
+rem Simple single-dash flag detection for nav (print wrapper help on typos)
+if not "%~2"=="" (
+        if "%~2:~0,1%"=="-" (
+                echo Invalid flag: %~2
+                echo.
+                goto :show_help
+        )
+)
+
+if exist "C:\xampp\php\php.exe" (
+        "C:\xampp\php\php.exe" "%NAV_SCRIPT%" %*
+        set "RC=%ERRORLEVEL%"
+        call :maybe_show_update_notice
+        exit /b %RC%
+)
+
+php "%NAV_SCRIPT%" %*
+set "RC=%ERRORLEVEL%"
+call :maybe_show_update_notice
+exit /b %RC%
+
+:cmd_clone_local
+set "LOCAL_PHP=%~dp0ml-local.php"
+if not exist "!LOCAL_PHP!" (
+        echo Local installer script not found: !LOCAL_PHP!
+        exit /b 2
+)
+
+echo Executing local clone installer...
+"%PHP_EXE%" -d display_errors=0 "!LOCAL_PHP!" %~3 %~4 %~5 %~6 %~7 %~8 %~9
+set "RC=%ERRORLEVEL%"
 exit /b %RC%
 
 :cmd_download_installer
