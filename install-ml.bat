@@ -7,7 +7,7 @@ set "MODE=INSTALL"
 if /I "%~1"=="--update" set "MODE=UPDATE"
 
 rem Determine CLI version from local VERSION file if present (fallback 1.0.3)
-set "CLI_VERSION=1.0.40"
+set "CLI_VERSION=1.0.41"
 if exist "%SOURCE_DIR%VERSION" (
   for /f "usebackq delims=" %%v in ("%SOURCE_DIR%VERSION") do set "CLI_VERSION=%%v"
 )

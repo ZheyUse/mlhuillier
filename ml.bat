@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.40"
+set "ML_VERSION=1.0.41"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -12,6 +12,7 @@ if /I "%~1"=="--h" goto :prepare_help_args
 if /I "%~1"=="--d" goto :cmd_download_installer
 if /I "%~1"=="doc" goto :cmd_docs
 if /I "%~1"=="docs" goto :cmd_docs
+if /I "%~1"=="--b" goto :cmd_backup
 
 echo.
 echo ==============================
@@ -23,6 +24,7 @@ echo.
 if /I "%~1"=="test" if /I "%~2"=="userdb" goto :cmd_test_userdb
 if /I "%~1"=="add" if /I "%~2"=="userdb" goto :cmd_add_userdb
 if /I "%~1"=="create" if /I "%~2"=="--a" goto :cmd_create_account
+if /I "%~1"=="create" if /I "%~2"=="--config" goto :cmd_create_config
 if /I "%~1"=="--c" goto :cmd_check_version
 if /I "%~1"=="update" goto :cmd_update
 if /I "%~1"=="serve" goto :cmd_serve
@@ -219,6 +221,60 @@ if %ERRORLEVEL% neq 0 (
         call :maybe_show_update_notice
         del /f /q "!TMP_FILE!" >nul 2>&1
         exit /b %RC%
+
+:cmd_create_config
+set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/db-config/db-config.php"
+set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
+set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
+set "TMP_FILE=%TEMP%\ml-db-config.php"
+call :strip_query "!RAW_URL!"
+rem URL hidden from output
+echo Creating ML CLI DB config...
+echo.
+
+where curl >nul 2>&1
+if %ERRORLEVEL%==0 (
+        curl -s -f -o "!TMP_FILE!" "!RAW_URL!"
+) else (
+        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!RAW_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
+)
+if %ERRORLEVEL% neq 0 (
+        echo Failed to fetch remote config script
+        exit /b 2
+)
+
+"%PHP_EXE%" -d display_errors=0 "!TMP_FILE!"
+set "RC=%ERRORLEVEL%"
+call :maybe_show_update_notice
+del /f /q "!TMP_FILE!" >nul 2>&1
+exit /b %RC%
+
+:cmd_backup
+set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/backup-cli/backup-db.php"
+set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
+set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
+set "TMP_FILE=%TEMP%\ml-backup-db.php"
+call :strip_query "!RAW_URL!"
+rem URL hidden from output
+echo Executing backup helper...
+echo.
+
+where curl >nul 2>&1
+if %ERRORLEVEL%==0 (
+        curl -s -f -o "!TMP_FILE!" "!RAW_URL!"
+) else (
+        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!RAW_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
+)
+if %ERRORLEVEL% neq 0 (
+        echo Failed to fetch remote backup script
+        exit /b 2
+)
+
+"%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" "%~2"
+set "RC=%ERRORLEVEL%"
+call :maybe_show_update_notice
+del /f /q "!TMP_FILE!" >nul 2>&1
+exit /b %RC%
 
 :cmd_add_userdb
 set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/userdb-import.php"
