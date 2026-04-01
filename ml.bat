@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.44"
+set "ML_VERSION=1.0.45"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -626,7 +626,39 @@ if not defined PROJECT (
         exit /b 2
 )
 
-"%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" "%PROJECT%"
+rem Sanitize project path for the serve helper so the remote script receives
+rem a web-relative path (e.g. "leah/public/"), not an absolute Windows path.
+set "SERVE_PROJECT=!PROJECT!"
+if not defined SERVE_PROJECT set "SERVE_PROJECT="
+rem Normalize to forward slashes
+set "SERVE_PROJECT=!SERVE_PROJECT:\=/!"
+
+rem If path contains xampp/htdocs or htdocs, strip everything up to that folder
+echo !SERVE_PROJECT! | findstr /I "xampp/htdocs/" >nul
+if not errorlevel 1 (
+        set "SERVE_PROJECT=!SERVE_PROJECT:*xampp/htdocs/=!"
+) else (
+        echo !SERVE_PROJECT! | findstr /I "htdocs/" >nul
+        if not errorlevel 1 set "SERVE_PROJECT=!SERVE_PROJECT:*htdocs/=!"
+)
+
+rem Remove leading drive letter if present (e.g. C:/... -> remove C:)
+if not "!SERVE_PROJECT:~1,1!"=="" (
+        if "!SERVE_PROJECT:~1,1!"==":" set "SERVE_PROJECT=!SERVE_PROJECT:~2!"
+)
+
+:serve_strip_leading
+if "!SERVE_PROJECT:~0,1!"=="/" (
+        set "SERVE_PROJECT=!SERVE_PROJECT:~1!"
+        goto serve_strip_leading
+)
+
+rem If user passed an empty project, fall back to current folder name
+if "!SERVE_PROJECT!"=="" (
+        for %%D in ("%CD%") do set "SERVE_PROJECT=%%~nxD"
+)
+
+"%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" "!SERVE_PROJECT!"
 set "RC=%ERRORLEVEL%"
 del /f /q "!TMP_FILE!" >nul 2>&1
 exit /b %RC%
