@@ -1,8 +1,28 @@
 {
-  "generatedAt": "2026-03-26T07:02:10.001Z",
+  "generatedAt": "2026-04-01T02:39:20.533Z",
   "source": "ml.bat",
-  "cliVersion": "1.0.40",
+  "cliVersion": "1.0.42",
   "commands": [
+    {
+      "name": "ml --b",
+      "description": "Backup MySQL schemas using configured server credentials.",
+      "syntax": "ml --b [schema]",
+      "params": [
+        "schema (optional, use all for all schemas)"
+      ],
+      "example": "ml --b",
+      "category": "database",
+      "expectedResult": "Creates schema SQL dumps under C:\\ML CLI\\Backup\\BACKUP_MM-DD-YY\\<schema>.",
+      "tutorial": {
+        "whenToUse": "When you need on-demand backups for one schema or all schemas.",
+        "scenario": "Typical database workflow using ml --b.",
+        "steps": [
+          "Run: ml --b",
+          "Review output and confirm expected result: Creates schema SQL dumps under C:\\ML CLI\\Backup\\BACKUP_MM-DD-YY\\<schema>.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
     {
       "name": "ml --c",
       "description": "Check local CLI version against remote GitHub version.",
@@ -109,6 +129,26 @@
         "steps": [
           "Run: ml create --a",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml create --config",
+      "description": "Create or update database backup connection config.",
+      "syntax": "ml create --config",
+      "params": [
+        "interactive prompts: host, port, user, password, mysqldumpPath, backupPath"
+      ],
+      "example": "ml create --config",
+      "category": "project",
+      "expectedResult": "Creates C:\\ML CLI\\Tools\\mlcli-config.json for backup connectivity.",
+      "tutorial": {
+        "whenToUse": "Before using schema backups or whenever DB credentials change.",
+        "scenario": "Typical project workflow using ml create --config.",
+        "steps": [
+          "Run: ml create --config",
+          "Review output and confirm expected result: Creates C:\\ML CLI\\Tools\\mlcli-config.json for backup connectivity.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
       }
@@ -322,6 +362,16 @@
     ],
     "commandLevel": [
       {
+        "command": "ml --b",
+        "whenToUse": "When you need on-demand backups for one schema or all schemas.",
+        "scenario": "Typical database workflow using ml --b.",
+        "steps": [
+          "Run: ml --b",
+          "Review output and confirm expected result: Creates schema SQL dumps under C:\\ML CLI\\Backup\\BACKUP_MM-DD-YY\\<schema>.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
         "command": "ml --c",
         "whenToUse": "When maintaining CLI consistency across machines.",
         "scenario": "Typical maintenance workflow using ml --c.",
@@ -378,6 +428,16 @@
         "steps": [
           "Run: ml create --a",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml create --config",
+        "whenToUse": "Before using schema backups or whenever DB credentials change.",
+        "scenario": "Typical project workflow using ml create --config.",
+        "steps": [
+          "Run: ml create --config",
+          "Review output and confirm expected result: Creates C:\\ML CLI\\Tools\\mlcli-config.json for backup connectivity.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
       },
@@ -454,6 +514,15 @@
         ]
       },
       {
+        "title": "Configuring and running schema backups",
+        "steps": [
+          "ml create --config",
+          "ml --b",
+          "ml --b userdb",
+          "ml --b all"
+        ]
+      },
+      {
         "title": "Fixing database connection issues",
         "steps": [
           "ml test userdb",
@@ -495,6 +564,16 @@
         "error": "Database test failed",
         "meaning": "Schema or credentials are not ready.",
         "fix": "Run ml add userdb then retry ml test userdb."
+      },
+      {
+        "error": "Error: missing config file",
+        "meaning": "Backup command ran before DB backup config was created.",
+        "fix": "Run ml create --config then retry ml --b."
+      },
+      {
+        "error": "mysqldump not found",
+        "meaning": "mysqldump is not installed or not detected from PATH/XAMPP.",
+        "fix": "Install MySQL client tools or set mysqldumpPath in ml create --config."
       }
     ],
     "faq": [

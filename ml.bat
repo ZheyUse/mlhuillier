@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.42"
+set "ML_VERSION=1.0.43"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -55,6 +55,7 @@ echo   --h    Show this help
 echo   --v    Show version
 echo   --c    Check for newer version
 echo   --d    Download remote installer
+echo   --b    Backup schemas (use ml --b [schema])
 echo   --a    Account creation (use with `ml create --a`)
 echo.
 echo Commands:
@@ -63,6 +64,7 @@ echo   add userdb         Import userdb SQL (migration/userdb)
 echo   serve              Open current project in browser (ml serve)
 echo   doc                Open online documentation (GitHub Pages)
 echo   create --a         Create interactive account (add user)
+echo   create --config    Create DB config for backups
 echo   update             Update ML CLI from remote
 echo   --d                Download remote installer
 echo   --c                Check remote ML CLI version
@@ -72,6 +74,7 @@ echo   ml --h create
 echo   ml --h test userdb
 echo   ml --h --c
 echo   ml --h create --a
+echo   ml --h create --config
 echo   ml --h --d
 echo   ml --h serve
 echo   ml --h add userdb
@@ -101,7 +104,9 @@ if /I "%CMD%"=="--c" goto :help_check_version
 if /I "%CMD%"=="update" goto :help_update
 if /I "%CMD%"=="--d" goto :help_download_installer
 if /I "%CMD%"=="doc" goto :help_docs
+if /I "%CMD%"=="--b" goto :help_backup
 if /I "%CMD%"=="create" if /I "%SUB%"=="--a" goto :help_create_account
+if /I "%CMD%"=="create" if /I "%SUB%"=="--config" goto :help_create_config
 if /I "%CMD%"=="create" goto :help_create
 if /I "%CMD%"=="test" goto :help_test
 if /I "%CMD%"=="add" goto :help_add
@@ -155,6 +160,22 @@ echo Usage: ml create --a
 echo Description: Downloads and runs the remote `account-insert.php` script which
 echo   interactively prompts for ID, first/last name and role, then inserts a user
 echo   into the `users` table and an `active` entry into `userlogs`.
+exit /b 0
+
+:help_create_config
+echo.
+echo HELP: Create DB config
+echo Usage: ml create --config
+echo Description: Interactive helper that creates the DB config used by 'ml --b'.
+echo   Writes a JSON config to C:\ML CLI\Tools\mlcli-config.json.
+exit /b 0
+
+:help_backup
+echo.
+echo HELP: Backup schemas
+echo Usage: ml --b [schema]
+echo Description: Lists available schemas on the configured DB server and creates SQL dumps.
+echo   If no schema provided, you'll be prompted. Use 'ml create --config' to set DB connection.
 exit /b 0
 
 :help_test

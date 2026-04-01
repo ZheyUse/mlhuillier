@@ -13,6 +13,30 @@ date_default_timezone_set(@date_default_timezone_get() ?: 'UTC');
 $toolsDir = 'C:\\ML CLI\\Tools';
 $defaultBackup = 'C:\\ML CLI\\Backup';
 
+// Try to detect common mysqldump locations (XAMPP / system MySQL)
+function detect_mysqldump(): ?string {
+    if (stripos(PHP_OS, 'WIN') === 0) {
+        $patterns = [
+            'C:\\xampp\\mysql\\bin\\mysqldump.exe',
+            'C:\\xampp\\php\\mysqldump.exe',
+            'C:\\Program Files\\MySQL\\*\\bin\\mysqldump.exe',
+            'C:\\Program Files (x86)\\MySQL\\*\\bin\\mysqldump.exe',
+        ];
+        foreach ($patterns as $pat) {
+            $m = glob($pat);
+            if (!empty($m)) return $m[0];
+            if (file_exists($pat)) return $pat;
+        }
+    } else {
+        $paths = ['/opt/lampp/bin/mysqldump', '/usr/local/mysql/bin/mysqldump', '/usr/bin/mysqldump'];
+        foreach ($paths as $p) { if (file_exists($p)) return $p; }
+    }
+    return null;
+}
+
+$autoDump = detect_mysqldump();
+if ($autoDump) echo "Auto-detected mysqldump: {$autoDump}\n";
+
 function prompt($label, $default = '') {
     if ($default !== '') {
         echo "{$label} [{$default}]: ";
@@ -29,7 +53,7 @@ $port = prompt('MySQL port', '3306');
 $user = prompt('MySQL user', 'root');
 echo "MySQL password (will be stored in plaintext): ";
 $password = trim(fgets(STDIN));
-$mysqldumpPath = prompt('Full path to mysqldump (leave blank to use PATH)', '');
+$mysqldumpPath = prompt('Full path to mysqldump (leave blank to use PATH)', $autoDump ?? '');
 $backupPath = prompt('Backup path', $defaultBackup);
 
 $cfg = [

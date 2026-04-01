@@ -121,6 +121,42 @@ if (!empty($mysqldumpPath) && file_exists($mysqldumpPath)) {
     $found = locateExecutable('mysqldump');
     if ($found) $mysqldump = $found;
 }
+
+// If not found in PATH or config, attempt common XAMPP/MySQL locations
+if (!$mysqldump) {
+    $detected = null;
+    if (stripos(PHP_OS, 'WIN') === 0) {
+        $patterns = [
+            'C:\\xampp\\mysql\\bin\\mysqldump.exe',
+            'C:\\xampp\\php\\mysqldump.exe',
+            'C:\\Program Files\\MySQL\\*\\bin\\mysqldump.exe',
+            'C:\\Program Files (x86)\\MySQL\\*\\bin\\mysqldump.exe',
+            'C:\\Program Files\\MariaDB*\\*\\bin\\mysqldump.exe',
+        ];
+        foreach ($patterns as $pat) {
+            $m = glob($pat);
+            if (!empty($m)) { $detected = $m[0]; break; }
+            if (file_exists($pat)) { $detected = $pat; break; }
+        }
+    } else {
+        $patterns = [
+            '/opt/lampp/bin/mysqldump',
+            '/opt/*/bin/mysqldump',
+            '/usr/local/mysql/bin/mysqldump',
+            '/usr/bin/mysqldump',
+        ];
+        foreach ($patterns as $pat) {
+            $m = glob($pat);
+            if (!empty($m)) { $detected = $m[0]; break; }
+            if (file_exists($pat)) { $detected = $pat; break; }
+        }
+    }
+    if ($detected) {
+        $mysqldump = $detected;
+        fwrite(STDOUT, "Detected mysqldump at: {$mysqldump}\n");
+    }
+}
+
 if (!$mysqldump) {
     fwrite(STDERR, "Error: mysqldump not found. Please install it or set 'mysqldumpPath' in config.\n");
     exit(10);

@@ -160,7 +160,7 @@ function parseHelpDetails(content) {
 
 function inferCategory(name) {
   const lower = name.toLowerCase();
-  if (lower.includes('userdb') || lower.includes('test') || lower.includes('add')) return 'database';
+  if (lower.includes('--b') || lower.includes('userdb') || lower.includes('test') || lower.includes('add')) return 'database';
   if (lower.includes('create') || lower.includes('clone')) return 'project';
   if (lower.includes('serve') || lower.includes('nav')) return 'workflow';
   if (lower.includes('update') || lower.includes('--c') || lower.includes('--v') || lower.includes('--d')) return 'maintenance';
@@ -178,6 +178,8 @@ function inferDescription(command) {
   if (name === 'ml nav') return 'Navigate to htdocs projects quickly and optionally open VS Code.';
   if (name === 'ml clone local') return 'Copy local repository files into CLI tools for development testing.';
   if (name === 'ml --d') return 'Download and execute remote installer downloader.';
+  if (name === 'ml --b') return 'Backup MySQL schemas using configured server credentials.';
+  if (name === 'ml create --config') return 'Create or update database backup connection config.';
   if (name === 'ml --h') return 'Show global or command-level help output.';
   if (name === 'ml --v') return 'Display currently installed CLI version.';
   return command.helpDescription || 'Run this CLI command to execute its linked workflow.';
@@ -193,9 +195,11 @@ function inferSyntax(command, helpDetails) {
     ['ml serve', 'serve'],
     ['ml nav', 'nav'],
     ['ml --d', 'download_installer'],
+    ['ml --b', 'backup'],
     ['ml --v', 'show_version'],
     ['ml --h', 'show_help'],
     ['ml clone local', 'dev'],
+    ['ml create --config', 'create_config'],
   ]);
 
   const key = keyMap.get(command.name.toLowerCase());
@@ -215,6 +219,8 @@ function inferSyntax(command, helpDetails) {
 function inferParams(command) {
   const lower = command.name.toLowerCase();
   if (lower === 'ml create --a') return ['interactive prompts: id, first_name, last_name, role'];
+  if (lower === 'ml create --config') return ['interactive prompts: host, port, user, password, mysqldumpPath, backupPath'];
+  if (lower === 'ml --b') return ['schema (optional, use all for all schemas)'];
   if (lower === 'ml nav') return ['--project_name (optional)', '--remote (optional)'];
   if (lower === 'ml serve') return ['project_name (optional)'];
   if (lower === 'ml clone local') return ['destination (optional)'];
@@ -230,6 +236,8 @@ function inferExpectedResult(command) {
   if (lower === 'ml --v') return 'Prints current CLI version number.';
   if (lower === 'ml serve') return 'Opens the local project URL in your browser.';
   if (lower === 'ml nav') return 'Moves shell to selected project folder under htdocs.';
+  if (lower === 'ml create --config') return 'Creates C:\\ML CLI\\Tools\\mlcli-config.json for backup connectivity.';
+  if (lower === 'ml --b') return 'Creates schema SQL dumps under C:\\ML CLI\\Backup\\BACKUP_MM-DD-YY\\<schema>.';
   return 'Runs the command workflow and returns success or actionable error output.';
 }
 
@@ -237,6 +245,8 @@ function inferWhenToUse(command) {
   const lower = command.name.toLowerCase();
   if (lower.includes('test userdb')) return 'Before development starts or after DB config changes.';
   if (lower.includes('add userdb')) return 'When userdb schema is missing or corrupted.';
+  if (lower.includes('create --config')) return 'Before using schema backups or whenever DB credentials change.';
+  if (lower.includes('--b')) return 'When you need on-demand backups for one schema or all schemas.';
   if (lower.includes('create')) return 'When starting a new project or account bootstrap flow.';
   if (lower.includes('serve')) return 'When you need to quickly preview the app in browser.';
   if (lower.includes('update') || lower.includes('--c') || lower.includes('--v')) return 'When maintaining CLI consistency across machines.';
@@ -416,6 +426,10 @@ function buildTutorials(commands) {
         steps: ['ml --v', 'ml nav', 'ml create my-app', 'ml nav --my-app', 'ml serve'],
       },
       {
+        title: 'Configuring and running schema backups',
+        steps: ['ml create --config', 'ml --b', 'ml --b userdb', 'ml --b all'],
+      },
+      {
         title: 'Fixing database connection issues',
         steps: ['ml test userdb', 'ml add userdb', 'ml test userdb'],
       },
@@ -443,6 +457,16 @@ function buildTutorials(commands) {
         error: 'Database test failed',
         meaning: 'Schema or credentials are not ready.',
         fix: 'Run ml add userdb then retry ml test userdb.',
+      },
+      {
+        error: 'Error: missing config file',
+        meaning: 'Backup command ran before DB backup config was created.',
+        fix: 'Run ml create --config then retry ml --b.',
+      },
+      {
+        error: 'mysqldump not found',
+        meaning: 'mysqldump is not installed or not detected from PATH/XAMPP.',
+        fix: 'Install MySQL client tools or set mysqldumpPath in ml create --config.',
       },
     ],
     faq: [
