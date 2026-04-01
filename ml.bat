@@ -104,6 +104,8 @@ if /I "%CMD%"=="--c" goto :help_check_version
 if /I "%CMD%"=="update" goto :help_update
 if /I "%CMD%"=="--d" goto :help_download_installer
 if /I "%CMD%"=="doc" goto :help_docs
+if /I "%CMD%"=="docs" goto :help_docs
+if /I "%CMD%"=="serve" goto :help_serve
 if /I "%CMD%"=="--b" goto :help_backup
 if /I "%CMD%"=="create" if /I "%SUB%"=="--a" goto :help_create_account
 if /I "%CMD%"=="create" if /I "%SUB%"=="--config" goto :help_create_config
