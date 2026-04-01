@@ -16,11 +16,14 @@ $defaultBackup = 'C:\\ML CLI\\Backup';
 // Try to detect common mysqldump locations (XAMPP / system MySQL)
 function detect_mysqldump(): ?string {
     if (stripos(PHP_OS, 'WIN') === 0) {
+        // Prefer official MySQL 8 client locations (Program Files), then Workbench, then XAMPP/MariaDB
         $patterns = [
+            'C:\\Program Files\\MySQL\\*\\bin\\mysqldump.exe',
+            'C:\\Program Files\\MySQL Workbench *\\mysqldump.exe',
+            'C:\\Program Files (x86)\\MySQL\\*\\bin\\mysqldump.exe',
             'C:\\xampp\\mysql\\bin\\mysqldump.exe',
             'C:\\xampp\\php\\mysqldump.exe',
-            'C:\\Program Files\\MySQL\\*\\bin\\mysqldump.exe',
-            'C:\\Program Files (x86)\\MySQL\\*\\bin\\mysqldump.exe',
+            'C:\\Program Files\\MariaDB*\\*\\bin\\mysqldump.exe',
         ];
         foreach ($patterns as $pat) {
             $m = glob($pat);

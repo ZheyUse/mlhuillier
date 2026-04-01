@@ -126,11 +126,13 @@ if (!empty($mysqldumpPath) && file_exists($mysqldumpPath)) {
 if (!$mysqldump) {
     $detected = null;
     if (stripos(PHP_OS, 'WIN') === 0) {
+        // Prefer MySQL Server 8 and Workbench locations first, then fallback to XAMPP/MariaDB
         $patterns = [
+            'C:\\Program Files\\MySQL\\*\\bin\\mysqldump.exe',
+            'C:\\Program Files\\MySQL Workbench *\\mysqldump.exe',
+            'C:\\Program Files (x86)\\MySQL\\*\\bin\\mysqldump.exe',
             'C:\\xampp\\mysql\\bin\\mysqldump.exe',
             'C:\\xampp\\php\\mysqldump.exe',
-            'C:\\Program Files\\MySQL\\*\\bin\\mysqldump.exe',
-            'C:\\Program Files (x86)\\MySQL\\*\\bin\\mysqldump.exe',
             'C:\\Program Files\\MariaDB*\\*\\bin\\mysqldump.exe',
         ];
         foreach ($patterns as $pat) {
