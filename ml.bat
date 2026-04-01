@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.43"
+set "ML_VERSION=1.0.44"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -499,6 +499,64 @@ set "TMP_FILE=%TEMP%\ml-serve.php"
 rem URL hidden from output
 echo Executing serve helper...
 echo.
+
+rem --- Ensure local Apache is running; attempt to start XAMPP Apache if not ---
+echo Checking local webserver availability...
+where curl >nul 2>&1
+if %ERRORLEVEL%==0 (
+        curl -s --head http://localhost:80/ >nul 2>&1
+        if %ERRORLEVEL%==0 (
+                echo Apache appears running.
+        ) else (
+                goto :try_start_apache
+        )
+) else (
+        powershell -NoProfile -Command "Try { (Invoke-WebRequest -UseBasicParsing -Uri 'http://localhost' -TimeoutSec 2) | Out-Null; exit 0 } Catch { exit 2 }"
+        if %ERRORLEVEL%==0 (
+                echo Apache appears running.
+        ) else (
+                goto :try_start_apache
+        )
+)
+
+goto :download_serve_script
+
+:try_start_apache
+echo Apache not responding; attempting to start XAMPP Apache or Apache service...
+if exist "C:\xampp\xampp_start.exe" (
+        start "" /B "C:\xampp\xampp_start.exe"
+) else if exist "C:\xampp\apache_start.bat" (
+        start "" /B "C:\xampp\apache_start.bat"
+) else (
+        sc query Apache2.4 >nul 2>&1
+        if %ERRORLEVEL%==0 sc start Apache2.4
+        sc query Apache2 >nul 2>&1
+        if %ERRORLEVEL%==0 sc start Apache2
+)
+
+rem wait up to 15 seconds for apache to respond
+set "tries=0"
+:wait_apache
+set /a tries+=1
+where curl >nul 2>&1
+if %ERRORLEVEL%==0 (
+        curl -s --head http://localhost:80/ >nul 2>&1
+        if %ERRORLEVEL%==0 goto :apache_up
+) else (
+        powershell -NoProfile -Command "Try { (Invoke-WebRequest -UseBasicParsing -Uri 'http://localhost' -TimeoutSec 2) | Out-Null; exit 0 } Catch { exit 2 }"
+        if %ERRORLEVEL%==0 goto :apache_up
+)
+if %tries% GEQ 15 (
+        echo Failed to start Apache within timeout. Please start XAMPP Apache manually and retry.
+        exit /b 2
+)
+timeout /t 1 >nul
+goto :wait_apache
+
+:apache_up
+echo Apache is running.
+
+:download_serve_script
 
 where curl >nul 2>&1
 if %ERRORLEVEL%==0 (
