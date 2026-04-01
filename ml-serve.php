@@ -9,6 +9,21 @@ if (!$project) {
     $project = $cwd === false ? '' : basename($cwd);
 }
 
+// Normalize any absolute/local path into a web project slug.
+if ($project) {
+    $project = str_replace('\\', '/', trim($project));
+    $project = preg_replace('#^[A-Za-z]:/#', '', $project);
+    if (stripos($project, 'xampp/htdocs/') !== false) {
+        $project = preg_replace('#^.*xampp/htdocs/#i', '', $project);
+    } elseif (stripos($project, 'htdocs/') !== false) {
+        $project = preg_replace('#^.*htdocs/#i', '', $project);
+    }
+    $project = rtrim($project, '/');
+    $project = preg_replace('#/public$#i', '', $project);
+    $parts = array_values(array_filter(explode('/', $project), 'strlen'));
+    $project = $parts[0] ?? '';
+}
+
 if (!$project) {
     fwrite(STDERR, "Error: cannot determine project name. Provide it as `ml serve <project>` or run inside a project folder.\n");
     exit(2);
