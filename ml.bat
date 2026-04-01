@@ -213,11 +213,19 @@ exit /b 0
 :help_nav
 echo.
 echo HELP: Nav
-echo Usage: ml nav [project_name]
-echo Description: Local helper to open or list projects. If no project provided, operates on current folder.
-echo Examples:
-echo   ml nav
-echo   ml nav leah/public
+echo Usage: ml nav
+echo.
+echo Arguments:
+echo   1. ml nav --projectname
+echo      Navigates to your created project folder under C:\xampp\htdocs and prompts to open
+echo      the project in VSCode (Y/N).
+echo.
+echo   2. ml nav --projectname --remote
+echo      Runs the remote ml-nav.php helper to perform remote-assisted navigation or actions.
+echo.
+echo Notes:
+echo   - Running ml nav with no arguments changes directory to C:\xampp\htdocs and exits.
+echo   - Set ML_REMOTE=1 to disable editor launches and prompts (useful for CI).
 exit /b 0
 
 :help_dev
@@ -694,29 +702,99 @@ set "RC=%ERRORLEVEL%"
 del /f /q "!TMP_FILE!" >nul 2>&1
 exit /b %RC%
 :cmd_nav
-rem Navigation helper - delegates to ml-nav.php in repo
-set "NAV_SCRIPT=%~dp0ml-nav.php"
-echo.
+set "HTDOCS_DIR=C:\xampp\htdocs"
+if "%~2"=="" (
+        for %%D in ("%HTDOCS_DIR%") do cd /d "%%~fD" & echo Now in %%~fD & exit /b 0
+)
 
-rem Simple single-dash flag detection for nav (print wrapper help on typos)
-if not "%~2"=="" (
-        if "%~2:~0,1%"=="-" (
-                echo Invalid flag: %~2
+set "NAV_ARG=%~2"
+if not "%NAV_ARG%"=="" (
+        rem If user provided a single-dash flag (likely a typo), show top-level help
+        if "%NAV_ARG:~0,1%"=="-" if not "%NAV_ARG:~0,2%"=="--" (
+                echo Invalid flag: %NAV_ARG%
                 echo.
-                goto :show_help
+                call :show_help
+                exit /b 2
+        )
+
+        if "%NAV_ARG:~0,2%"=="--" (
+                set "PROJECT_NAME=%NAV_ARG:~2%"
+                if defined PROJECT_NAME (
+                        set "PROJECT_PATH=%HTDOCS_DIR%\!PROJECT_NAME!"
+                        if exist "!PROJECT_PATH!" (
+                                echo Now in !PROJECT_PATH!
+                                if not defined ML_REMOTE (
+                                        set "OPEN_IN_VSCODE="
+                                        set /p OPEN_IN_VSCODE=Do you want to open !PROJECT_NAME! in VSCode? ^(Y/N^): 
+                                        if /I "!OPEN_IN_VSCODE:~0,1!"=="Y" (
+                                                where code >nul 2>&1
+                                                if errorlevel 1 (
+                                                        echo VSCode CLI ^(code^) not found in PATH.
+                                                ) else (
+                                                        tasklist /FI "IMAGENAME eq Code.exe" | find /I "Code.exe" >nul
+                                                        if errorlevel 1 (
+                                                                code "!PROJECT_PATH!" >nul 2>&1
+                                                        ) else (
+                                                                code --new-window "!PROJECT_PATH!" >nul 2>&1
+                                                        )
+                                                )
+                                        )
+                                )
+                                for %%D in ("!PROJECT_PATH!") do cd /d "%%~fD" & exit /b 0
+                        ) else (
+                                echo Project not found: !PROJECT_PATH!
+                                exit /b 2
+                        )
+                )
         )
 )
 
-if exist "C:\xampp\php\php.exe" (
-        "C:\xampp\php\php.exe" "%NAV_SCRIPT%" %*
-        set "RC=%ERRORLEVEL%"
-        call :maybe_show_update_notice
-        exit /b %RC%
+set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml-nav.php"
+set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
+set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
+set "TMP_FILE=%TEMP%\ml-nav.php"
+set "TMP_OUT=%TEMP%\ml-nav.out"
+call :strip_query "!RAW_URL!"
+rem URL hidden from output
+
+echo Executing navigation helper...
+echo.
+
+where curl >nul 2>&1
+if %ERRORLEVEL%==0 (
+        curl -s -f -o "!TMP_FILE!" "!RAW_URL!"
+) else (
+        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!RAW_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
+)
+if %ERRORLEVEL% neq 0 (
+        echo Failed to fetch navigation script
+        exit /b 2
 )
 
-php "%NAV_SCRIPT%" %*
+"%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" %* --remote > "!TMP_OUT!" 2>&1
 set "RC=%ERRORLEVEL%"
+
+set "CD_TO="
+for /f "usebackq tokens=1* delims=:" %%A in ("!TMP_OUT!") do (
+        if /I "%%A"=="CD_TO" set "CD_TO=%%B"
+)
+
+rem Trim leading space
+if defined CD_TO (
+        if "!CD_TO:~0,1!"==" " set "CD_TO=!CD_TO:~1!"
+)
+
+if defined CD_TO (
+        if exist "!CD_TO!" (
+                del /f /q "!TMP_FILE!" "!TMP_OUT!" >nul 2>&1
+                for %%D in ("!CD_TO!") do cd /d "%%~fD" & echo Now in %%~fD & exit /b 0
+        ) else (
+                echo Target folder not found: !CD_TO!
+        )
+)
+
 call :maybe_show_update_notice
+del /f /q "!TMP_FILE!" "!TMP_OUT!" >nul 2>&1
 exit /b %RC%
 
 :cmd_clone_local

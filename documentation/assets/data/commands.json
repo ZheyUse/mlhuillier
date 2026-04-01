@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-01T05:25:51.095Z",
+  "generatedAt": "2026-04-01T05:32:53.129Z",
   "source": "ml.bat",
   "cliVersion": "1.0.45",
   "commands": [
@@ -232,7 +232,7 @@
     {
       "name": "ml nav",
       "description": "Navigate to htdocs projects quickly and optionally open VS Code.",
-      "syntax": "ml nav [project_name]",
+      "syntax": "ml nav",
       "params": [
         "--project_name (optional)",
         "--remote (optional)"
