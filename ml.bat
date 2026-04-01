@@ -502,52 +502,92 @@ rem URL hidden from output
 echo Executing serve helper...
 echo.
 
-rem --- Ensure local Apache is running; attempt to start XAMPP Apache if not ---
-echo Checking local webserver availability...
-where curl >nul 2>&1
-if %ERRORLEVEL%==0 (
-        curl -s --head http://localhost:80/ >nul 2>&1
-        if %ERRORLEVEL%==0 (
-                echo Apache appears running.
-        ) else (
-                goto :try_start_apache
-        )
-) else (
-        powershell -NoProfile -Command "Try { (Invoke-WebRequest -UseBasicParsing -Uri 'http://localhost' -TimeoutSec 2) | Out-Null; exit 0 } Catch { exit 2 }"
-        if %ERRORLEVEL%==0 (
-                echo Apache appears running.
-        ) else (
-                goto :try_start_apache
-        )
-)
+rem --- Ensure local Apache is running; attempt to start XAMPP Apache or Apache service if not ---
+echo Checking for local Apache process...
+rem Check for typical Apache process names first
+tasklist /FI "IMAGENAME eq httpd.exe" 2>NUL | findstr /I "httpd.exe" >nul
+if %ERRORLEVEL%==0 goto :apache_up
+tasklist /FI "IMAGENAME eq apache.exe" 2>NUL | findstr /I "apache.exe" >nul
+if %ERRORLEVEL%==0 goto :apache_up
 
-goto :download_serve_script
+goto :try_start_apache
 
 :try_start_apache
-echo Apache not responding; attempting to start XAMPP Apache or Apache service...
-if exist "C:\xampp\xampp_start.exe" (
-        start "" /B "C:\xampp\xampp_start.exe"
-) else if exist "C:\xampp\apache_start.bat" (
-        start "" /B "C:\xampp\apache_start.bat"
+echo Apache not running; attempting to start XAMPP Apache or Apache service...
+rem Prefer interactive XAMPP control, service install/start, or falling back to httpd binary
+set "XAMPP_ROOT=C:\xampp"
+set "XAMPP_CONTROL=%XAMPP_ROOT%\xampp-control.exe"
+set "XAMPP_HTTPD=%XAMPP_ROOT%\apache\bin\httpd.exe"
+set "XAMPP_START=%XAMPP_ROOT%\xampp_start.exe"
+set "TMP_INSTALL=%TEMP%\ml_install_apache_service.bat"
+
+if exist "%XAMPP_CONTROL%" (
+        echo Found XAMPP Control Panel at %XAMPP_CONTROL%.
+        echo.
+        echo How would you like to start Apache?
+        echo  [1] Open XAMPP Control Panel (manual Start)
+        echo  [2] Install Apache as Windows service and start (requires admin)
+        echo  [3] Start Apache directly (no service, may not reflect in Control Panel)
+        set /p "CHOICE=Select 1/2/3 (default 1): "
+        if "%CHOICE%"=="" set "CHOICE=1"
+        if "%CHOICE%"=="1" (
+                echo Launching XAMPP Control Panel...
+                start "" "%XAMPP_CONTROL%"
+                goto wait_apache
+        ) else if "%CHOICE%"=="2" (
+                if not exist "%XAMPP_HTTPD%" (
+                        echo Apache binary not found at %XAMPP_HTTPD%. Cannot install service.
+                        goto try_start_fallback
+                )
+                echo Preparing elevated installer to create Apache service...
+                > "%TMP_INSTALL%" echo @echo off
+                >> "%TMP_INSTALL%" echo "%XAMPP_HTTPD%" -k install -n "Apache2.4"
+                >> "%TMP_INSTALL%" echo sc start Apache2.4
+                echo Requesting elevation to install Apache service...
+                powershell -NoProfile -Command "Start-Process -FilePath '%TMP_INSTALL%' -Verb RunAs"
+                echo Installer launched. Waiting a moment for service to start...
+                ping -n 4 127.0.0.1 >nul
+                goto wait_apache
+        ) else (
+                echo Starting Apache binary directly...
+                start "" /B "%XAMPP_HTTPD%" -k start
+                goto wait_apache
+        )
 ) else (
-        sc query Apache2.4 >nul 2>&1
-        if %ERRORLEVEL%==0 sc start Apache2.4
-        sc query Apache2 >nul 2>&1
-        if %ERRORLEVEL%==0 sc start Apache2
+        goto try_start_fallback
 )
 
-rem wait up to 15 seconds for apache to respond
+:try_start_fallback
+if exist "%XAMPP_HTTPD%" (
+        echo Starting XAMPP Apache binary...
+        start "" /B "%XAMPP_HTTPD%" -k start
+        goto wait_apache
+) else if exist "%XAMPP_START%" (
+        echo Running XAMPP start helper...
+        start "" /B "%XAMPP_START%"
+        goto wait_apache
+) else (
+        rem attempt to start common Apache services
+        sc query Apache2.4 >nul 2>&1
+        if %ERRORLEVEL%==0 (
+                echo Starting Apache2.4 service...
+                sc start Apache2.4
+        )
+        sc query Apache2 >nul 2>&1
+        if %ERRORLEVEL%==0 (
+                echo Starting Apache2 service...
+                sc start Apache2
+        )
+)
+
+rem wait up to 15 seconds for apache process to appear
 set "tries=0"
 :wait_apache
 set /a tries+=1
-where curl >nul 2>&1
-if %ERRORLEVEL%==0 (
-        curl -s --head http://localhost:80/ >nul 2>&1
-        if %ERRORLEVEL%==0 goto :apache_up
-) else (
-        powershell -NoProfile -Command "Try { (Invoke-WebRequest -UseBasicParsing -Uri 'http://localhost' -TimeoutSec 2) | Out-Null; exit 0 } Catch { exit 2 }"
-        if %ERRORLEVEL%==0 goto :apache_up
-)
+tasklist /FI "IMAGENAME eq httpd.exe" 2>NUL | findstr /I "httpd.exe" >nul
+if %ERRORLEVEL%==0 goto :apache_up
+tasklist /FI "IMAGENAME eq apache.exe" 2>NUL | findstr /I "apache.exe" >nul
+if %ERRORLEVEL%==0 goto :apache_up
 if %tries% GEQ 15 (
         echo Failed to start Apache within timeout. Please start XAMPP Apache manually and retry.
         exit /b 2
@@ -556,7 +596,7 @@ timeout /t 1 >nul
 goto :wait_apache
 
 :apache_up
-echo Apache is running.
+echo Apache process detected and running.
 
 :download_serve_script
 
