@@ -696,6 +696,18 @@ rem If user passed an empty project, fall back to current folder name
 if "!SERVE_PROJECT!"=="" (
         for %%D in ("%CD%") do set "SERVE_PROJECT=%%~nxD"
 )
+rem Remove trailing slashes
+:serve_strip_trailing
+if "!SERVE_PROJECT:~-1!"=="/" (
+        set "SERVE_PROJECT=!SERVE_PROJECT:~0,-1!"
+        goto serve_strip_trailing
+)
+
+rem Remove any '/public' segments so we pass the project root (e.g., 'leah')
+set "SERVE_PROJECT=!SERVE_PROJECT:/public=!"
+
+rem Use only the top-level folder (project name) for the URL
+for /f "tokens=1 delims=/" %%P in ("!SERVE_PROJECT!") do set "SERVE_PROJECT=%%P"
 
 "%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" "!SERVE_PROJECT!"
 set "RC=%ERRORLEVEL%"
