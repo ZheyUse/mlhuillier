@@ -4182,7 +4182,7 @@ MD,
 function finalizeGeneratedProject(string $projectRoot): bool
 {
   $htPath = $projectRoot . DIRECTORY_SEPARATOR . '.htaccess';
-  $htContent = "RewriteEngine On\nRewriteRule ^$ public/ [R=302,L]\n";
+  $htContent = "RewriteEngine On\nRewriteRule ^$ %{REQUEST_URI}public/ [R=302,L,NE]\n";
 
   if (file_put_contents($htPath, $htContent) === false) {
     report('file', $htPath, $projectRoot, 'FAILED');

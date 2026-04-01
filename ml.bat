@@ -6,6 +6,14 @@ set "ML_VERSION=1.0.45"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
+rem In CMD, ml.bat can be resolved before ml.cmd. For `ml nav`, bounce to ml.cmd
+rem once so directory changes are applied by the wrapper expected for navigation.
+if /I "%~1"=="nav" if not defined ML_NAV_BRIDGE if exist "%~dp0ml.cmd" (
+        set "ML_NAV_BRIDGE=1"
+        call "%~dp0ml.cmd" %*
+        exit /b %ERRORLEVEL%
+)
+
 if /I "%~1"=="--v" goto :show_version
 if /I "%~1"=="--h" if "%~2"=="" goto :show_help
 if /I "%~1"=="--h" goto :prepare_help_args
