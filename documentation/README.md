@@ -1,6 +1,6 @@
-# ML CLI Documentation Site
+# M LHUILLIER ML CLI Documentation Site
 
-Dynamic documentation is generated from `ml.bat` using the parser pipeline.
+M LHUILLIER ML CLI is a workflow command-line tool for project scaffolding, database setup, navigation, and update automation. It also provides utilities for account and schema management, local development helpers, and remote workflow helpers that simplify common developer tasks.
 
 ## Build
 
@@ -16,14 +16,8 @@ npm run docs:watch
 
 ## Open
 
-Open `documentation/index.html` in your browser.
+Open documentation/index.html in your browser.
 
-## Data Source
+## Notes
 
-Generated data file:
-
-- `documentation/assets/data/commands.json`
-
-Parser script:
-
-- `scripts/parse-ml.js`
+This documentation is generated from the CLI using an internal parser pipeline and is intended as a user-facing reference for workflows and commands.

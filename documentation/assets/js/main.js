@@ -53,7 +53,7 @@ function renderIntro(root, data) {
 
   const p = document.createElement('p');
   p.className = 'section-sub';
-  p.textContent = 'ml is a workflow CLI for project scaffolding, database setup, navigation, and update automation. This site is generated from ml.bat and refreshes via the parser pipeline.';
+  p.textContent = 'M LHUILLIER ML CLI is a workflow command-line tool for project scaffolding, database setup, navigation, and update automation. It also provides utilities for account and schema management, developer helpers, and remote workflow helpers.';
 
   const cards = document.createElement('div');
   cards.className = 'cards';
@@ -61,7 +61,7 @@ function renderIntro(root, data) {
   const highlights = [
     `CLI version tracked: ${data.cliVersion}`,
     `Total parsed commands: ${data.commands.length}`,
-    'Self-updating command reference through commands.json',
+    'Includes PBAC and RBAC table creation workflows',
     'Step-by-step tutorials and scenario guides included',
   ];
 
