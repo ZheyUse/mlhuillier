@@ -176,6 +176,12 @@ echo.
 echo HELP: Create project
 echo Usage: ml create ^<project_name^>
 echo Description: Generates project scaffold using generator script.
+echo.
+echo Subcommands:
+echo   --a         Create interactive account (add user)
+echo   --config    Create DB config for backups
+echo   --pbac      Create PBAC table in userdb
+echo   --rbac      Create RBAC table in userdb
 exit /b 0
 
 :cmd_create_list
@@ -242,8 +248,12 @@ exit /b 0
 if /I "%SUB%"=="userdb" goto :help_test_userdb
 echo.
 echo HELP: Test commands
-echo Usage: ml test <database>
-echo Description: Run connectivity tests for a chosen database (e.g., ml test userdb).
+echo Usage: ml test ^<database^>
+echo Description: Run connectivity tests for a chosen database.
+echo.
+echo Examples:
+echo   ml test userdb
+echo   ml test gledb
 exit /b 0
 
 :help_test_userdb
