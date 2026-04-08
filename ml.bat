@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.45"
+set "ML_VERSION=1.0.46"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -33,6 +33,7 @@ if /I "%~1"=="test" if /I "%~2"=="userdb" goto :cmd_test_userdb
 if /I "%~1"=="add" if /I "%~2"=="userdb" goto :cmd_add_userdb
 if /I "%~1"=="create" if /I "%~2"=="--a" goto :cmd_create_account
 if /I "%~1"=="create" if /I "%~2"=="--config" goto :cmd_create_config
+if /I "%~1"=="create" if /I "%~2"=="--pbac" goto :cmd_create_pbac
 if /I "%~1"=="--c" goto :cmd_check_version
 if /I "%~1"=="update" goto :cmd_update
 if /I "%~1"=="nav" goto :cmd_nav
@@ -76,6 +77,7 @@ echo   serve              Open current project in browser (ml serve)
 echo   doc                Open online documentation (GitHub Pages)
 echo   create --a         Create interactive account (add user)
 echo   create --config    Create DB config for backups
+echo   create --pbac      Create PBAC table in userdb
 echo   update             Update ML CLI from remote
 echo   --d                Download remote installer
 echo   --c                Check remote ML CLI version
@@ -123,6 +125,7 @@ if /I "%CMD%"=="dev" goto :help_dev
 if /I "%CMD%"=="--b" goto :help_backup
 if /I "%CMD%"=="create" if /I "%SUB%"=="--a" goto :help_create_account
 if /I "%CMD%"=="create" if /I "%SUB%"=="--config" goto :help_create_config
+if /I "%CMD%"=="create" if /I "%SUB%"=="--pbac" goto :help_create_pbac
 if /I "%CMD%"=="create" goto :help_create
 if /I "%CMD%"=="test" goto :help_test
 if /I "%CMD%"=="add" goto :help_add
@@ -184,6 +187,13 @@ echo HELP: Create DB config
 echo Usage: ml create --config
 echo Description: Interactive helper that creates the DB config used by 'ml --b'.
 echo   Writes a JSON config to C:\ML CLI\Tools\mlcli-config.json.
+exit /b 0
+
+:help_create_pbac
+echo.
+echo HELP: Create PBAC table
+echo Usage: ml create --pbac [project_name]
+echo Description: Creates a Permission Based Access Control table in 'userdb' for ^<project_name^>.
 exit /b 0
 
 :help_backup
@@ -314,6 +324,32 @@ if %ERRORLEVEL% neq 0 (
 )
 
 "%PHP_EXE%" -d display_errors=0 "!TMP_FILE!"
+set "RC=%ERRORLEVEL%"
+call :maybe_show_update_notice
+del /f /q "!TMP_FILE!" >nul 2>&1
+exit /b %RC%
+:cmd_create_pbac
+set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/pbac/ml-pbac.php"
+set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
+set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
+set "TMP_FILE=%TEMP%\ml-pbac.php"
+call :strip_query "!RAW_URL!"
+rem URL hidden from output
+echo Executing create PBAC helper...
+echo.
+
+where curl >nul 2>&1
+if %ERRORLEVEL%==0 (
+        curl -s -f -o "!TMP_FILE!" "!RAW_URL!"
+) else (
+        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!RAW_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
+)
+if %ERRORLEVEL% neq 0 (
+        echo Failed to fetch remote pbac script
+        exit /b 2
+)
+
+"%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" %~3
 set "RC=%ERRORLEVEL%"
 call :maybe_show_update_notice
 del /f /q "!TMP_FILE!" >nul 2>&1
