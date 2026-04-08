@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-04-08T02:48:32.190Z",
+  "generatedAt": "2026-04-08T02:59:14.618Z",
   "source": "ml.bat",
-  "cliVersion": "1.0.48",
+  "cliVersion": "1.0.49",
   "commands": [
     {
       "name": "ml --b",
@@ -325,18 +325,18 @@
       }
     },
     {
-      "name": "ml test <database>",
+      "name": "ml test ^<database^>",
       "description": "Run DB connection test for a specified database (e.g., userdb, gledb)",
-      "syntax": "ml test <database>",
+      "syntax": "ml test ^<database^>",
       "params": [],
-      "example": "ml test <database>",
+      "example": "ml test ^<database^>",
       "category": "database",
       "expectedResult": "Runs the command workflow and returns success or actionable error output.",
       "tutorial": {
         "whenToUse": "When this workflow matches your current task.",
-        "scenario": "Typical database workflow using ml test <database>.",
+        "scenario": "Typical database workflow using ml test ^<database^>.",
         "steps": [
-          "Run: ml test <database>",
+          "Run: ml test ^<database^>",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
@@ -345,7 +345,7 @@
     {
       "name": "ml test userdb",
       "description": "Execute database connectivity and schema checks for userdb.",
-      "syntax": "ml test <database>",
+      "syntax": "ml test ^<database^>",
       "params": [],
       "example": "ml test userdb",
       "category": "database",
@@ -645,11 +645,11 @@
         ]
       },
       {
-        "command": "ml test <database>",
+        "command": "ml test ^<database^>",
         "whenToUse": "When this workflow matches your current task.",
-        "scenario": "Typical database workflow using ml test <database>.",
+        "scenario": "Typical database workflow using ml test ^<database^>.",
         "steps": [
-          "Run: ml test <database>",
+          "Run: ml test ^<database^>",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]

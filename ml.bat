@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.48"
+set "ML_VERSION=1.0.49"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -74,7 +74,7 @@ echo   --b    Backup schemas (use ml --b [schema])
 echo   --a    Account creation (use with `ml create --a`)
 echo.
 echo Commands:
-echo   test <database>     Run DB connection test for a specified database (e.g., userdb, gledb)
+echo   test ^<database^>     Run DB connection test for a specified database (e.g., userdb, gledb)
 echo   add userdb         Import userdb SQL (migration/userdb)
 echo   nav                Navigate or open a project (ml nav)
 echo   serve              Open current project in browser (ml serve)
@@ -87,12 +87,17 @@ echo   update             Update ML CLI from remote
 echo   --d                Download remote installer
 echo   --c                Check remote ML CLI version
 echo.
+
+rem help hints for specific commands
 echo To get help for a specific command:
-echo   ml --h create
+echo   ml --h create                 Show create help and subcommands
+echo   ml --h test
 echo   ml --h test userdb
 echo   ml --h --c
 echo   ml --h create --a
 echo   ml --h create --config
+echo   ml --h create --pbac
+echo   ml --h create --rbac
 echo   ml --h --d
 echo   ml --h serve
 echo   ml --h nav
@@ -259,7 +264,7 @@ exit /b 0
 :help_test_userdb
 echo.
 echo HELP: Test userdb
-echo Usage: ml test <database>
+echo Usage: ml test ^<database^>
 echo Description: Downloads and runs a remote PHP script that checks the specified database connection and schema (default example: userdb).
 exit /b 0
 
@@ -269,7 +274,7 @@ echo HELP: Serve project
 echo Usage: ml serve [project_name]
 echo Description: Remote-only helper. Fetches and runs the GitHub-hosted
 echo   ml-serve.php which prints and opens the project URL at
-echo   http://localhost/<project_name>. No local fallback if fetch fails.
+echo   http://localhost/^<project_name^>. No local fallback if fetch fails.
 exit /b 0
 
 :help_nav
@@ -801,7 +806,7 @@ if not "%~2"=="" (
 )
 
 if not defined PROJECT (
-        echo Unable to determine project name. Use: ml serve <project_name> or run inside project folder.
+        echo Unable to determine project name. Use: ml serve ^<project_name^> or run inside project folder.
         del /f /q "!TMP_FILE!" >nul 2>&1
         exit /b 2
 )
