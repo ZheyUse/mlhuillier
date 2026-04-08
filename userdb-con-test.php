@@ -42,6 +42,11 @@ $user = $env['DB_USERNAME'] ?? $env['DB_USER'] ?? 'root';
 $pass = $env['DB_PASSWORD'] ?? $env['DB_PASS'] ?? '';
 $charset = 'utf8mb4';
 
+// Allow overriding database name via CLI arg: php userdb-con-test.php <database>
+if (isset($argv[1]) && trim($argv[1]) !== '') {
+    $dbname = trim($argv[1]);
+}
+
 function safeEcho($line)
 {
     fwrite(STDOUT, $line . PHP_EOL);

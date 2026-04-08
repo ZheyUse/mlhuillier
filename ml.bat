@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.47"
+set "ML_VERSION=1.0.48"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -29,7 +29,9 @@ echo https://github.com/ZheyUse
 echo ==============================
 echo.
 
+if /I "%~1"=="test" if "%~2"=="" goto :cmd_test_list
 if /I "%~1"=="test" if /I "%~2"=="userdb" goto :cmd_test_userdb
+if /I "%~1"=="test" goto :cmd_test_db
 if /I "%~1"=="add" if /I "%~2"=="userdb" goto :cmd_add_userdb
 if /I "%~1"=="create" if /I "%~2"=="--a" goto :cmd_create_account
 if /I "%~1"=="create" if /I "%~2"=="--config" goto :cmd_create_config
@@ -72,7 +74,7 @@ echo   --b    Backup schemas (use ml --b [schema])
 echo   --a    Account creation (use with `ml create --a`)
 echo.
 echo Commands:
-echo   test userdb        Run remote DB connection test
+echo   test <database>     Run DB connection test for a specified database (e.g., userdb, gledb)
 echo   add userdb         Import userdb SQL (migration/userdb)
 echo   nav                Navigate or open a project (ml nav)
 echo   serve              Open current project in browser (ml serve)
@@ -188,6 +190,15 @@ echo   create --pbac      Create PBAC table in userdb
 echo   create --rbac      Create RBAC table in userdb
 exit /b 2
 
+:cmd_test_list
+echo Missing arguments for ml test
+echo below are the list of test commands you can use
+echo.
+echo Test List:
+echo   test ^<database^>    Run DB connection test for a specified database (e.g., userdb, gledb)
+echo   test userdb         Run the default userdb connectivity and schema checks
+exit /b 2
+
 :help_create_account
 echo.
 echo HELP: Create account (interactive)
@@ -231,15 +242,15 @@ exit /b 0
 if /I "%SUB%"=="userdb" goto :help_test_userdb
 echo.
 echo HELP: Test commands
-echo Usage: ml test userdb
-echo Description: Run specific tests; use ml --h test userdb for DB test help.
+echo Usage: ml test <database>
+echo Description: Run connectivity tests for a chosen database (e.g., ml test userdb).
 exit /b 0
 
 :help_test_userdb
 echo.
 echo HELP: Test userdb
-echo Usage: ml test userdb
-echo Description: Downloads and runs a remote PHP script that checks userdb connection and schema.
+echo Usage: ml test <database>
+echo Description: Downloads and runs a remote PHP script that checks the specified database connection and schema (default example: userdb).
 exit /b 0
 
 :help_serve
@@ -319,11 +330,37 @@ if %ERRORLEVEL% neq 0 (
         exit /b 2
 )
 
-"!PHP_EXE!" -d display_errors=0 "!TMP_FILE!"
+"!PHP_EXE!" -d display_errors=0 "!TMP_FILE!" "%~2"
         set "RC=%ERRORLEVEL%"
         call :maybe_show_update_notice
         del /f /q "!TMP_FILE!" >nul 2>&1
         exit /b %RC%
+
+:cmd_test_db
+set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/userdb-con-test.php"
+set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
+set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
+set "TMP_FILE=%TEMP%\userdb-con-test.php"
+call :strip_query "!RAW_URL!"
+rem URL hidden from output
+echo Executing test connection to %~2...
+
+where curl >nul 2>&1
+if %ERRORLEVEL%==0 (
+        curl -s -f -o "!TMP_FILE!" "!RAW_URL!"
+) else (
+        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!RAW_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
+)
+if %ERRORLEVEL% neq 0 (
+        echo Failed to fetch remote test script
+        exit /b 2
+)
+
+"%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" "%~2"
+set "RC=%ERRORLEVEL%"
+call :maybe_show_update_notice
+del /f /q "!TMP_FILE!" >nul 2>&1
+exit /b %RC%
 
 :cmd_create_config
 set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/db-config/db-config.php"
