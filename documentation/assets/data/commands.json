@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-04-08T01:39:30.933Z",
+  "generatedAt": "2026-04-08T01:58:20.779Z",
   "source": "ml.bat",
-  "cliVersion": "1.0.46",
+  "cliVersion": "1.0.47",
   "commands": [
     {
       "name": "ml --b",
@@ -186,6 +186,24 @@
         "scenario": "Typical project workflow using ml create --pbac.",
         "steps": [
           "Run: ml create --pbac",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml create --rbac",
+      "description": "Create RBAC table in userdb",
+      "syntax": "ml create --rbac",
+      "params": [],
+      "example": "ml create --rbac",
+      "category": "project",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When starting a new project or account bootstrap flow.",
+        "scenario": "Typical project workflow using ml create --rbac.",
+        "steps": [
+          "Run: ml create --rbac",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
@@ -516,6 +534,16 @@
         "scenario": "Typical project workflow using ml create --pbac.",
         "steps": [
           "Run: ml create --pbac",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml create --rbac",
+        "whenToUse": "When starting a new project or account bootstrap flow.",
+        "scenario": "Typical project workflow using ml create --rbac.",
+        "steps": [
+          "Run: ml create --rbac",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]

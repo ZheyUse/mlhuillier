@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.46"
+set "ML_VERSION=1.0.47"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -34,6 +34,8 @@ if /I "%~1"=="add" if /I "%~2"=="userdb" goto :cmd_add_userdb
 if /I "%~1"=="create" if /I "%~2"=="--a" goto :cmd_create_account
 if /I "%~1"=="create" if /I "%~2"=="--config" goto :cmd_create_config
 if /I "%~1"=="create" if /I "%~2"=="--pbac" goto :cmd_create_pbac
+if /I "%~1"=="create" if /I "%~2"=="--rbac" goto :cmd_create_rbac
+if /I "%~1"=="create" if "%~2"=="" goto :cmd_create_list
 if /I "%~1"=="--c" goto :cmd_check_version
 if /I "%~1"=="update" goto :cmd_update
 if /I "%~1"=="nav" goto :cmd_nav
@@ -78,6 +80,7 @@ echo   doc                Open online documentation (GitHub Pages)
 echo   create --a         Create interactive account (add user)
 echo   create --config    Create DB config for backups
 echo   create --pbac      Create PBAC table in userdb
+echo   create --rbac      Create RBAC table in userdb
 echo   update             Update ML CLI from remote
 echo   --d                Download remote installer
 echo   --c                Check remote ML CLI version
@@ -126,6 +129,7 @@ if /I "%CMD%"=="--b" goto :help_backup
 if /I "%CMD%"=="create" if /I "%SUB%"=="--a" goto :help_create_account
 if /I "%CMD%"=="create" if /I "%SUB%"=="--config" goto :help_create_config
 if /I "%CMD%"=="create" if /I "%SUB%"=="--pbac" goto :help_create_pbac
+if /I "%CMD%"=="create" if /I "%SUB%"=="--rbac" goto :help_create_rbac
 if /I "%CMD%"=="create" goto :help_create
 if /I "%CMD%"=="test" goto :help_test
 if /I "%CMD%"=="add" goto :help_add
@@ -172,6 +176,18 @@ echo Usage: ml create ^<project_name^>
 echo Description: Generates project scaffold using generator script.
 exit /b 0
 
+:cmd_create_list
+echo Missing arguments for ml create
+echo below are the list of create commands you can use
+echo.
+echo Create List:
+echo   create ^<project_name^>   Generate project scaffold (use: ml create myproject)
+echo   create --a         Create interactive account (add user)
+echo   create --config    Create DB config for backups
+echo   create --pbac      Create PBAC table in userdb
+echo   create --rbac      Create RBAC table in userdb
+exit /b 2
+
 :help_create_account
 echo.
 echo HELP: Create account (interactive)
@@ -194,6 +210,13 @@ echo.
 echo HELP: Create PBAC table
 echo Usage: ml create --pbac [project_name]
 echo Description: Creates a Permission Based Access Control table in 'userdb' for ^<project_name^>.
+exit /b 0
+
+:help_create_rbac
+echo.
+echo HELP: Create RBAC table
+echo Usage: ml create --rbac [project_name]
+echo Description: Creates a Role Based Access Control table in 'userdb' for ^<project_name^>.
 exit /b 0
 
 :help_backup
@@ -346,6 +369,33 @@ if %ERRORLEVEL%==0 (
 )
 if %ERRORLEVEL% neq 0 (
         echo Failed to fetch remote pbac script
+        exit /b 2
+)
+
+"%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" %~3
+set "RC=%ERRORLEVEL%"
+call :maybe_show_update_notice
+del /f /q "!TMP_FILE!" >nul 2>&1
+exit /b %RC%
+
+:cmd_create_rbac
+set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/rbac/ml-rbac.php"
+set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
+set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
+set "TMP_FILE=%TEMP%\ml-rbac.php"
+call :strip_query "!RAW_URL!"
+rem URL hidden from output
+echo Executing create RBAC helper...
+echo.
+
+where curl >nul 2>&1
+if %ERRORLEVEL%==0 (
+        curl -s -f -o "!TMP_FILE!" "!RAW_URL!"
+) else (
+        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!RAW_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
+)
+if %ERRORLEVEL% neq 0 (
+        echo Failed to fetch remote rbac script
         exit /b 2
 )
 
