@@ -189,6 +189,19 @@ function pbac_patch_middleware(string $path, bool $dryRun, array &$report): bool
                 $changed = true;
         }
 
+            // Normalize legacy middleware snippets that bypass PBAC via role only.
+            $countBypass = 0;
+            $content = preg_replace(
+                "/\n\s*if \(function_exists\('auth_has_role'\) && auth_has_role\('admin'\)\) \{\s*return;\s*\}\n/",
+                "\n",
+                $content,
+                -1,
+                $countBypass
+            );
+            if (is_int($countBypass) && $countBypass > 0) {
+                $changed = true;
+            }
+
         $snippet = <<<'PHP'
 
 if (!function_exists('requirePermission')) {
@@ -196,10 +209,6 @@ if (!function_exists('requirePermission')) {
     {
         if (function_exists('requireAuth')) {
             requireAuth();
-        }
-
-        if (function_exists('auth_has_role') && auth_has_role('admin')) {
-            return;
         }
 
         if (function_exists('has_permission') && has_permission($permission)) {
@@ -219,10 +228,6 @@ if (!function_exists('requireMenuAccess')) {
     {
         if (function_exists('requireAuth')) {
             requireAuth();
-        }
-
-        if (function_exists('auth_has_role') && auth_has_role('admin')) {
-            return;
         }
 
         if (function_exists('has_menu_access') && has_menu_access($menu)) {
@@ -473,6 +478,10 @@ if (!function_exists('has_permission')) {
             return false;
         }
 
+        if (!pbac_access_map_ready()) {
+            return false;
+        }
+
         if (auth_has_role('admin')) {
             return true;
         }
@@ -480,10 +489,6 @@ if (!function_exists('has_permission')) {
         $level = isset($_SESSION['user_access_level']) ? (int) $_SESSION['user_access_level'] : 0;
         if ($level === -1) {
             return true;
-        }
-
-        if (!pbac_access_map_ready()) {
-            return false;
         }
 
         foreach (get_current_user_permissions() as $perm) {
@@ -513,6 +518,10 @@ if (!function_exists('has_menu_access')) {
         auth_start();
         pbac_refresh_current_session_permissions();
 
+        if (!pbac_access_map_ready()) {
+            return false;
+        }
+
         if (auth_has_role('admin')) {
             return true;
         }
@@ -525,10 +534,6 @@ if (!function_exists('has_menu_access')) {
         $level = isset($_SESSION['user_access_level']) ? (int) $_SESSION['user_access_level'] : 0;
         if ($level === -1) {
             return true;
-        }
-
-        if (!pbac_access_map_ready()) {
-            return false;
         }
 
         $userPerms = get_current_user_permissions();
@@ -644,7 +649,16 @@ if (!function_exists('require_mapped_permission_for_current_route')) {
             return;
         }
 
-        if (auth_has_role('admin')) {
+        $current = pbac_normalize_route_path((string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+
+        if (!pbac_access_map_ready()) {
+            if (str_contains($current, '/src/pages/maintenance/')) {
+                http_response_code(403);
+                echo '<!doctype html><html><head><meta charset="utf-8"><title>Forbidden</title></head><body>';
+                echo '<h1>403 Forbidden</h1><p>Access map is not generated yet. Run ml gen first.</p>';
+                echo '</body></html>';
+                exit;
+            }
             return;
         }
 
@@ -653,15 +667,7 @@ if (!function_exists('require_mapped_permission_for_current_route')) {
             return;
         }
 
-        if (!pbac_access_map_ready()) {
-            $current = pbac_normalize_route_path((string) ($_SERVER['SCRIPT_NAME'] ?? ''));
-            if (str_contains($current, '/src/pages/maintenance/')) {
-                http_response_code(403);
-                echo '<!doctype html><html><head><meta charset="utf-8"><title>Forbidden</title></head><body>';
-                echo '<h1>403 Forbidden</h1><p>Access map is not generated yet. Run ml gen first.</p>';
-                echo '</body></html>';
-                exit;
-            }
+        if (auth_has_role('admin')) {
             return;
         }
 
