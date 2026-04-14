@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.1.1"
+set "ML_VERSION=1.1.2"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -34,9 +34,13 @@ if /I "%~1"=="test" if /I "%~2"=="userdb" goto :cmd_test_userdb
 if /I "%~1"=="test" goto :cmd_test_db
 if /I "%~1"=="add" if /I "%~2"=="userdb" goto :cmd_add_userdb
 if /I "%~1"=="create" if /I "%~2"=="--a" goto :cmd_create_account
+if /I "%~1"=="create" if /I "%~3"=="--a" goto :cmd_create_account
 if /I "%~1"=="create" if /I "%~2"=="--config" goto :cmd_create_config
+if /I "%~1"=="create" if /I "%~3"=="--config" goto :cmd_create_config
 if /I "%~1"=="create" if /I "%~2"=="--pbac" goto :cmd_create_pbac
+if /I "%~1"=="create" if /I "%~3"=="--pbac" goto :cmd_create_pbac
 if /I "%~1"=="create" if /I "%~2"=="--rbac" goto :cmd_create_rbac
+if /I "%~1"=="create" if /I "%~3"=="--rbac" goto :cmd_create_rbac
 if /I "%~1"=="create" if "%~2"=="" goto :cmd_create_list
 if /I "%~1"=="gen" goto :cmd_gen
 if /I "%~1"=="--c" goto :cmd_check_version
@@ -458,7 +462,15 @@ if %ERRORLEVEL% neq 0 (
         exit /b 2
 )
 
-"%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" %~3
+rem Determine project argument for PBAC helper. Accept either
+rem "ml create --pbac <project>" or "ml create <project> --pbac".
+set "PBAC_ARG=%~2"
+if "%PBAC_ARG:~0,2%"=="--" set "PBAC_ARG=%~3"
+if "%PBAC_ARG%"=="" (
+        "%PHP_EXE%" -d display_errors=0 "!TMP_FILE!"
+) else (
+        "%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" "%PBAC_ARG%"
+)
 set "RC=%ERRORLEVEL%"
 call :maybe_show_update_notice
 del /f /q "!TMP_FILE!" >nul 2>&1
@@ -485,7 +497,15 @@ if %ERRORLEVEL% neq 0 (
         exit /b 2
 )
 
-"%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" %~3
+rem Determine project argument for RBAC helper. Accept either
+rem "ml create --rbac <project>" or "ml create <project> --rbac".
+set "RBAC_ARG=%~2"
+if "%RBAC_ARG:~0,2%"=="--" set "RBAC_ARG=%~3"
+if "%RBAC_ARG%"=="" (
+        "%PHP_EXE%" -d display_errors=0 "!TMP_FILE!"
+) else (
+        "%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" "%RBAC_ARG%"
+)
 set "RC=%ERRORLEVEL%"
 call :maybe_show_update_notice
 del /f /q "!TMP_FILE!" >nul 2>&1
@@ -512,12 +532,13 @@ if %ERRORLEVEL% neq 0 (
         exit /b 2
 )
 
-rem Determine project/path argument to pass - prefer explicit arg, else use current folder name
+rem Determine project/path argument to pass - prefer explicit arg, else open current working directory
 set "ARG_PATH="
 if not "%~2"=="" (
         set "ARG_PATH=%~2"
 ) else (
-        for %%D in ("%CD%") do set "ARG_PATH=%%~nxD"
+        rem Leave ARG_PATH empty so reveal script uses current working directory
+        set "ARG_PATH="
 )
 
 "%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" "%ARG_PATH%"
