@@ -471,10 +471,6 @@ if (!function_exists('has_permission')) {
             return false;
         }
 
-        if (auth_has_role('admin')) {
-            return true;
-        }
-
         $level = isset($_SESSION['user_access_level']) ? (int) $_SESSION['user_access_level'] : 0;
         if ($level === -1) {
             return true;
@@ -509,10 +505,6 @@ if (!function_exists('has_menu_access')) {
 
         if (!pbac_access_map_ready()) {
             return false;
-        }
-
-        if (auth_has_role('admin')) {
-            return true;
         }
 
         $menuKey = trim($menuKey);
@@ -653,10 +645,6 @@ if (!function_exists('require_mapped_permission_for_current_route')) {
 
         $level = isset($_SESSION['user_access_level']) ? (int) $_SESSION['user_access_level'] : 0;
         if ($level === -1) {
-            return;
-        }
-
-        if (auth_has_role('admin')) {
             return;
         }
 
@@ -882,7 +870,7 @@ $scriptName = (string) ($_SERVER['SCRIPT_NAME'] ?? '');
 $appBaseUrl = preg_replace('#/src/.*$#', '', $scriptName);
 $appBaseUrl = rtrim((string) $appBaseUrl, '/');
 
-$canView = has_permission('Maintenance Access Level') || auth_has_role('admin');
+$canView = has_permission('Maintenance Access Level');
 
 $isEntry = (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === realpath(__FILE__));
 if ($isEntry) {
@@ -2110,14 +2098,14 @@ if (!function_exists('pbac_permissions_for_level')) {
 }
 
 if (!function_exists('pbac_resolve_id_number')) {
-    function pbac_resolve_id_number(PDO $pdo, string $userDb, array $user, string $usernameHint): ?string
+    function pbac_resolve_id_number(PDO $pdo, array $user, string $usernameHint): ?string
     {
         $id = trim((string) ($user['id_number'] ?? ''));
         if ($id !== '') {
             return $id;
         }
 
-        $table = "`" . $userDb . "`.`users`";
+        $table = "`users`";
         $username = trim((string) ($user['username'] ?? $usernameHint));
         if ($username === '') {
             return null;
@@ -2144,9 +2132,9 @@ if (!function_exists('pbac_is_admin_user')) {
 }
 
 if (!function_exists('pbac_db_role_is_admin')) {
-    function pbac_db_role_is_admin(PDO $pdo, string $userDb, string $idNumber): bool
+    function pbac_db_role_is_admin(PDO $pdo, string $idNumber): bool
     {
-        $table = "`" . $userDb . "`.`users`";
+        $table = "`users`";
         $stmt = $pdo->prepare("SELECT role FROM {$table} WHERE id_number = :id LIMIT 1");
         $stmt->execute([':id' => $idNumber]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -2163,8 +2151,7 @@ if (!function_exists('loadPbacSession')) {
     {
         try {
             $pdo = userDbConnection();
-            $userDb = preg_replace('/[^A-Za-z0-9_]/', '', env('USERDB_NAME', env('USERDB_DATABASE', env('DB_DATABASE', 'userdb'))));
-            $idNumber = pbac_resolve_id_number($pdo, $userDb, $user, $username);
+            $idNumber = pbac_resolve_id_number($pdo, $user, $username);
 
             $_SESSION['user_access_level'] = 0;
             $_SESSION['user_permissions'] = [];
@@ -2173,14 +2160,14 @@ if (!function_exists('loadPbacSession')) {
                 return;
             }
 
-            $table = "`" . $userDb . "`.`" . preg_replace('/[^A-Za-z0-9_]/', '', $pbacTableName) . "`";
+            $table = "`" . preg_replace('/[^A-Za-z0-9_]/', '', $pbacTableName) . "`";
             $stmt = $pdo->prepare("SELECT access_level, permissions FROM {$table} WHERE id_number = :id LIMIT 1");
             $stmt->execute([':id' => $idNumber]);
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
             $isAdmin = pbac_is_admin_user($user);
             try {
-                $isAdmin = pbac_db_role_is_admin($pdo, $userDb, $idNumber) || $isAdmin;
+                $isAdmin = pbac_db_role_is_admin($pdo, $idNumber) || $isAdmin;
             } catch (Throwable $e) {
                 // Keep fallback from session payload when direct DB role lookup fails.
             }
@@ -2281,7 +2268,7 @@ if (!auth_is_authenticated()) {
     exit;
 }
 
-if (!auth_has_role('admin') && !has_permission('Maintenance Access Level')) {
+if (!has_permission('Maintenance Access Level')) {
     http_response_code(403);
     echo json_encode(['ok' => false, 'message' => 'Forbidden']);
     exit;
@@ -2289,11 +2276,10 @@ if (!auth_has_role('admin') && !has_permission('Maintenance Access Level')) {
 
 try {
     $pdo = userDbConnection();
-    $userDb = preg_replace('/[^A-Za-z0-9_]/', '', env('USERDB_NAME', env('USERDB_DATABASE', env('DB_DATABASE', 'userdb'))));
 
-    $usersTable = "`" . $userDb . "`.`users`";
-    $logsTable = "`" . $userDb . "`.`userlogs`";
-    $pbacTable = "`" . $userDb . "`.`{{PBAC_TABLE}}`";
+    $usersTable = "`users`";
+    $logsTable = "`userlogs`";
+    $pbacTable = "`{{PBAC_TABLE}}`";
 
     $sql = "SELECT u.no, u.id_number, u.username, u.firstname, u.middlename, u.lastname,
                    p.access_level, p.permissions AS active_permissions,
@@ -2338,7 +2324,7 @@ if (!auth_is_authenticated()) {
     exit;
 }
 
-if (!auth_has_role('admin') && !has_permission('Maintenance Access Level')) {
+if (!has_permission('Maintenance Access Level')) {
     http_response_code(403);
     echo json_encode(['success' => false, 'error' => 'forbidden']);
     exit;
@@ -2380,8 +2366,7 @@ if ($idNumber === '') {
 
 try {
     $pdo = userDbConnection();
-    $userDb = preg_replace('/[^A-Za-z0-9_]/', '', env('USERDB_NAME', env('USERDB_DATABASE', env('DB_DATABASE', 'userdb'))));
-    $pbacTable = "`" . $userDb . "`.`{{PBAC_TABLE}}`";
+    $pbacTable = "`{{PBAC_TABLE}}`";
 
     $jsonPerms = json_encode($permissions, JSON_UNESCAPED_UNICODE);
 
