@@ -275,6 +275,10 @@ function pbac_auth_template(): string
 declare(strict_types=1);
 
 $__auth_session_key = 'auth_user';
+$__pbac_session_file = __DIR__ . '/pbac-session.php';
+if (is_file($__pbac_session_file)) {
+    require_once $__pbac_session_file;
+}
 
 if (!function_exists('auth_session_key')) {
     function auth_session_key(): string
@@ -340,6 +344,108 @@ if (!function_exists('auth_logout')) {
     }
 }
 
+if (!function_exists('pbac_refresh_current_session_permissions')) {
+    function pbac_refresh_current_session_permissions(): void
+    {
+        static $refreshed = false;
+        if ($refreshed) {
+            return;
+        }
+        $refreshed = true;
+
+        if (!function_exists('loadPbacSession')) {
+            return;
+        }
+
+        $user = auth_get_user();
+        if (!is_array($user)) {
+            return;
+        }
+
+        $username = trim((string) ($user['username'] ?? ''));
+        loadPbacSession($user, $username);
+    }
+}
+
+if (!function_exists('pbac_access_map_details')) {
+    function pbac_access_map_details(): array
+    {
+        static $cached = null;
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        $mapPath = dirname(__DIR__) . '/assets/js/accesslevel-map.json';
+        $details = [
+            'path' => $mapPath,
+            'exists' => is_file($mapPath),
+            'raw_length' => 0,
+            'json_error' => '',
+            'loaded_access_levels' => [],
+            'decoded' => null,
+        ];
+
+        if (!$details['exists']) {
+            $cached = $details;
+            return $cached;
+        }
+
+        $raw = (string) file_get_contents($mapPath);
+        $details['raw_length'] = strlen($raw);
+        $decoded = json_decode($raw, true);
+        if (!is_array($decoded)) {
+            $details['json_error'] = json_last_error_msg();
+            $cached = $details;
+            return $cached;
+        }
+
+        $details['decoded'] = $decoded;
+        $levels = isset($decoded['access_levels']) && is_array($decoded['access_levels']) ? $decoded['access_levels'] : [];
+        foreach ($levels as $entry) {
+            if (is_array($entry) && isset($entry['access_level'])) {
+                $details['loaded_access_levels'][] = (int) $entry['access_level'];
+            }
+        }
+
+        $cached = $details;
+        return $cached;
+    }
+}
+
+if (!function_exists('pbac_access_map_ready')) {
+    function pbac_access_map_ready(): bool
+    {
+        $details = pbac_access_map_details();
+        if (empty($details['exists']) || (string) ($details['json_error'] ?? '') !== '') {
+            return false;
+        }
+
+        $decoded = $details['decoded'] ?? null;
+        return is_array($decoded)
+            && isset($decoded['permission_catalog'])
+            && is_array($decoded['permission_catalog'])
+            && !empty($decoded['permission_catalog']);
+    }
+}
+
+if (!function_exists('pbac_debug_access_enabled')) {
+    function pbac_debug_access_enabled(): bool
+    {
+        auth_start();
+
+        if (isset($_GET['debug_access'])) {
+            $flag = (string) $_GET['debug_access'];
+            if ($flag === '1') {
+                $_SESSION['pbac_debug_access'] = 1;
+            } elseif ($flag === '0') {
+                unset($_SESSION['pbac_debug_access']);
+            }
+        }
+
+        return !empty($_SESSION['pbac_debug_access']);
+    }
+}
+
 if (!function_exists('get_current_user_permissions')) {
     function get_current_user_permissions(): array
     {
@@ -360,6 +466,8 @@ if (!function_exists('has_permission')) {
     function has_permission(string $key): bool
     {
         auth_start();
+        pbac_refresh_current_session_permissions();
+
         $key = strtolower(trim($key));
         if ($key === '') {
             return false;
@@ -372,6 +480,10 @@ if (!function_exists('has_permission')) {
         $level = isset($_SESSION['user_access_level']) ? (int) $_SESSION['user_access_level'] : 0;
         if ($level === -1) {
             return true;
+        }
+
+        if (!pbac_access_map_ready()) {
+            return false;
         }
 
         foreach (get_current_user_permissions() as $perm) {
@@ -399,6 +511,7 @@ if (!function_exists('has_menu_access')) {
     function has_menu_access(string $menuKey): bool
     {
         auth_start();
+        pbac_refresh_current_session_permissions();
 
         if (auth_has_role('admin')) {
             return true;
@@ -414,41 +527,33 @@ if (!function_exists('has_menu_access')) {
             return true;
         }
 
+        if (!pbac_access_map_ready()) {
+            return false;
+        }
+
         $userPerms = get_current_user_permissions();
         if (empty($userPerms)) {
             return false;
         }
 
-        $mapPath = dirname(__DIR__) . '/assets/js/accesslevel-map.json';
-        if (is_file($mapPath)) {
-            $raw = file_get_contents($mapPath);
-            $map = json_decode((string) $raw, true);
-            if (is_array($map)) {
-                $catalog = isset($map['permission_catalog']) && is_array($map['permission_catalog']) ? $map['permission_catalog'] : [];
-                foreach ($catalog as $menu) {
-                    $label = trim((string) ($menu['label'] ?? ''));
-                    $id = trim((string) ($menu['id'] ?? ($menu['key'] ?? '')));
-                    if (strcasecmp($label, $menuKey) !== 0 && strcasecmp($id, $menuKey) !== 0) {
-                        continue;
-                    }
-                    $children = isset($menu['children']) && is_array($menu['children']) ? $menu['children'] : [];
-                    foreach ($children as $child) {
-                        $childId = trim((string) ($child['id'] ?? ($child['key'] ?? '')));
-                        if ($childId !== '' && in_array($childId, $userPerms, true)) {
-                            return true;
-                        }
-                    }
-                    return false;
+        $details = pbac_access_map_details();
+        $decoded = $details['decoded'] ?? null;
+        if (is_array($decoded)) {
+            $catalog = isset($decoded['permission_catalog']) && is_array($decoded['permission_catalog']) ? $decoded['permission_catalog'] : [];
+            foreach ($catalog as $menu) {
+                $label = trim((string) ($menu['label'] ?? ''));
+                $id = trim((string) ($menu['id'] ?? ($menu['key'] ?? '')));
+                if (strcasecmp($label, $menuKey) !== 0 && strcasecmp($id, $menuKey) !== 0) {
+                    continue;
                 }
-            }
-        }
-
-        // Fallback heuristic when map file is not ready yet.
-        $prefix = strtolower($menuKey) . ' ';
-        foreach ($userPerms as $perm) {
-            $candidate = strtolower(trim((string) $perm));
-            if ($candidate === strtolower($menuKey) || str_starts_with($candidate, $prefix)) {
-                return true;
+                $children = isset($menu['children']) && is_array($menu['children']) ? $menu['children'] : [];
+                foreach ($children as $child) {
+                    $childId = trim((string) ($child['id'] ?? ($child['key'] ?? '')));
+                    if ($childId !== '' && in_array($childId, $userPerms, true)) {
+                        return true;
+                    }
+                }
+                return false;
             }
         }
 
@@ -548,6 +653,18 @@ if (!function_exists('require_mapped_permission_for_current_route')) {
             return;
         }
 
+        if (!pbac_access_map_ready()) {
+            $current = pbac_normalize_route_path((string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+            if (str_contains($current, '/src/pages/maintenance/')) {
+                http_response_code(403);
+                echo '<!doctype html><html><head><meta charset="utf-8"><title>Forbidden</title></head><body>';
+                echo '<h1>403 Forbidden</h1><p>Access map is not generated yet. Run ml gen first.</p>';
+                echo '</body></html>';
+                exit;
+            }
+            return;
+        }
+
         $permission = pbac_permission_for_current_route();
         if ($permission === null || $permission === '') {
             return;
@@ -562,6 +679,33 @@ if (!function_exists('require_mapped_permission_for_current_route')) {
         echo '<h1>403 Forbidden</h1><p>You do not have permission to access this page.</p>';
         echo '</body></html>';
         exit;
+    }
+}
+
+if (!function_exists('pbac_debug_access_payload')) {
+    function pbac_debug_access_payload(): array
+    {
+        auth_start();
+        pbac_refresh_current_session_permissions();
+
+        $level = isset($_SESSION['user_access_level']) ? (int) $_SESSION['user_access_level'] : 0;
+        $currentPermissions = get_current_user_permissions();
+        $mappedForLevel = function_exists('pbac_permissions_for_level') ? pbac_permissions_for_level($level) : [];
+        $routePermission = pbac_permission_for_current_route();
+        $details = pbac_access_map_details();
+
+        return [
+            'access_level' => $level,
+            'current_permissions' => $currentPermissions,
+            'permissions_for_level' => $mappedForLevel,
+            'route_permission' => $routePermission,
+            'has_route_permission' => $routePermission ? has_permission($routePermission) : true,
+            'map_exists' => !empty($details['exists']),
+            'map_path' => (string) ($details['path'] ?? ''),
+            'map_raw_length' => (int) ($details['raw_length'] ?? 0),
+            'map_json_error' => (string) ($details['json_error'] ?? ''),
+            'map_loaded_access_levels' => array_values((array) ($details['loaded_access_levels'] ?? [])),
+        ];
     }
 }
 
@@ -581,6 +725,10 @@ require_once __DIR__ . '/../config/auth.php';
 
 auth_start();
 
+if (function_exists('pbac_refresh_current_session_permissions')) {
+    pbac_refresh_current_session_permissions();
+}
+
 $userController = new UserController();
 $user = $userController->profile();
 $username = htmlspecialchars(strtoupper((string) ($user['username'] ?? 'Guest')), ENT_QUOTES, 'UTF-8');
@@ -596,10 +744,32 @@ if (function_exists('require_mapped_permission_for_current_route')) {
     require_mapped_permission_for_current_route();
 }
 
+$showAccessDebug = function_exists('pbac_debug_access_enabled') ? pbac_debug_access_enabled() : (isset($_GET['debug_access']) && (string) $_GET['debug_access'] === '1');
+$accessDebug = null;
+if ($showAccessDebug && function_exists('pbac_debug_access_payload')) {
+    $accessDebug = pbac_debug_access_payload();
+}
+
 $logoSrc = ($appBaseUrl !== '' ? $appBaseUrl : '') . '/src/assets/images/logo1.png';
 ?>
 
 <aside class="sidebar" id="appSidebar" aria-label="Sidebar">
+    <?php if ($showAccessDebug && is_array($accessDebug)): ?>
+    <div style="margin:8px;border:1px solid #f59e0b;background:#fffbeb;color:#92400e;padding:8px;border-radius:6px;font-size:12px;line-height:1.4;">
+        <strong>PBAC Debug</strong><br>
+        Access Level: <?= htmlspecialchars((string) ($accessDebug['access_level'] ?? 0), ENT_QUOTES, 'UTF-8'); ?><br>
+        Route Permission: <?= htmlspecialchars((string) ($accessDebug['route_permission'] ?? 'none'), ENT_QUOTES, 'UTF-8'); ?><br>
+        Route Allowed: <?= !empty($accessDebug['has_route_permission']) ? 'yes' : 'no'; ?><br>
+        Map Exists: <?= !empty($accessDebug['map_exists']) ? 'yes' : 'no'; ?><br>
+        Map Path: <?= htmlspecialchars((string) ($accessDebug['map_path'] ?? ''), ENT_QUOTES, 'UTF-8'); ?><br>
+        Map Raw Bytes: <?= htmlspecialchars((string) ($accessDebug['map_raw_length'] ?? 0), ENT_QUOTES, 'UTF-8'); ?><br>
+        Map JSON Error: <?= htmlspecialchars((string) ($accessDebug['map_json_error'] ?? 'none'), ENT_QUOTES, 'UTF-8'); ?><br>
+        Loaded Levels: <?= htmlspecialchars(json_encode($accessDebug['map_loaded_access_levels'] ?? [], JSON_UNESCAPED_SLASHES) ?: '[]', ENT_QUOTES, 'UTF-8'); ?><br>
+        Current Permissions: <?= htmlspecialchars(json_encode($accessDebug['current_permissions'] ?? [], JSON_UNESCAPED_SLASHES) ?: '[]', ENT_QUOTES, 'UTF-8'); ?><br>
+        Permissions For Level: <?= htmlspecialchars(json_encode($accessDebug['permissions_for_level'] ?? [], JSON_UNESCAPED_SLASHES) ?: '[]', ENT_QUOTES, 'UTF-8'); ?>
+    </div>
+    <?php endif; ?>
+
   <div class="sidebar__top">
     <div class="sidebar__brand">
       <img src="<?= htmlspecialchars($logoSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="Logo" class="sidebar__brand-logo">
