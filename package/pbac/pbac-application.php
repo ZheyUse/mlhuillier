@@ -279,6 +279,16 @@ function pbac_auth_template(): string
 
 declare(strict_types=1);
 
+$__pbac_env_file = __DIR__ . '/env.php';
+if (is_file($__pbac_env_file)) {
+    require_once $__pbac_env_file;
+}
+
+$__pbac_db_file = __DIR__ . '/db.php';
+if (is_file($__pbac_db_file)) {
+    require_once $__pbac_db_file;
+}
+
 $__auth_session_key = 'auth_user';
 $__pbac_session_file = __DIR__ . '/pbac-session.php';
 if (is_file($__pbac_session_file)) {
@@ -2160,6 +2170,18 @@ if (!function_exists('pbac_db_role_is_admin')) {
 if (!function_exists('loadPbacSession')) {
     function loadPbacSession(array $user, string $username, string $pbacTableName = '{{PBAC_TABLE}}'): void
     {
+        if (!function_exists('userDbConnection')) {
+            $_SESSION['user_access_level'] = 0;
+            $_SESSION['user_permissions'] = [];
+            $_SESSION['pbac_debug_last_lookup'] = [
+                'resolved_id_number' => null,
+                'pbac_table' => preg_replace('/[^A-Za-z0-9_]/', '', $pbacTableName),
+                'pbac_row_found' => false,
+                'error' => 'userDbConnection() is not available. Ensure src/config/db.php is loaded.',
+            ];
+            return;
+        }
+
         try {
             $pdo = userDbConnection();
             $idNumber = pbac_resolve_id_number($pdo, $user, $username);
