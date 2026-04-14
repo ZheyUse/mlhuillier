@@ -436,18 +436,7 @@ if (!function_exists('pbac_access_map_ready')) {
 if (!function_exists('pbac_debug_access_enabled')) {
     function pbac_debug_access_enabled(): bool
     {
-        auth_start();
-
-        if (isset($_GET['debug_access'])) {
-            $flag = (string) $_GET['debug_access'];
-            if ($flag === '1') {
-                $_SESSION['pbac_debug_access'] = 1;
-            } elseif ($flag === '0') {
-                unset($_SESSION['pbac_debug_access']);
-            }
-        }
-
-        return !empty($_SESSION['pbac_debug_access']);
+        return isset($_GET['debug_access']) && (string) $_GET['debug_access'] === '1';
     }
 }
 
@@ -759,23 +748,23 @@ if ($showAccessDebug && function_exists('pbac_debug_access_payload')) {
 $logoSrc = ($appBaseUrl !== '' ? $appBaseUrl : '') . '/src/assets/images/logo1.png';
 ?>
 
-<aside class="sidebar" id="appSidebar" aria-label="Sidebar">
-    <?php if ($showAccessDebug && is_array($accessDebug)): ?>
-    <div style="margin:8px;border:1px solid #f59e0b;background:#fffbeb;color:#92400e;padding:8px;border-radius:6px;font-size:12px;line-height:1.4;">
-        <strong>PBAC Debug</strong><br>
-        Access Level: <?= htmlspecialchars((string) ($accessDebug['access_level'] ?? 0), ENT_QUOTES, 'UTF-8'); ?><br>
-        Route Permission: <?= htmlspecialchars((string) ($accessDebug['route_permission'] ?? 'none'), ENT_QUOTES, 'UTF-8'); ?><br>
-        Route Allowed: <?= !empty($accessDebug['has_route_permission']) ? 'yes' : 'no'; ?><br>
-        Map Exists: <?= !empty($accessDebug['map_exists']) ? 'yes' : 'no'; ?><br>
-        Map Path: <?= htmlspecialchars((string) ($accessDebug['map_path'] ?? ''), ENT_QUOTES, 'UTF-8'); ?><br>
-        Map Raw Bytes: <?= htmlspecialchars((string) ($accessDebug['map_raw_length'] ?? 0), ENT_QUOTES, 'UTF-8'); ?><br>
-        Map JSON Error: <?= htmlspecialchars((string) ($accessDebug['map_json_error'] ?? 'none'), ENT_QUOTES, 'UTF-8'); ?><br>
-        Loaded Levels: <?= htmlspecialchars(json_encode($accessDebug['map_loaded_access_levels'] ?? [], JSON_UNESCAPED_SLASHES) ?: '[]', ENT_QUOTES, 'UTF-8'); ?><br>
-        Current Permissions: <?= htmlspecialchars(json_encode($accessDebug['current_permissions'] ?? [], JSON_UNESCAPED_SLASHES) ?: '[]', ENT_QUOTES, 'UTF-8'); ?><br>
-        Permissions For Level: <?= htmlspecialchars(json_encode($accessDebug['permissions_for_level'] ?? [], JSON_UNESCAPED_SLASHES) ?: '[]', ENT_QUOTES, 'UTF-8'); ?>
-    </div>
-    <?php endif; ?>
+<?php if ($showAccessDebug && is_array($accessDebug)): ?>
+<div style="position:fixed;top:12px;right:12px;z-index:2100;max-width:min(460px,calc(100vw - 24px));border:1px solid #f59e0b;background:#fffbeb;color:#92400e;padding:10px 12px;border-radius:8px;font-size:12px;line-height:1.4;box-shadow:0 10px 30px rgba(0,0,0,0.18);">
+    <strong>PBAC Debug</strong><br>
+    Access Level: <?= htmlspecialchars((string) ($accessDebug['access_level'] ?? 0), ENT_QUOTES, 'UTF-8'); ?><br>
+    Route Permission: <?= htmlspecialchars((string) ($accessDebug['route_permission'] ?? 'none'), ENT_QUOTES, 'UTF-8'); ?><br>
+    Route Allowed: <?= !empty($accessDebug['has_route_permission']) ? 'yes' : 'no'; ?><br>
+    Map Exists: <?= !empty($accessDebug['map_exists']) ? 'yes' : 'no'; ?><br>
+    Map Path: <?= htmlspecialchars((string) ($accessDebug['map_path'] ?? ''), ENT_QUOTES, 'UTF-8'); ?><br>
+    Map Raw Bytes: <?= htmlspecialchars((string) ($accessDebug['map_raw_length'] ?? 0), ENT_QUOTES, 'UTF-8'); ?><br>
+    Map JSON Error: <?= htmlspecialchars((string) ($accessDebug['map_json_error'] ?? 'none'), ENT_QUOTES, 'UTF-8'); ?><br>
+    Loaded Levels: <?= htmlspecialchars(json_encode($accessDebug['map_loaded_access_levels'] ?? [], JSON_UNESCAPED_SLASHES) ?: '[]', ENT_QUOTES, 'UTF-8'); ?><br>
+    Current Permissions: <?= htmlspecialchars(json_encode($accessDebug['current_permissions'] ?? [], JSON_UNESCAPED_SLASHES) ?: '[]', ENT_QUOTES, 'UTF-8'); ?><br>
+    Permissions For Level: <?= htmlspecialchars(json_encode($accessDebug['permissions_for_level'] ?? [], JSON_UNESCAPED_SLASHES) ?: '[]', ENT_QUOTES, 'UTF-8'); ?>
+</div>
+<?php endif; ?>
 
+<aside class="sidebar" id="appSidebar" aria-label="Sidebar">
   <div class="sidebar__top">
     <div class="sidebar__brand">
       <img src="<?= htmlspecialchars($logoSrc, ENT_QUOTES, 'UTF-8'); ?>" alt="Logo" class="sidebar__brand-logo">
