@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.49"
+set "ML_VERSION=1.0.50"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -43,6 +43,9 @@ if /I "%~1"=="update" goto :cmd_update
 if /I "%~1"=="nav" goto :cmd_nav
 if /I "%~1"=="clone" if /I "%~2"=="local" goto :cmd_clone_local
 if /I "%~1"=="serve" goto :cmd_serve
+
+if /I "%~1"=="rev" goto :cmd_reveal
+if /I "%~1"=="reveal" goto :cmd_reveal
 
 goto :cmd_generate
 
@@ -86,6 +89,7 @@ echo   create --rbac      Create RBAC table in userdb
 echo   update             Update ML CLI from remote
 echo   --d                Download remote installer
 echo   --c                Check remote ML CLI version
+echo   rev                Reveal current project folder in File Explorer (ml rev)
 echo.
 
 rem help hints for specific commands
@@ -102,6 +106,7 @@ echo   ml --h --d
 echo   ml --h serve
 echo   ml --h nav
 echo   ml --h add userdb
+echo   ml --h rev
 exit /b 0
 
 :prepare_help_args
@@ -138,6 +143,7 @@ if /I "%CMD%"=="create" if /I "%SUB%"=="--config" goto :help_create_config
 if /I "%CMD%"=="create" if /I "%SUB%"=="--pbac" goto :help_create_pbac
 if /I "%CMD%"=="create" if /I "%SUB%"=="--rbac" goto :help_create_rbac
 if /I "%CMD%"=="create" goto :help_create
+if /I "%CMD%"=="rev" goto :help_reveal
 if /I "%CMD%"=="test" goto :help_test
 if /I "%CMD%"=="add" goto :help_add
 
@@ -277,6 +283,15 @@ echo   ml-serve.php which prints and opens the project URL at
 echo   http://localhost/^<project_name^>. No local fallback if fetch fails.
 exit /b 0
 
+:help_reveal
+echo.
+echo HELP: Reveal folder
+echo Usage: ml rev [project_name_or_path]
+echo Description: Opens the specified folder in Windows File Explorer.
+echo   If no argument is given, opens the current working directory.
+echo   If a project name is given, the command will try to open
+echo   C:\xampp\htdocs\^<project_name^> or resolve a relative path.
+exit /b 0
 :help_nav
 echo.
 echo HELP: Nav
@@ -452,6 +467,41 @@ if %ERRORLEVEL% neq 0 (
 )
 
 "%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" %~3
+set "RC=%ERRORLEVEL%"
+call :maybe_show_update_notice
+del /f /q "!TMP_FILE!" >nul 2>&1
+exit /b %RC%
+
+:cmd_reveal
+set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/reveal-in-folder/reveal-folder.php"
+set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
+set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
+set "TMP_FILE=%TEMP%\reveal-folder.php"
+call :strip_query "!RAW_URL!"
+rem URL hidden from output
+echo Executing reveal helper...
+echo.
+
+where curl >nul 2>&1
+if %ERRORLEVEL%==0 (
+        curl -s -f -o "!TMP_FILE!" "!RAW_URL!"
+) else (
+        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!RAW_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
+)
+if %ERRORLEVEL% neq 0 (
+        echo Failed to fetch reveal helper script
+        exit /b 2
+)
+
+rem Determine project/path argument to pass - prefer explicit arg, else use current folder name
+set "ARG_PATH="
+if not "%~2"=="" (
+        set "ARG_PATH=%~2"
+) else (
+        for %%D in ("%CD%") do set "ARG_PATH=%%~nxD"
+)
+
+"%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" "%ARG_PATH%"
 set "RC=%ERRORLEVEL%"
 call :maybe_show_update_notice
 del /f /q "!TMP_FILE!" >nul 2>&1

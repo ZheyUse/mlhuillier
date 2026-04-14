@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-04-08T05:12:01.510Z",
+  "generatedAt": "2026-04-14T01:40:17.529Z",
   "source": "ml.bat",
-  "cliVersion": "1.0.49",
+  "cliVersion": "1.0.50",
   "commands": [
     {
       "name": "ml --b",
@@ -282,6 +282,42 @@
         "steps": [
           "Run: ml nav",
           "Review output and confirm expected result: Moves shell to selected project folder under htdocs.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml rev",
+      "description": "Reveal current project folder in File Explorer (ml rev)",
+      "syntax": "ml rev",
+      "params": [],
+      "example": "ml rev",
+      "category": "general",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml rev.",
+        "steps": [
+          "Run: ml rev",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml reveal",
+      "description": "Run this CLI command to execute its linked workflow.",
+      "syntax": "ml reveal",
+      "params": [],
+      "example": "ml reveal",
+      "category": "general",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml reveal.",
+        "steps": [
+          "Run: ml reveal",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
       }
@@ -621,6 +657,26 @@
         "steps": [
           "Run: ml nav",
           "Review output and confirm expected result: Moves shell to selected project folder under htdocs.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml rev",
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml rev.",
+        "steps": [
+          "Run: ml rev",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml reveal",
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml reveal.",
+        "steps": [
+          "Run: ml reveal",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
       },
