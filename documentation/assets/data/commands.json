@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-04-14T01:40:17.529Z",
+  "generatedAt": "2026-04-14T03:02:51.703Z",
   "source": "ml.bat",
-  "cliVersion": "1.0.50",
+  "cliVersion": "1.1.1",
   "commands": [
     {
       "name": "ml --b",
@@ -175,7 +175,7 @@
     },
     {
       "name": "ml create --pbac",
-      "description": "Create PBAC table in userdb",
+      "description": "Create PBAC table and apply PBAC scaffold",
       "syntax": "ml create --pbac",
       "params": [],
       "example": "ml create --pbac",
@@ -266,6 +266,24 @@
       }
     },
     {
+      "name": "ml gen",
+      "description": "Generate local PBAC access map (ml gen)",
+      "syntax": "ml gen",
+      "params": [],
+      "example": "ml gen",
+      "category": "general",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml gen.",
+        "steps": [
+          "Run: ml gen",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
       "name": "ml nav",
       "description": "Navigate to htdocs projects quickly and optionally open VS Code.",
       "syntax": "ml nav",
@@ -288,7 +306,7 @@
     },
     {
       "name": "ml rev",
-      "description": "Reveal current project folder in File Explorer (ml rev)",
+      "description": "Run this CLI command to execute its linked workflow.",
       "syntax": "ml rev",
       "params": [],
       "example": "ml rev",
@@ -646,6 +664,16 @@
         "scenario": "Typical general workflow using ml docs.",
         "steps": [
           "Run: ml docs",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml gen",
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml gen.",
+        "steps": [
+          "Run: ml gen",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]

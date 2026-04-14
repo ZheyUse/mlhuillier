@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.0.50"
+set "ML_VERSION=1.1.1"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -38,6 +38,7 @@ if /I "%~1"=="create" if /I "%~2"=="--config" goto :cmd_create_config
 if /I "%~1"=="create" if /I "%~2"=="--pbac" goto :cmd_create_pbac
 if /I "%~1"=="create" if /I "%~2"=="--rbac" goto :cmd_create_rbac
 if /I "%~1"=="create" if "%~2"=="" goto :cmd_create_list
+if /I "%~1"=="gen" goto :cmd_gen
 if /I "%~1"=="--c" goto :cmd_check_version
 if /I "%~1"=="update" goto :cmd_update
 if /I "%~1"=="nav" goto :cmd_nav
@@ -84,12 +85,13 @@ echo   serve              Open current project in browser (ml serve)
 echo   doc                Open online documentation (GitHub Pages)
 echo   create --a         Create interactive account (add user)
 echo   create --config    Create DB config for backups
-echo   create --pbac      Create PBAC table in userdb
+echo   create --pbac      Create PBAC table and apply PBAC scaffold
 echo   create --rbac      Create RBAC table in userdb
+echo   gen                Generate local PBAC access map (ml gen)
 echo   update             Update ML CLI from remote
 echo   --d                Download remote installer
 echo   --c                Check remote ML CLI version
-echo   rev                Reveal current project folder in File Explorer (ml rev)
+echo   rev / reveal       Reveal current project folder in File Explorer
 echo.
 
 rem help hints for specific commands
@@ -107,6 +109,8 @@ echo   ml --h serve
 echo   ml --h nav
 echo   ml --h add userdb
 echo   ml --h rev
+echo   ml --h reveal
+echo   ml --h gen
 exit /b 0
 
 :prepare_help_args
@@ -143,7 +147,9 @@ if /I "%CMD%"=="create" if /I "%SUB%"=="--config" goto :help_create_config
 if /I "%CMD%"=="create" if /I "%SUB%"=="--pbac" goto :help_create_pbac
 if /I "%CMD%"=="create" if /I "%SUB%"=="--rbac" goto :help_create_rbac
 if /I "%CMD%"=="create" goto :help_create
+if /I "%CMD%"=="gen" goto :help_gen
 if /I "%CMD%"=="rev" goto :help_reveal
+if /I "%CMD%"=="reveal" goto :help_reveal
 if /I "%CMD%"=="test" goto :help_test
 if /I "%CMD%"=="add" goto :help_add
 
@@ -203,8 +209,9 @@ echo Create List:
 echo   create ^<project_name^>   Generate project scaffold (use: ml create myproject)
 echo   create --a         Create interactive account (add user)
 echo   create --config    Create DB config for backups
-echo   create --pbac      Create PBAC table in userdb
+echo   create --pbac      Create PBAC table and apply PBAC scaffold
 echo   create --rbac      Create RBAC table in userdb
+echo   gen                Generate local PBAC access map (use: ml gen)
 exit /b 2
 
 :cmd_test_list
@@ -237,7 +244,18 @@ exit /b 0
 echo.
 echo HELP: Create PBAC table
 echo Usage: ml create --pbac [project_name]
-echo Description: Creates a Permission Based Access Control table in 'userdb' for ^<project_name^>.
+echo Description: Creates a Permission Based Access Control table in 'userdb' for ^<project_name^>
+echo   and applies PBAC scaffold files to the generated project.
+echo   You will be asked to confirm before continuing.
+exit /b 0
+
+:help_gen
+echo.
+echo HELP: Generate PBAC access map
+echo Usage: ml gen [project_name]
+echo Description: Runs local tools\generate_access_map.php in your current PBAC project.
+echo   If project_name is provided, it will try C:\xampp\htdocs\^<project_name^>\tools\generate_access_map.php.
+echo   If no map script is found, it prints conversion guidance.
 exit /b 0
 
 :help_create_rbac
@@ -287,6 +305,7 @@ exit /b 0
 echo.
 echo HELP: Reveal folder
 echo Usage: ml rev [project_name_or_path]
+echo        ml reveal [project_name_or_path]
 echo Description: Opens the specified folder in Windows File Explorer.
 echo   If no argument is given, opens the current working directory.
 echo   If a project name is given, the command will try to open
@@ -505,6 +524,29 @@ if not "%~2"=="" (
 set "RC=%ERRORLEVEL%"
 call :maybe_show_update_notice
 del /f /q "!TMP_FILE!" >nul 2>&1
+exit /b %RC%
+
+:cmd_gen
+set "MAP_SCRIPT="
+
+rem Optional argument support: ml gen project_name
+if not "%~2"=="" (
+        if exist "%~2\tools\generate_access_map.php" set "MAP_SCRIPT=%~2\tools\generate_access_map.php"
+        if not defined MAP_SCRIPT if exist "C:\xampp\htdocs\%~2\tools\generate_access_map.php" set "MAP_SCRIPT=C:\xampp\htdocs\%~2\tools\generate_access_map.php"
+)
+
+if not defined MAP_SCRIPT if exist "%CD%\tools\generate_access_map.php" set "MAP_SCRIPT=%CD%\tools\generate_access_map.php"
+
+if not defined MAP_SCRIPT (
+        echo No Map to Generate convert your project to Permission Base Access Control by running
+        echo run: ml create --pbac ^<project_name^>
+        exit /b 2
+)
+
+echo Generating PBAC access map...
+"%PHP_EXE%" -d display_errors=0 "!MAP_SCRIPT!"
+set "RC=%ERRORLEVEL%"
+call :maybe_show_update_notice
 exit /b %RC%
 
 :cmd_backup

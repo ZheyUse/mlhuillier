@@ -2,54 +2,153 @@
 /**
  * pbac/ml-pbac.php
  *
- * CLI helper to create a Permission-Based Access Control table for a project.
+ * CLI helper to create a Permission-Based Access Control table for a project
+ * and apply PBAC scaffold files into the generated project.
+ *
  * Usage:
- *  php pbac/ml-pbac.php <project_name>
- *  php pbac/ml-pbac.php        # prompts for table name
+ *   php pbac/ml-pbac.php <project_name>
+ *   php pbac/ml-pbac.php            # prompts for table name
  */
+
+declare(strict_types=1);
 
 function parseEnvFile(string $path): array
 {
     $vars = [];
-    if (!is_readable($path)) return $vars;
+    if (!is_readable($path)) {
+        return $vars;
+    }
+
     $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     foreach ($lines as $line) {
         $line = trim($line);
-        if ($line === '' || $line[0] === '#' || strpos($line, '=') === false) continue;
+        if ($line === '' || $line[0] === '#' || strpos($line, '=') === false) {
+            continue;
+        }
         [$key, $val] = explode('=', $line, 2);
         $key = trim($key);
         $val = trim($val);
         $val = trim($val, " \t\"'");
         $vars[$key] = $val;
     }
+
     return $vars;
 }
 
-// Determine project name from CLI args (skip flags like --pbac or create)
+function downloadRemotePhp(string $url, string $destPath): bool
+{
+    $context = stream_context_create([
+        'http' => [
+            'method' => 'GET',
+            'timeout' => 12,
+            'header' => "User-Agent: ml-cli\r\n",
+        ],
+    ]);
+
+    $raw = @file_get_contents($url, false, $context);
+    if ($raw === false || trim((string) $raw) === '') {
+        return false;
+    }
+
+    return file_put_contents($destPath, (string) $raw) !== false;
+}
+
+function askProceedConfirmation(bool $assumeYes = false): bool
+{
+    if ($assumeYes) {
+        return true;
+    }
+
+    fwrite(STDOUT, "Permission Base Access Control works best for a newly generated project using ml create <project_name>\n");
+    fwrite(STDOUT, "Are you sure you want to continue (Y/N): ");
+
+    $line = fgets(STDIN);
+    if ($line === false) {
+        return false;
+    }
+
+    $answer = strtoupper(substr(trim($line), 0, 1));
+    return $answer === 'Y';
+}
+
+function applyRemotePbacScaffold(string $projectName): int
+{
+    $cacheBust = (string) (random_int(100000, 999999) . random_int(100000, 999999));
+    $url = 'https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/package/pbac/pbac-application.php?t=' . $cacheBust;
+    $tmpFile = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'ml-pbac-application.php';
+
+    if (!downloadRemotePhp($url, $tmpFile)) {
+        fwrite(STDERR, "Warning: Failed to fetch remote PBAC application script.\n");
+        return 2;
+    }
+
+    try {
+        require $tmpFile;
+
+        if (!function_exists('applyPbacScaffold')) {
+            fwrite(STDERR, "Warning: Remote PBAC application script is invalid.\n");
+            return 2;
+        }
+
+        $result = applyPbacScaffold($projectName, false);
+        $report = isset($result['report']) && is_array($result['report']) ? $result['report'] : [];
+        foreach ($report as $line) {
+            fwrite(STDOUT, (string) $line . PHP_EOL);
+        }
+
+        if (!($result['ok'] ?? false)) {
+            fwrite(STDERR, "PBAC scaffold failed: " . (string) ($result['message'] ?? 'Unknown error') . "\n");
+            return 2;
+        }
+
+        fwrite(STDOUT, "PBAC scaffold successfully applied.\n");
+        return 0;
+    } catch (Throwable $e) {
+        fwrite(STDERR, "Warning: PBAC scaffold exception: " . $e->getMessage() . "\n");
+        return 2;
+    } finally {
+        @unlink($tmpFile);
+    }
+}
+
 $argv = $_SERVER['argv'] ?? [];
 $args = array_slice($argv, 1);
+
+$assumeYes = false;
 $project = null;
-foreach ($args as $a) {
-    if (strpos($a, '-') === 0) continue;
-    // skip common words if present
-    if (in_array(strtolower($a), ['ml', 'create', 'add'], true)) continue;
-    $project = $a;
+
+foreach ($args as $arg) {
+    $lower = strtolower((string) $arg);
+    if ($lower === '--yes' || $lower === '-y') {
+        $assumeYes = true;
+        continue;
+    }
+    if (strpos($arg, '-') === 0) {
+        continue;
+    }
+    if (in_array($lower, ['ml', 'create', 'add'], true)) {
+        continue;
+    }
+    $project = $arg;
     break;
+}
+
+if ((getenv('ML_PBAC_ASSUME_Y') ?: '') === '1') {
+    $assumeYes = true;
 }
 
 if ($project === null) {
     fwrite(STDOUT, "To create a new Permission Based Access Control table for your project, please provide a table name.\n\nTable name: ");
-    $line = trim(fgets(STDIN));
+    $line = trim((string) fgets(STDIN));
     $project = $line;
 }
 
-$project = trim($project ?? '');
+$project = trim((string) $project);
 if ($project === '') {
     fwrite(STDERR, "Error: no table name provided.\n");
     exit(1);
 }
 
-// Basic validation: allow alphanumeric and underscore only
 $sanitized = preg_replace('/[^A-Za-z0-9_]/', '', $project);
 if ($sanitized === '') {
     fwrite(STDERR, "Error: invalid table name. Use letters, numbers or underscore only.\n");
@@ -60,10 +159,17 @@ if ($sanitized !== $project) {
 }
 $project = $sanitized;
 
-$cwd = getcwd();
+if (!askProceedConfirmation($assumeYes)) {
+    fwrite(STDOUT, "PBAC creation cancelled.\n");
+    exit(0);
+}
+
+$cwd = getcwd() ?: '.';
 $envPath = $cwd . DIRECTORY_SEPARATOR . '.env';
 $env = [];
-if (file_exists($envPath)) $env = parseEnvFile($envPath);
+if (file_exists($envPath)) {
+    $env = parseEnvFile($envPath);
+}
 
 $host = $env['USERDB_HOST'] ?? $env['DB_HOST'] ?? '127.0.0.1';
 $port = $env['USERDB_PORT'] ?? $env['DB_PORT'] ?? '3306';
@@ -85,7 +191,6 @@ $options = [
     PDO::ATTR_TIMEOUT => 5,
 ];
 
-// 1) Check server reachability / credentials by connecting without selecting DB
 try {
     $pdoServer = new PDO($dsnServer, $user, $pass, $options);
 } catch (PDOException $e) {
@@ -103,7 +208,6 @@ try {
     exit(2);
 }
 
-// 2) Connect to the userdb database
 try {
     $pdo = new PDO($dsnDb, $user, $pass, $options);
 } catch (PDOException $e) {
@@ -138,16 +242,30 @@ $sql = sprintf(
     $fkName
 );
 
+$tableCreatedOrExists = false;
+
 try {
     $pdo->exec($sql);
     fwrite(STDOUT, sprintf("%s has been successfully added to your database (%s)\n", $pbacTable, $dbname));
-    exit(0);
+    $tableCreatedOrExists = true;
 } catch (PDOException $e) {
     $msg = $e->getMessage();
     if (stripos($msg, 'already exists') !== false) {
         fwrite(STDOUT, sprintf("%s already exists in database (%s)\n", $pbacTable, $dbname));
-        exit(0);
+        $tableCreatedOrExists = true;
+    } else {
+        fwrite(STDERR, "Failed to create table: " . $msg . "\n");
+        exit(3);
     }
-    fwrite(STDERR, "Failed to create table: " . $msg . "\n");
-    exit(3);
 }
+
+if ($tableCreatedOrExists) {
+    fwrite(STDOUT, "Applying PBAC scaffold files to project...\n");
+    $scaffoldRc = applyRemotePbacScaffold($project);
+    if ($scaffoldRc !== 0) {
+        fwrite(STDERR, "PBAC table was created, but scaffold application did not fully complete.\n");
+        exit(4);
+    }
+}
+
+exit(0);
