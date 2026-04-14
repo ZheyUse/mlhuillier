@@ -165,6 +165,108 @@ function pbac_patch_login_handler(string $path, string $pbacTable, bool $dryRun,
     return $ok;
 }
 
+function pbac_patch_middleware(string $path, bool $dryRun, array &$report): bool
+{
+        if (!is_file($path)) {
+                $report[] = 'PATCH SKIP  middleware not found';
+                return true;
+        }
+
+        $content = (string) file_get_contents($path);
+        if ($content === '') {
+                $report[] = 'PATCH FAIL  middleware empty';
+                return false;
+        }
+
+        $changed = false;
+        $includeLine = "require_once __DIR__ . '/auth.php';";
+        if (strpos($content, $includeLine) === false) {
+                if (strpos($content, 'declare(strict_types=1);') !== false) {
+                        $content = str_replace('declare(strict_types=1);', "declare(strict_types=1);\n\n" . $includeLine, $content);
+                } else {
+                        $content = "<?php\n" . $includeLine . "\n" . ltrim($content);
+                }
+                $changed = true;
+        }
+
+        $snippet = <<<'PHP'
+
+if (!function_exists('requirePermission')) {
+    function requirePermission(string $permission): void
+    {
+        if (function_exists('requireAuth')) {
+            requireAuth();
+        }
+
+        if (function_exists('auth_has_role') && auth_has_role('admin')) {
+            return;
+        }
+
+        if (function_exists('has_permission') && has_permission($permission)) {
+            return;
+        }
+
+        http_response_code(403);
+        echo '<!doctype html><html><head><meta charset="utf-8"><title>Forbidden</title></head><body>';
+        echo '<h1>403 Forbidden</h1><p>You do not have permission to access this page.</p>';
+        echo '</body></html>';
+        exit;
+    }
+}
+
+if (!function_exists('requireMenuAccess')) {
+    function requireMenuAccess(string $menu): void
+    {
+        if (function_exists('requireAuth')) {
+            requireAuth();
+        }
+
+        if (function_exists('auth_has_role') && auth_has_role('admin')) {
+            return;
+        }
+
+        if (function_exists('has_menu_access') && has_menu_access($menu)) {
+            return;
+        }
+
+        http_response_code(403);
+        echo '<!doctype html><html><head><meta charset="utf-8"><title>Forbidden</title></head><body>';
+        echo '<h1>403 Forbidden</h1><p>You do not have access to this menu.</p>';
+        echo '</body></html>';
+        exit;
+    }
+}
+
+if (!function_exists('requireCurrentRoutePermission')) {
+    function requireCurrentRoutePermission(): void
+    {
+        if (function_exists('require_mapped_permission_for_current_route')) {
+            require_mapped_permission_for_current_route();
+        }
+    }
+}
+PHP;
+
+        if (strpos($content, 'function requirePermission(') === false) {
+                $content = rtrim($content) . "\n" . $snippet . "\n";
+                $changed = true;
+        }
+
+        if (!$changed) {
+                $report[] = 'PATCH OK    middleware already patched';
+                return true;
+        }
+
+        if ($dryRun) {
+                $report[] = 'PATCH APPLY middleware.php';
+                return true;
+        }
+
+        $ok = file_put_contents($path, $content) !== false;
+        $report[] = $ok ? 'PATCH DONE  middleware.php' : 'PATCH FAIL  middleware.php';
+        return $ok;
+}
+
 function pbac_auth_template(): string
 {
     return <<<'PHP'
@@ -354,6 +456,115 @@ if (!function_exists('has_menu_access')) {
     }
 }
 
+if (!function_exists('pbac_normalize_route_path')) {
+    function pbac_normalize_route_path(string $path): string
+    {
+        $path = trim($path);
+        if ($path === '') {
+            return '';
+        }
+        $parsed = parse_url($path, PHP_URL_PATH);
+        $normalized = str_replace('\\', '/', (string) ($parsed ?? $path));
+        $normalized = preg_replace('#/+#', '/', $normalized);
+        return strtolower(rtrim((string) $normalized, '/'));
+    }
+}
+
+if (!function_exists('pbac_extract_target_path')) {
+    function pbac_extract_target_path(string $rawTarget): string
+    {
+        $rawTarget = trim($rawTarget);
+        if ($rawTarget === '') {
+            return '';
+        }
+
+        if (preg_match('#(/src/pages/[^\"\'\s)]+\.php)#i', $rawTarget, $m)) {
+            return pbac_normalize_route_path((string) $m[1]);
+        }
+
+        if (preg_match('#(/public/[^\"\'\s)]+\.php)#i', $rawTarget, $m)) {
+            return pbac_normalize_route_path((string) $m[1]);
+        }
+
+        return pbac_normalize_route_path($rawTarget);
+    }
+}
+
+if (!function_exists('pbac_permission_for_current_route')) {
+    function pbac_permission_for_current_route(): ?string
+    {
+        $current = pbac_normalize_route_path((string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+        if ($current === '') {
+            return null;
+        }
+
+        $mapPath = dirname(__DIR__) . '/assets/js/accesslevel-map.json';
+        if (!is_file($mapPath)) {
+            return null;
+        }
+
+        $raw = file_get_contents($mapPath);
+        $map = json_decode((string) $raw, true);
+        if (!is_array($map)) {
+            return null;
+        }
+
+        $catalog = isset($map['permission_catalog']) && is_array($map['permission_catalog']) ? $map['permission_catalog'] : [];
+        foreach ($catalog as $menu) {
+            $children = isset($menu['children']) && is_array($menu['children']) ? $menu['children'] : [];
+            foreach ($children as $child) {
+                $targetRaw = (string) ($child['target'] ?? '');
+                $target = pbac_extract_target_path($targetRaw);
+                if ($target === '') {
+                    continue;
+                }
+
+                if ($current === $target || str_ends_with($current, $target)) {
+                    $perm = trim((string) ($child['id'] ?? ($child['key'] ?? '')));
+                    return $perm !== '' ? $perm : null;
+                }
+            }
+        }
+
+        return null;
+    }
+}
+
+if (!function_exists('require_mapped_permission_for_current_route')) {
+    function require_mapped_permission_for_current_route(): void
+    {
+        auth_start();
+
+        if (!auth_is_authenticated()) {
+            return;
+        }
+
+        if (auth_has_role('admin')) {
+            return;
+        }
+
+        $level = isset($_SESSION['user_access_level']) ? (int) $_SESSION['user_access_level'] : 0;
+        if ($level === -1) {
+            return;
+        }
+
+        $permission = pbac_permission_for_current_route();
+        if ($permission === null || $permission === '') {
+            return;
+        }
+
+        if (has_permission($permission)) {
+            return;
+        }
+
+        http_response_code(403);
+        echo '<!doctype html><html><head><meta charset="utf-8"><title>Forbidden</title></head><body>';
+        echo '<h1>403 Forbidden</h1><p>You do not have permission to access this page.</p>';
+        echo '</body></html>';
+        exit;
+    }
+}
+
 return [
     'session_key' => $__auth_session_key,
 ];
@@ -380,6 +591,11 @@ if ($appBaseUrl === '') {
   $appBaseUrl = preg_replace('#/src/.*$#', '', $scriptName);
   $appBaseUrl = rtrim((string) $appBaseUrl, '/');
 }
+
+if (function_exists('require_mapped_permission_for_current_route')) {
+    require_mapped_permission_for_current_route();
+}
+
 $logoSrc = ($appBaseUrl !== '' ? $appBaseUrl : '') . '/src/assets/images/logo1.png';
 ?>
 
@@ -1498,11 +1714,31 @@ function pbac_perm(string $menu, string $sub): string
     return pbac_norm($menu . ' ' . $sub);
 }
 
+function pbac_extract_target_from_href(string $href): string
+{
+    $href = trim($href);
+    if ($href === '') {
+        return '';
+    }
+
+    if (preg_match('#(/src/pages/[^\"\'\s)]+\.php)#i', $href, $m)) {
+        return (string) $m[1];
+    }
+
+    if (preg_match('#(/public/[^\"\'\s)]+\.php)#i', $href, $m)) {
+        return (string) $m[1];
+    }
+
+    $path = parse_url($href, PHP_URL_PATH);
+    return is_string($path) ? $path : '';
+}
+
 $lines = preg_split('/\R/', $content) ?: [];
 $menus = [];
 $inMenu = false;
 $depth = 0;
 $current = null;
+$pendingHref = '';
 
 foreach ($lines as $line) {
     $lineStr = (string) $line;
@@ -1518,6 +1754,10 @@ foreach ($lines as $line) {
     }
 
     if ($inMenu && is_array($current)) {
+        if (preg_match('/<a\s+[^>]*href\s*=\s*"([^"]+)"/i', $lineStr, $hm)) {
+            $pendingHref = trim((string) $hm[1]);
+        }
+
         if ($current['label'] === '' && preg_match('/<span\s+class="sidebar__nav-label">([^<]+)<\/span>/', $lineStr, $m)) {
             $current['label'] = pbac_norm((string) $m[1]);
         }
@@ -1527,7 +1767,9 @@ foreach ($lines as $line) {
             $current['subs'][] = [
                 'label' => $label,
                 'key' => '',
+                'target' => pbac_extract_target_from_href($pendingHref),
             ];
+            $pendingHref = '';
         }
 
         $depth += substr_count($lineStr, '<li');
@@ -1552,6 +1794,7 @@ foreach ($menus as $menu) {
             'id' => pbac_perm($menu['label'], $sub['label']),
             'key' => pbac_perm($menu['label'], $sub['label']),
             'label' => $sub['label'],
+            'target' => (string) ($sub['target'] ?? ''),
         ];
     }
 
@@ -2228,6 +2471,15 @@ function applyPbacScaffold(string $projectArg, bool $dryRun = false): array
         return [
             'ok' => false,
             'message' => 'Failed to patch login-handler for PBAC session loading.',
+            'report' => $report,
+        ];
+    }
+
+    $middlewarePath = pbac_join($projectRoot, 'src/config/middleware.php');
+    if (!pbac_patch_middleware($middlewarePath, $dryRun, $report)) {
+        return [
+            'ok' => false,
+            'message' => 'Failed to patch middleware for PBAC route guards.',
             'report' => $report,
         ];
     }
