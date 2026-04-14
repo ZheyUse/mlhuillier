@@ -676,6 +676,9 @@ if (!function_exists('pbac_debug_access_payload')) {
         $mappedForLevel = function_exists('pbac_permissions_for_level') ? pbac_permissions_for_level($level) : [];
         $routePermission = pbac_permission_for_current_route();
         $details = pbac_access_map_details();
+        $lookup = isset($_SESSION['pbac_debug_last_lookup']) && is_array($_SESSION['pbac_debug_last_lookup'])
+            ? $_SESSION['pbac_debug_last_lookup']
+            : [];
 
         return [
             'access_level' => $level,
@@ -688,6 +691,10 @@ if (!function_exists('pbac_debug_access_payload')) {
             'map_raw_length' => (int) ($details['raw_length'] ?? 0),
             'map_json_error' => (string) ($details['json_error'] ?? ''),
             'map_loaded_access_levels' => array_values((array) ($details['loaded_access_levels'] ?? [])),
+            'resolved_id_number' => (string) ($lookup['resolved_id_number'] ?? ''),
+            'pbac_table' => (string) ($lookup['pbac_table'] ?? ''),
+            'pbac_row_found' => !empty($lookup['pbac_row_found']),
+            'lookup_error' => (string) ($lookup['error'] ?? ''),
         ];
     }
 }
@@ -747,6 +754,10 @@ $logoSrc = ($appBaseUrl !== '' ? $appBaseUrl : '') . '/src/assets/images/logo1.p
     Map Raw Bytes: <?= htmlspecialchars((string) ($accessDebug['map_raw_length'] ?? 0), ENT_QUOTES, 'UTF-8'); ?><br>
     Map JSON Error: <?= htmlspecialchars((string) ($accessDebug['map_json_error'] ?? 'none'), ENT_QUOTES, 'UTF-8'); ?><br>
     Loaded Levels: <?= htmlspecialchars(json_encode($accessDebug['map_loaded_access_levels'] ?? [], JSON_UNESCAPED_SLASHES) ?: '[]', ENT_QUOTES, 'UTF-8'); ?><br>
+    PBAC Table: <?= htmlspecialchars((string) ($accessDebug['pbac_table'] ?? ''), ENT_QUOTES, 'UTF-8'); ?><br>
+    Resolved ID Number: <?= htmlspecialchars((string) ($accessDebug['resolved_id_number'] ?? ''), ENT_QUOTES, 'UTF-8'); ?><br>
+    PBAC Row Found: <?= !empty($accessDebug['pbac_row_found']) ? 'yes' : 'no'; ?><br>
+    Lookup Error: <?= htmlspecialchars((string) ($accessDebug['lookup_error'] ?? 'none'), ENT_QUOTES, 'UTF-8'); ?><br>
     Current Permissions: <?= htmlspecialchars(json_encode($accessDebug['current_permissions'] ?? [], JSON_UNESCAPED_SLASHES) ?: '[]', ENT_QUOTES, 'UTF-8'); ?><br>
     Permissions For Level: <?= htmlspecialchars(json_encode($accessDebug['permissions_for_level'] ?? [], JSON_UNESCAPED_SLASHES) ?: '[]', ENT_QUOTES, 'UTF-8'); ?>
 </div>
@@ -2111,7 +2122,7 @@ if (!function_exists('pbac_resolve_id_number')) {
             return null;
         }
 
-        $stmt = $pdo->prepare("SELECT id_number FROM {$table} WHERE username = :u LIMIT 1");
+        $stmt = $pdo->prepare("SELECT id_number FROM {$table} WHERE UPPER(username) = UPPER(:u) LIMIT 1");
         $stmt->execute([':u' => $username]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         if (!$row) {
@@ -2157,13 +2168,24 @@ if (!function_exists('loadPbacSession')) {
             $_SESSION['user_permissions'] = [];
 
             if ($idNumber === null) {
+                $_SESSION['pbac_debug_last_lookup'] = [
+                    'resolved_id_number' => null,
+                    'pbac_table' => preg_replace('/[^A-Za-z0-9_]/', '', $pbacTableName),
+                    'pbac_row_found' => false,
+                ];
                 return;
             }
 
             $table = "`" . preg_replace('/[^A-Za-z0-9_]/', '', $pbacTableName) . "`";
-            $stmt = $pdo->prepare("SELECT access_level, permissions FROM {$table} WHERE id_number = :id LIMIT 1");
+            $stmt = $pdo->prepare("SELECT access_level, permissions FROM {$table} WHERE TRIM(CAST(id_number AS CHAR)) = TRIM(:id) LIMIT 1");
             $stmt->execute([':id' => $idNumber]);
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            $_SESSION['pbac_debug_last_lookup'] = [
+                'resolved_id_number' => $idNumber,
+                'pbac_table' => preg_replace('/[^A-Za-z0-9_]/', '', $pbacTableName),
+                'pbac_row_found' => (bool) $row,
+            ];
 
             $isAdmin = pbac_is_admin_user($user);
             try {
@@ -2212,7 +2234,7 @@ if (!function_exists('loadPbacSession')) {
                 }
 
                 if ($shouldUpdate) {
-                    $update = $pdo->prepare("UPDATE {$table} SET access_level = :al, permissions = :perms WHERE id_number = :id");
+                    $update = $pdo->prepare("UPDATE {$table} SET access_level = :al, permissions = :perms WHERE TRIM(CAST(id_number AS CHAR)) = TRIM(:id)");
                     $update->execute([
                         ':al' => $level,
                         ':perms' => json_encode(array_values($perms), JSON_UNESCAPED_SLASHES) ?: '[]',
@@ -2241,6 +2263,12 @@ if (!function_exists('loadPbacSession')) {
         } catch (Throwable $e) {
             $_SESSION['user_access_level'] = 0;
             $_SESSION['user_permissions'] = [];
+            $_SESSION['pbac_debug_last_lookup'] = [
+                'resolved_id_number' => null,
+                'pbac_table' => preg_replace('/[^A-Za-z0-9_]/', '', $pbacTableName),
+                'pbac_row_found' => false,
+                'error' => $e->getMessage(),
+            ];
         }
     }
 }
