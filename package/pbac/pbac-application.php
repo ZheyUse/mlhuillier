@@ -911,9 +911,36 @@ if ($appBaseUrl === '') {
         }).catch(function(){});
     };
 
+    function closeAccessLevelModal(){
+        modal.classList.add('hidden');
+    }
+
+    var closeBtn = modal.querySelector('.alm-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function(e){
+            e.preventDefault();
+            e.stopPropagation();
+            closeAccessLevelModal();
+        });
+    }
+
     modal.querySelectorAll('[data-close]').forEach(function(el){
-        el.addEventListener('click', function(){ modal.classList.add('hidden'); });
+        if (el === closeBtn) return;
+        el.addEventListener('click', function(e){
+            e.preventDefault();
+            e.stopPropagation();
+            closeAccessLevelModal();
+        });
     });
+
+    if (!modal.dataset.escapeBound) {
+        document.addEventListener('keydown', function(e){
+            if ((e.key === 'Escape' || e.key === 'Esc') && !modal.classList.contains('hidden')) {
+                closeAccessLevelModal();
+            }
+        });
+        modal.dataset.escapeBound = '1';
+    }
 
     var menu = modal.querySelector('.alm-preview-menu');
     if (menu){
@@ -1272,7 +1299,7 @@ function pbac_accesslevel_modal_css_template(): string
 .alm-modal.hidden{display:none}
 .alm-modal .alm-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000}
 .alm-modal .alm-dialog{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(900px,96vw);max-width:96vw;height:76vh;background:var(--surface);z-index:1001;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.2);overflow:hidden;display:flex;flex-direction:column;box-sizing:border-box}
-.alm-close{position:absolute;right:12px;top:8px;border:0;background:transparent;font-size:22px;cursor:pointer}
+.alm-close{position:absolute;right:12px;top:8px;border:0;background:transparent;font-size:22px;cursor:pointer;z-index:3;line-height:1;padding:2px 6px}
 .alm-inner{display:flex;height:100%;flex:1;overflow:auto}
 
 .alm-dialog *, .alm-dialog *:before, .alm-dialog *:after { box-sizing: border-box; }
@@ -1594,6 +1621,19 @@ if ($json === false) {
 }
 
 file_put_contents($outputPath, $json . PHP_EOL);
+
+echo "Access Map Hierarchy:\n";
+foreach ($catalog as $menu) {
+    $menuLabel = (string) ($menu['label'] ?? ($menu['key'] ?? 'Menu'));
+    echo "- Menu: {$menuLabel}\n";
+    $children = isset($menu['children']) && is_array($menu['children']) ? $menu['children'] : [];
+    foreach ($children as $child) {
+        $subLabel = (string) ($child['label'] ?? ($child['key'] ?? 'Submenu'));
+        $permId = (string) ($child['id'] ?? ($child['key'] ?? ''));
+        echo "  - Submenu: {$subLabel} => Permission: {$permId}\n";
+    }
+}
+
 echo "Wrote access map: src/assets/js/accesslevel-map.json\n";
 PHP;
 }
@@ -1687,6 +1727,29 @@ if (!function_exists('pbac_resolve_id_number')) {
     }
 }
 
+if (!function_exists('pbac_is_admin_user')) {
+    function pbac_is_admin_user(array $user): bool
+    {
+        $role = strtolower(trim((string) ($user['role'] ?? '')));
+        return $role === 'admin';
+    }
+}
+
+if (!function_exists('pbac_db_role_is_admin')) {
+    function pbac_db_role_is_admin(PDO $pdo, string $userDb, string $idNumber): bool
+    {
+        $table = "`" . $userDb . "`.`users`";
+        $stmt = $pdo->prepare("SELECT role FROM {$table} WHERE id_number = :id LIMIT 1");
+        $stmt->execute([':id' => $idNumber]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$row) {
+            return false;
+        }
+        $role = strtolower(trim((string) ($row['role'] ?? '')));
+        return $role === 'admin';
+    }
+}
+
 if (!function_exists('loadPbacSession')) {
     function loadPbacSession(array $user, string $username, string $pbacTableName = '{{PBAC_TABLE}}'): void
     {
@@ -1706,6 +1769,67 @@ if (!function_exists('loadPbacSession')) {
             $stmt = $pdo->prepare("SELECT access_level, permissions FROM {$table} WHERE id_number = :id LIMIT 1");
             $stmt->execute([':id' => $idNumber]);
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            $isAdmin = pbac_is_admin_user($user);
+            try {
+                $isAdmin = pbac_db_role_is_admin($pdo, $userDb, $idNumber) || $isAdmin;
+            } catch (Throwable $e) {
+                // Keep fallback from session payload when direct DB role lookup fails.
+            }
+
+            // Admin bootstrap rules:
+            // - if admin has no PBAC row, insert with access_level -1
+            // - if admin row has null access_level, set it to -1
+            // - when level is -1 and permissions are empty/null, auto-populate from map
+            if ($isAdmin) {
+                $adminPerms = pbac_permissions_for_level(-1);
+                $adminPermsJson = json_encode(array_values($adminPerms), JSON_UNESCAPED_SLASHES);
+                if ($adminPermsJson === false) {
+                    $adminPermsJson = '[]';
+                }
+
+                if (!$row) {
+                    $insert = $pdo->prepare("INSERT INTO {$table} (id_number, access_level, permissions) VALUES (:id, :al, :perms)");
+                    $insert->execute([
+                        ':id' => $idNumber,
+                        ':al' => -1,
+                        ':perms' => $adminPermsJson,
+                    ]);
+
+                    $_SESSION['user_access_level'] = -1;
+                    $_SESSION['user_permissions'] = $adminPerms;
+                    return;
+                }
+
+                $rawLevel = $row['access_level'] ?? null;
+                $levelIsNull = $rawLevel === null || trim((string) $rawLevel) === '';
+                $level = $levelIsNull ? -1 : (int) $rawLevel;
+                $perms = pbac_normalize_permissions($row['permissions'] ?? []);
+
+                $shouldUpdate = false;
+                if ($levelIsNull) {
+                    $shouldUpdate = true;
+                }
+
+                if ($level === -1 && empty($perms)) {
+                    $perms = $adminPerms;
+                    $shouldUpdate = true;
+                }
+
+                if ($shouldUpdate) {
+                    $update = $pdo->prepare("UPDATE {$table} SET access_level = :al, permissions = :perms WHERE id_number = :id");
+                    $update->execute([
+                        ':al' => $level,
+                        ':perms' => json_encode(array_values($perms), JSON_UNESCAPED_SLASHES) ?: '[]',
+                        ':id' => $idNumber,
+                    ]);
+                }
+
+                $_SESSION['user_access_level'] = $level;
+                $_SESSION['user_permissions'] = $perms;
+                return;
+            }
+
             if (!$row) {
                 return;
             }
