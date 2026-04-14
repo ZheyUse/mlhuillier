@@ -1102,6 +1102,59 @@ if ($appBaseUrl === '') {
                 m.appendChild(list);
                 contentRoot.appendChild(m);
             });
+
+            var selectAll = document.getElementById('alm-map-select-all');
+            if (selectAll){
+                selectAll.removeEventListener('change', window._almSelectAllHandler || function(){});
+                window._almSelectAllHandler = function(e){
+                    var checked = !!e.target.checked;
+                    var allSubs = mapRoot.querySelectorAll('.alm-map-sub');
+                    allSubs.forEach(function(el){
+                        if (checked) el.classList.add('selected');
+                        else el.classList.remove('selected');
+                    });
+
+                    mapData.forEach(function(menu){ syncMenuSelection(menu.id); });
+
+                    var cards = document.getElementById('alm-selected-perms-cards');
+                    if (cards) cards.innerHTML = '';
+                    if (checked){
+                        var seen = {};
+                        mapRoot.querySelectorAll('.alm-map-sub.selected').forEach(function(s){
+                            var p = String(s.dataset.perm || '').trim();
+                            if (p && !seen[p]){
+                                seen[p] = true;
+                                createPermCard(p, s.dataset.permlabel || p);
+                            }
+                        });
+                    }
+
+                    updatePreviewAndCode();
+                };
+                selectAll.addEventListener('change', window._almSelectAllHandler);
+            }
+        }
+
+        function updateSelectAllCheckbox(){
+            var checkbox = document.getElementById('alm-map-select-all');
+            if (!checkbox) return;
+            var subs = mapRoot.querySelectorAll('.alm-map-sub');
+            if (!subs || subs.length === 0){
+                checkbox.checked = false;
+                checkbox.indeterminate = false;
+                return;
+            }
+            var selected = mapRoot.querySelectorAll('.alm-map-sub.selected').length;
+            if (selected === 0){
+                checkbox.checked = false;
+                checkbox.indeterminate = false;
+            } else if (selected === subs.length){
+                checkbox.checked = true;
+                checkbox.indeterminate = false;
+            } else {
+                checkbox.checked = false;
+                checkbox.indeterminate = true;
+            }
         }
 
         function syncMenuSelection(menuId){
@@ -1151,9 +1204,17 @@ if ($appBaseUrl === '') {
             var selectedPermEls = mapRoot.querySelectorAll('.alm-map-sub.selected');
             var perms = Array.from(selectedPermEls).map(function(el){ return String(el.dataset.perm || '').trim(); }).filter(Boolean);
 
+            var menuMask = 0;
+            mapData.forEach(function(menu, idx){
+                if (mapRoot.querySelectorAll('.alm-map-sub.selected[data-menu="'+menu.id+'"]').length > 0) {
+                    menuMask = menuMask | (1 << idx);
+                }
+            });
+
             if (!perms.length){
                 var alDisplayEmpty = document.getElementById('alm-access-level');
                 if (alDisplayEmpty){ alDisplayEmpty.textContent = '0'; alDisplayEmpty.dataset.value = '0'; }
+                updateSelectAllCheckbox();
                 return;
             }
 
@@ -1167,11 +1228,16 @@ if ($appBaseUrl === '') {
                 if (matches.length > 0){
                     matches.sort(function(a,b){ if (a === -1) return -1; if (b === -1) return 1; return a - b; });
                     code = matches[0];
+                } else {
+                    code = menuMask;
                 }
+            } else {
+                code = menuMask;
             }
 
             var alDisplay = document.getElementById('alm-access-level');
             if (alDisplay){ alDisplay.textContent = String(code); alDisplay.dataset.value = String(code); }
+            updateSelectAllCheckbox();
         }
 
         window.almMapSetSelectedPerms = function(userPerms){
