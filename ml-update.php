@@ -56,6 +56,11 @@ function safeEcho($line)
     fwrite(STDOUT, $line . PHP_EOL);
 }
 
+function normalizeWindowsLineEndings($content)
+{
+    return preg_replace("/\r?\n/", "\r\n", $content);
+}
+
 safeEcho('ML Updater: Starting...');
 
 if (!is_dir($targetDir)) {
@@ -77,6 +82,9 @@ foreach ($files as $name => $url) {
     }
 
     $dest = $targetDir . DIRECTORY_SEPARATOR . $name;
+    if (preg_match('/\.(bat|cmd)$/i', $name)) {
+        $data = normalizeWindowsLineEndings($data);
+    }
     safeEcho('ML Updater: Writing to ' . $dest . ' ...');
     if (file_put_contents($dest, $data) === false) {
         safeEcho('ML Updater: Failed to write ' . $dest . '. Check permissions.');
@@ -97,6 +105,9 @@ if ($installedVersion) {
         $mlBatData = @file_get_contents($mlBatPath);
         if ($mlBatData !== false) {
             $newData = preg_replace('/set \"ML_VERSION=.*\"/i', 'set "ML_VERSION=' . addslashes($installedVersion) . '"', $mlBatData, 1);
+            if ($newData !== null) {
+                $newData = normalizeWindowsLineEndings($newData);
+            }
             if ($newData !== null && $newData !== $mlBatData) {
                 if (file_put_contents($mlBatPath, $newData) === false) {
                     safeEcho('ML Updater: Failed to update ML_VERSION in ' . $mlBatPath);
