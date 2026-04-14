@@ -486,192 +486,235 @@ PHP;
 
 function pbac_accesslevel_page_template(): string
 {
-    return <<<'PHP'
-<?php /* Access Level Management component (sample-parity implementation) */ ?>
+        return <<<'PHP'
 <?php
+require_once __DIR__ . '/../../../config/session.php';
+require_once __DIR__ . '/../../../config/middleware.php';
+require_once __DIR__ . '/../../../controllers/usercontroller.php';
+require_once __DIR__ . '/../../../templates/header_ui.php';
+require_once __DIR__ . '/../../../config/auth.php';
+
+requireAuth();
+auth_start();
+
 $scriptName = (string) ($_SERVER['SCRIPT_NAME'] ?? '');
 $appBaseUrl = preg_replace('#/src/.*$#', '', $scriptName);
 $appBaseUrl = rtrim((string) $appBaseUrl, '/');
-?>
-<link rel="stylesheet" href="<?= htmlspecialchars(($appBaseUrl !== '' ? $appBaseUrl : '') . '/src/pages/maintenance/accesslevel/accesslevel.css', ENT_QUOTES, 'UTF-8'); ?>" data-component-css>
 
-<?php
-require_once __DIR__ . '/../../../config/auth.php';
-auth_start();
-if (!function_exists('has_permission') || !has_permission('Maintenance Access Level')) {
-    require_once __DIR__ . '/../no-access/no-access-level-display.php';
-    return;
+$canView = has_permission('Maintenance Access Level') || auth_has_role('admin');
+
+$isEntry = (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === realpath(__FILE__));
+if ($isEntry) {
+    ?>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Access Level</title>
+        <link rel="icon" type="image/png" href="<?= htmlspecialchars($appBaseUrl . '/src/assets/images/logo2.png', ENT_QUOTES, 'UTF-8'); ?>">
+        <link rel="stylesheet" href="<?= htmlspecialchars($appBaseUrl . '/public/index.css', ENT_QUOTES, 'UTF-8'); ?>">
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <link rel="stylesheet" href="<?= htmlspecialchars($appBaseUrl . '/src/assets/css/color.css', ENT_QUOTES, 'UTF-8'); ?>">
+        <link rel="stylesheet" href="<?= htmlspecialchars($appBaseUrl . '/src/templates/header_ui.css', ENT_QUOTES, 'UTF-8'); ?>">
+        <link rel="stylesheet" href="<?= htmlspecialchars($appBaseUrl . '/src/templates/sidebar.css', ENT_QUOTES, 'UTF-8'); ?>">
+        <link rel="stylesheet" href="<?= htmlspecialchars($appBaseUrl . '/src/modals/logout-modal/logout-modal.css', ENT_QUOTES, 'UTF-8'); ?>">
+        <link rel="stylesheet" href="<?= htmlspecialchars($appBaseUrl . '/src/pages/maintenance/accesslevel/accesslevel.css', ENT_QUOTES, 'UTF-8'); ?>">
+    </head>
+    <body>
+    <?php
 }
-
-require __DIR__ . '/../../../templates/header_ui.php';
-bp_section_header_html('security', 'Access Level Management', 'Manage user permissions and access levels');
 ?>
+<div class="app-layout">
+    <?php require __DIR__ . '/../../../templates/sidebar.php'; ?>
+
+    <main class="main-content">
+        <section class="access-level-management" id="accesslevel-root">
+            <?php bp_section_header_html('security', 'Access Level Management', 'Manage user permissions and access levels'); ?>
+
+            <?php if (!$canView): ?>
+                <div class="placeholder">You do not have permission to view this module.</div>
+            <?php else: ?>
+            <div class="alm-controls">
+                <div class="alm-left">
+                    <div class="alm-search">
+                        <label for="al-search-input">Search</label>
+                        <input id="al-search-input" placeholder="Search by name, ID or username..." autocomplete="off">
+                        <button class="btn" id="al-search-btn"><span class="material-icons">search</span></button>
+                    </div>
+                </div>
+
+                <div class="alm-right">
+                    <div class="alm-actions">
+                        <button class="btn btn-secondary" id="al-reset-all-btn"><span class="material-icons">restart_alt</span> Reset All</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alm-table-wrap">
+                <div class="table-scroll">
+                    <table class="alm-table" id="al-table" aria-label="Access level table">
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>ID Number</th>
+                                <th>Username</th>
+                                <th>First Name</th>
+                                <th>Middle Name</th>
+                                <th>Last Name</th>
+                                <th>Access Level</th>
+                            </tr>
+                        </thead>
+                        <tbody id="al-tbody">
+                            <tr><td colspan="7" class="placeholder">Loading accounts...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <?php endif; ?>
+        </section>
+    </main>
+</div>
+
+<?php require __DIR__ . '/../../../modals/logout-modal/logout-modal.php'; ?>
+<?php if ($canView): ?>
 <?php require __DIR__ . '/../../../modals/accesslevel-modal/accesslevel-modal.php'; ?>
+<?php endif; ?>
+<?php
+if ($isEntry) {
+    echo "</body>\n</html>\n";
+}
+?>
 
-<section class="access-level-management" id="accesslevel-root">
-    <div class="alm-controls">
-        <div class="alm-left">
-            <div class="alm-search">
-                <label for="al-search-input">Search</label>
-                <input id="al-search-input" placeholder="Search by name, ID or username..." autocomplete="off">
-                <button class="btn" id="al-search-btn"><span class="material-icons">search</span></button>
-            </div>
-        </div>
-
-        <div class="alm-right">
-            <div class="alm-actions">
-                <button class="btn btn-secondary" id="al-reset-all-btn"><span class="material-icons">restart_alt</span> Reset All</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="alm-table-wrap">
-        <div class="table-scroll">
-            <table class="alm-table" id="al-table" aria-label="Access level table">
-                <thead>
-                    <tr>
-                        <th>No.</th>
-                        <th>ID Number</th>
-                        <th>Username</th>
-                        <th>First Name</th>
-                        <th>Middle Name</th>
-                        <th>Last Name</th>
-                        <th>Access Level</th>
-                    </tr>
-                </thead>
-                <tbody id="al-tbody">
-                    <tr><td colspan="7" class="placeholder">Loading accounts...</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</section>
-
+<?php if ($canView): ?>
 <script>
-  window.initAccessLevelManagement = function(){
-    var root = document.getElementById('accesslevel-root');
-    if (!root) return;
-    if (root.dataset.inited === '1') return;
-    root.dataset.inited = '1';
+    window.initAccessLevelManagement = function(){
+        var root = document.getElementById('accesslevel-root');
+        if (!root) return;
+        if (root.dataset.inited==='1') return;
+        root.dataset.inited='1';
 
-    var tbody = document.getElementById('al-tbody');
-    var allRows = [];
-    var apiBase = '<?= htmlspecialchars($appBaseUrl, ENT_QUOTES, 'UTF-8'); ?>';
+        var tbody = document.getElementById('al-tbody');
+        var allRows = [];
+        var apiBase = '<?= htmlspecialchars($appBaseUrl, ENT_QUOTES, 'UTF-8'); ?>';
 
-    function esc(v){ return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+        function esc(v){ return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-    function renderRows(rows){
-      if (!tbody) return;
-      if (!rows || rows.length === 0){
-        tbody.innerHTML = '<tr><td colspan="7" class="placeholder">No accounts found.</td></tr>';
-        return;
-      }
-      var html = '';
-      rows.forEach(function(r){
-        var rid = esc(r.id_number || r.id || r.no || '');
-        html += '<tr data-id="'+rid+'">' +
-                '<td>' + esc(r.no) + '</td>' +
-                '<td>' + esc(r.id_number) + '</td>' +
-                '<td>' + esc(r.username) + '</td>' +
-                '<td>' + esc(r.firstname) + '</td>' +
-                '<td>' + esc(r.middlename) + '</td>' +
-                '<td>' + esc(r.lastname) + '</td>' +
-                '<td>' + esc(r.access_level) + '</td>' +
-                '</tr>';
-      });
-      tbody.innerHTML = html;
-    }
-
-    function parsePermissions(raw){
-      if (raw === null || raw === undefined) return [];
-      if (Array.isArray(raw)) return raw.map(function(x){ return String(x).trim(); }).filter(Boolean);
-      var s = String(raw).trim();
-      if (!s) return [];
-      if (s.charAt(0) === '[' || s.charAt(0) === '{') {
-        try {
-          var dec = JSON.parse(s);
-          if (Array.isArray(dec)) return dec.map(function(x){ return String(x).trim(); }).filter(Boolean);
-        } catch (e) {}
-      }
-      return s.split(/[;,|]/).map(function(x){ return String(x).trim(); }).filter(Boolean);
-    }
-
-    function applyFilters(){
-      var q = (document.getElementById('al-search-input') || {value:''}).value.trim().toLowerCase();
-      var filtered = allRows.filter(function(r){
-        if (!q) return true;
-        var hay = (r.id_number+' '+r.username+' '+r.firstname+' '+r.middlename+' '+r.lastname+' '+r.access_level).toLowerCase();
-        return hay.indexOf(q) !== -1;
-      });
-      renderRows(filtered);
-    }
-
-    function debounce(fn, wait){ var t; return function(){ clearTimeout(t); var args = arguments; t = setTimeout(function(){ fn.apply(null, args); }, wait); }; }
-
-    function loadAccounts(){
-      fetch(apiBase + '/public/api/account-load.php', { credentials: 'same-origin' })
-        .then(function(r){ return r.json(); })
-        .then(function(json){
-          if (json && json.ok && Array.isArray(json.rows)) {
-            allRows = json.rows;
-            renderRows(allRows);
-            var si = document.getElementById('al-search-input');
-            var sb = document.getElementById('al-search-btn');
-            if (si) si.addEventListener('input', debounce(applyFilters, 200));
-            if (sb) sb.addEventListener('click', applyFilters);
-            try {
-              if (si && String(si.value || '').trim() !== '') {
-                applyFilters();
-              }
-            } catch (e) {}
-          } else {
-            tbody.innerHTML = '<tr><td colspan="7" class="placeholder">Unable to load accounts.</td></tr>';
-          }
-        })
-        .catch(function(){
-          tbody.innerHTML = '<tr><td colspan="7" class="placeholder">Unable to load accounts.</td></tr>';
-        });
-    }
-
-    var resetAllBtn = document.getElementById('al-reset-all-btn');
-    if (resetAllBtn) {
-      resetAllBtn.addEventListener('click', function(){
-        var si = document.getElementById('al-search-input');
-        if (si) si.value = '';
-        renderRows(allRows);
-      });
-    }
-
-    if (tbody && !root.dataset.modalInit) {
-      tbody.addEventListener('click', function(e){
-        var tr = e.target.closest && e.target.closest('tr');
-        if (!tr || !tbody.contains(tr)) return;
-        var id = tr.dataset.id;
-        if (!id) return;
-        var row = allRows.find(function(r){ return String(r.id_number || r.id || r.no || '') === id; });
-        if (!row) return;
-        if (window.showAccessLevelModal) {
-          var uname = row.username || ((row.firstname || '') + ' ' + (row.lastname || '')).trim() || 'Unknown';
-          var al = (row.access_level === null || row.access_level === undefined || String(row.access_level).trim() === '') ? '0' : row.access_level;
-          var activePerms = parsePermissions(row.active_permissions);
-          window.showAccessLevelModal({
-            id_number: row.id_number || row.id || row.no || '',
-            username: uname,
-            access_level: al,
-            active_permissions: activePerms,
-            permissions: activePerms,
-            active_permission: activePerms.length ? activePerms.join(', ') : '-'
-          });
+        function renderRows(rows){
+            if (!tbody) return;
+            if (!rows || rows.length === 0){
+                tbody.innerHTML = '<tr><td colspan="7" class="placeholder">No accounts found.</td></tr>';
+                return;
+            }
+            var html = '';
+            rows.forEach(function(r, i){
+                var rid = esc(r.id_number || r.id || r.no || '');
+                html += '<tr data-id="'+rid+'">' +
+                                '<td>' + esc(r.no || (i + 1)) + '</td>' +
+                                '<td>' + esc(r.id_number) + '</td>' +
+                                '<td>' + esc(r.username) + '</td>' +
+                                '<td>' + esc(r.firstname) + '</td>' +
+                                '<td>' + esc(r.middlename) + '</td>' +
+                                '<td>' + esc(r.lastname) + '</td>' +
+                                '<td>' + esc(r.access_level) + '</td>' +
+                                '</tr>';
+            });
+            tbody.innerHTML = html;
         }
-      });
-      root.dataset.modalInit = '1';
-    }
 
-    window.refreshAccessLevelManagement = function(){ loadAccounts(); };
+        function parsePermissions(raw){
+            if (raw === null || raw === undefined) return [];
+            if (Array.isArray(raw)) return raw.map(function(x){ return String(x).trim(); }).filter(Boolean);
+            var s = String(raw).trim();
+            if (!s) return [];
+            if (s.charAt(0) === '[' || s.charAt(0) === '{') {
+                try {
+                    var dec = JSON.parse(s);
+                    if (Array.isArray(dec)) return dec.map(function(x){ return String(x).trim(); }).filter(Boolean);
+                } catch (e) {}
+            }
+            return s.split(/[;,|]/).map(function(x){ return String(x).trim(); }).filter(Boolean);
+        }
 
-    loadAccounts();
-  };
+        function applyFilters(){
+            var q = (document.getElementById('al-search-input') || {value:''}).value.trim().toLowerCase();
+            var filtered = allRows.filter(function(r){
+                if (!q) return true;
+                var hay = (r.id_number+' '+r.username+' '+r.firstname+' '+r.middlename+' '+r.lastname+' '+r.access_level).toLowerCase();
+                return hay.indexOf(q) !== -1;
+            });
+            renderRows(filtered);
+        }
+
+        function debounce(fn, wait){ var t; return function(){ clearTimeout(t); var args=arguments; t = setTimeout(function(){ fn.apply(null, args); }, wait); }; }
+
+        function loadAccounts(){
+            fetch(apiBase + '/public/api/accesslevel-fetch.php', { credentials: 'same-origin' })
+                .then(function(r){ return r.json(); })
+                .then(function(json){
+                    if (json && json.ok && Array.isArray(json.rows)) {
+                        allRows = json.rows;
+                        renderRows(allRows);
+                        var si = document.getElementById('al-search-input');
+                        var sb = document.getElementById('al-search-btn');
+                        if (si && !si.dataset.bound) {
+                            si.addEventListener('input', debounce(applyFilters, 200));
+                            si.dataset.bound = '1';
+                        }
+                        if (sb && !sb.dataset.bound) {
+                            sb.addEventListener('click', applyFilters);
+                            sb.dataset.bound = '1';
+                        }
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="7" class="placeholder">Unable to load accounts.</td></tr>';
+                    }
+                })
+                .catch(function(){
+                    tbody.innerHTML = '<tr><td colspan="7" class="placeholder">Unable to load accounts.</td></tr>';
+                });
+        }
+
+        var resetAllBtn = document.getElementById('al-reset-all-btn');
+        if (resetAllBtn && !resetAllBtn.dataset.bound) {
+            resetAllBtn.addEventListener('click', function(){
+                var si = document.getElementById('al-search-input'); if (si) si.value = '';
+                renderRows(allRows);
+            });
+            resetAllBtn.dataset.bound = '1';
+        }
+
+        if (tbody && !root.dataset.modalInit) {
+            tbody.addEventListener('click', function(e){
+                var tr = e.target.closest && e.target.closest('tr');
+                if (!tr || !tbody.contains(tr)) return;
+                var id = tr.dataset.id;
+                if (!id) return;
+                var row = allRows.find(function(r){ return String(r.id_number || r.id || r.no || '') === id; });
+                if (!row) return;
+                if (window.showAccessLevelModal) {
+                    var uname = row.username || ((row.firstname||'') + ' ' + (row.lastname||'')).trim() || 'Unknown';
+                    var al = (row.access_level === null || row.access_level === undefined || String(row.access_level).trim() === '') ? '0' : row.access_level;
+                    var activePerms = parsePermissions(row.active_permissions);
+                    window.showAccessLevelModal({
+                        id_number: row.id_number || row.id || row.no || '',
+                        username: uname,
+                        access_level: al,
+                        active_permissions: activePerms,
+                        permissions: activePerms,
+                        active_permission: activePerms.length ? activePerms.join(', ') : '-'
+                    });
+                }
+            });
+            root.dataset.modalInit = '1';
+        }
+
+        window.refreshAccessLevelManagement = function(){ loadAccounts(); };
+        loadAccounts();
+    };
+
+    window.initAccessLevelManagement();
 </script>
+<?php endif; ?>
 PHP;
 }
 
@@ -717,48 +760,15 @@ function pbac_accesslevel_css_template(): string
 CSS;
 }
 
-function pbac_no_access_level_display_template(): string
-{
-        return <<<'PHP'
-<?php /* No access level display component */ ?>
-<?php
-$scriptName = (string) ($_SERVER['SCRIPT_NAME'] ?? '');
-$appBaseUrl = preg_replace('#/src/.*$#', '', $scriptName);
-$appBaseUrl = rtrim((string) $appBaseUrl, '/');
-?>
-<link rel="stylesheet" href="<?= htmlspecialchars(($appBaseUrl !== '' ? $appBaseUrl : '') . '/src/pages/maintenance/no-access/no-access-level-display.css', ENT_QUOTES, 'UTF-8'); ?>" data-component-css>
-
-<section class="no-access-card" id="no-access-card-root">
-    <div class="card" role="status" aria-live="polite">
-        <span class="material-icons icon" aria-hidden="true">lock</span>
-        <h3>You do not have any Access Level present</h3>
-        <p>Contact your administrator to request access.</p>
-    </div>
-</section>
-PHP;
-}
-
-function pbac_no_access_level_display_css_template(): string
-{
-        return <<<'CSS'
-.no-access-card { display:flex; justify-content:center; padding:28px; }
-.no-access-card .card { background:#ffffff; border-radius:10px; box-shadow:0 6px 18px rgba(18,38,63,0.08); padding:28px; max-width:820px; width:100%; border:1px solid #eef2f6; text-align:center; }
-.no-access-card .card .icon { font-size:36px; color:#e04b4b; display:block; margin-bottom:8px; }
-.no-access-card .card h3 { margin:0 0 8px; font-size:20px; color:#203040; }
-.no-access-card .card p { margin:0; color:#546075; }
-CSS;
-}
-
 function pbac_accesslevel_modal_template(): string
 {
         return <<<'PHP'
-<?php /* Access Level Modal: sample-parity implementation */ ?>
 <?php
 $appBaseUrl = isset($appBaseUrl) ? rtrim((string) $appBaseUrl, '/') : '';
 if ($appBaseUrl === '') {
-        $scriptName = (string) ($_SERVER['SCRIPT_NAME'] ?? '');
-        $appBaseUrl = preg_replace('#/src/.*$#', '', $scriptName);
-        $appBaseUrl = rtrim((string) $appBaseUrl, '/');
+    $scriptName = (string) ($_SERVER['SCRIPT_NAME'] ?? '');
+    $appBaseUrl = preg_replace('#/src/.*$#', '', $scriptName);
+    $appBaseUrl = rtrim((string) $appBaseUrl, '/');
 }
 ?>
 <link rel="stylesheet" href="<?= htmlspecialchars(($appBaseUrl !== '' ? $appBaseUrl : '') . '/src/modals/accesslevel-modal/accesslevel-modal.css', ENT_QUOTES, 'UTF-8'); ?>" data-component-css>
@@ -773,8 +783,8 @@ if ($appBaseUrl === '') {
                 <div class="alm-preview-top">
                     <img src="<?= htmlspecialchars(($appBaseUrl !== '' ? $appBaseUrl : '') . '/src/assets/images/logo1.png', ENT_QUOTES, 'UTF-8'); ?>" class="alm-preview-logo" alt="Logo">
                     <div class="alm-preview-brand">
-                        <div class="alm-preview-label">General Ledger Extraction</div>
-                        <div class="alm-preview-sub">GLE SYSTEM</div>
+                        <div class="alm-preview-label">Permission Based Access</div>
+                        <div class="alm-preview-sub">PBAC SYSTEM</div>
                     </div>
                 </div>
 
@@ -826,11 +836,11 @@ if ($appBaseUrl === '') {
                                 </div>
                             </div>
                         </div>
-
                     </form>
                 </div>
             </section>
         </div>
+
         <div class="alm-footer">
             <div class="alm-footer-inner">
                 <button class="btn btn-primary" id="alm-save">Save</button>
@@ -843,502 +853,348 @@ if ($appBaseUrl === '') {
 <?php require __DIR__ . '/accesslevel-update-success-modal.php'; ?>
 
 <script>
+(function(){
+    var modal = document.getElementById('accesslevel-modal');
+    if (!modal) return;
+
+    var almBase = '<?= htmlspecialchars(($appBaseUrl !== '' ? $appBaseUrl : ''), ENT_QUOTES, 'UTF-8'); ?>';
+
+    function normalizeUserPerms(input){
+        if (!input) return [];
+        if (Array.isArray(input)) return input.map(function(x){ return String(x).trim(); }).filter(Boolean);
+        var s = String(input).trim();
+        if (!s) return [];
+        if (s.charAt(0) === '[' || s.charAt(0) === '{') {
+            try {
+                var dec = JSON.parse(s);
+                if (Array.isArray(dec)) return dec.map(function(x){ return String(x).trim(); }).filter(Boolean);
+            } catch (e) {}
+        }
+        return s.split(/[;,|]/).map(function(x){ return String(x).trim(); }).filter(Boolean);
+    }
+
+    window.showAccessLevelModal = function(opts){
+        opts = opts || {};
+        modal.classList.remove('hidden');
+        modal.dataset.idNumber = opts.id_number || opts.id || opts.idNumber || '';
+        var mapReady = window.almLoadAccessMap ? window.almLoadAccessMap() : Promise.resolve();
+        var username = opts.username || opts.user || 'Unknown';
+        var usernameEl = document.getElementById('alm-username');
+        if (usernameEl) usernameEl.textContent = username;
+
+        mapReady.then(function(){
+            var userPerms = normalizeUserPerms(opts.permissions || opts.active_permissions || []);
+            if (window.almMapSetSelectedPerms) window.almMapSetSelectedPerms(userPerms);
+
+            var accessEl = document.getElementById('alm-access-level');
+            if (accessEl) {
+                var al = opts.access_level || '0';
+                accessEl.textContent = String(al);
+                accessEl.dataset.value = String(al);
+            }
+
+            var active = document.getElementById('alm-active-permission');
+            if (active) {
+                active.innerHTML = '';
+                if (!userPerms.length) {
+                    active.textContent = '-';
+                } else {
+                    userPerms.forEach(function(p){
+                        var chip = document.createElement('div');
+                        chip.className = 'alm-perm-card active-perm';
+                        chip.dataset.perm = p;
+                        chip.textContent = p;
+                        active.appendChild(chip);
+                    });
+                }
+            }
+        }).catch(function(){});
+    };
+
+    modal.querySelectorAll('[data-close]').forEach(function(el){
+        el.addEventListener('click', function(){ modal.classList.add('hidden'); });
+    });
+
+    var menu = modal.querySelector('.alm-preview-menu');
+    if (menu){
+        menu.addEventListener('click', function(e){
+            var toggle = e.target.closest && e.target.closest('.alm-menu-toggle');
+            if (toggle){
+                var item = toggle.parentElement;
+                var expanded = item.classList.contains('expanded');
+                if (expanded){ item.classList.remove('expanded'); toggle.setAttribute('aria-expanded','false'); }
+                else { item.classList.add('expanded'); toggle.setAttribute('aria-expanded','true'); }
+            }
+        });
+    }
+
+    var save = document.getElementById('alm-save');
+    if (save){
+        save.addEventListener('click', function(){
+            var username = (document.getElementById('alm-username') || {textContent:'User'}).textContent;
+            var alEl = document.getElementById('alm-access-level');
+            var access = (alEl && alEl.dataset && alEl.dataset.value) ? alEl.dataset.value : (alEl ? alEl.textContent : '0');
+            var perms = Array.from(document.querySelectorAll('#alm-map .alm-map-sub.selected')).map(function(i){ return i.dataset.perm; }).filter(Boolean);
+            perms = perms.filter(function(v, idx, arr){ return arr.indexOf(v) === idx; });
+            var idNumber = modal.dataset.idNumber || '';
+            if (!idNumber){
+                modal.classList.add('hidden');
+                return;
+            }
+
+            fetch(almBase + '/public/api/accesslevel-update.php', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_number: idNumber, access_level: access, permissions: perms })
+            }).then(function(r){ return r.json(); })
+            .then(function(json){
+                if (json && json.success){
+                    if (window.refreshAccessLevelManagement) {
+                        try { window.refreshAccessLevelManagement(); } catch (e) {}
+                    }
+                    var successModal = document.getElementById('alm-success-modal');
+                    if (successModal){
+                        modal.classList.add('hidden');
+                        var nameEl = document.getElementById('alm-success-username');
+                        if (nameEl) nameEl.textContent = username;
+                        successModal.classList.remove('hidden');
+                        function closeSuccess(){
+                            successModal.classList.add('hidden');
+                        }
+                        successModal.querySelectorAll('[data-close-success]').forEach(function(el){ el.addEventListener('click', closeSuccess, { once: true }); });
+                    } else {
+                        modal.classList.add('hidden');
+                    }
+                } else {
+                    alert('Failed to save access level.');
+                }
+            }).catch(function(){
+                alert('Save request failed.');
+            });
+        });
+    }
+
     (function(){
-        var modal = document.getElementById('accesslevel-modal');
-        if (!modal) return;
+        var mapRoot = document.getElementById('alm-map');
+        if (!mapRoot) return;
 
-        var almBase = '<?= htmlspecialchars(($appBaseUrl !== '' ? $appBaseUrl : ''), ENT_QUOTES, 'UTF-8'); ?>';
-
-        function normalizeUserPerms(input){
-            if (!input) return [];
-            if (Array.isArray(input)) return input.map(function(x){ return String(x).trim(); }).filter(Boolean);
-            var s = String(input).trim();
-            if (!s) return [];
-            if (s.charAt(0) === '[' || s.charAt(0) === '{') {
-                try {
-                    var dec = JSON.parse(s);
-                    if (Array.isArray(dec)) return dec.map(function(x){ return String(x).trim(); }).filter(Boolean);
-                } catch (e) {}
-            }
-            return s.split(/[;,|]/).map(function(x){ return String(x).trim(); }).filter(Boolean);
-        }
-
-        window.showAccessLevelModal = function(opts){
-            opts = opts || {};
-            modal.classList.remove('hidden');
-            modal.dataset.idNumber = opts.id_number || opts.id || opts.idNumber || '';
-            var mapReady = window.almLoadAccessMap ? window.almLoadAccessMap() : Promise.resolve();
-            var username = opts.username || opts.user || 'Unknown';
-            document.getElementById('alm-username').textContent = username;
-
-            mapReady.then(function(){
-                return fetch(almBase + '/public/api/accesslevel-fetch.php', { credentials: 'same-origin' });
-            })
-                .then(function(r){ return r.json(); })
-                .then(function(json){
-                    if (!json || !json.ok) return;
-
-                    var alDisplay = document.getElementById('alm-access-level');
-                    if (alDisplay){
-                        var userAl = opts.access_level || '';
-                        if (!userAl) userAl = '0';
-                        alDisplay.textContent = userAl;
-                        alDisplay.dataset.value = userAl;
-                    }
-
-                    var permsWrap = document.getElementById('alm-selected-perms');
-                    if (permsWrap){
-                        var cards = document.getElementById('alm-selected-perms-cards');
-                        if (!cards){
-                            cards = document.createElement('div');
-                            cards.id = 'alm-selected-perms-cards';
-                            cards.className = 'alm-perm-cards';
-                            permsWrap.innerHTML = '';
-                            permsWrap.appendChild(cards);
-                        }
-                        cards.innerHTML = '';
-
-                        var userPerms = opts.permissions || opts.active_permissions || null;
-                        if (userPerms) {
-                            userPerms = normalizeUserPerms(userPerms);
-                            if (window.almMapSetSelectedPerms) window.almMapSetSelectedPerms(userPerms);
-                        }
-                    }
-
-                    var ap = normalizeUserPerms(opts.active_permissions || opts.permissions || opts.active_permission || '');
-                    (function renderActivePerms(list){
-                        var out = document.getElementById('alm-active-permission');
-                        if (!out) return;
-                        out.innerHTML = '';
-                        if (!list || list.length === 0){ out.textContent = '-'; return; }
-                        list.forEach(function(p){
-                            var c = document.createElement('div');
-                            c.className = 'alm-perm-card active-perm';
-                            c.dataset.perm = p;
-                            c.style.backgroundColor = '#16a34a';
-                            c.style.color = 'var(--surface)';
-                            c.style.borderColor = '#15803d';
-                            c.style.boxShadow = '0 6px 18px rgba(16,185,129,0.12)';
-                            c.style.display = 'inline-flex';
-                            c.style.alignItems = 'center';
-                            c.style.gap = '8px';
-                            c.style.padding = '6px 10px';
-                            c.style.borderRadius = '14px';
-                            var t = document.createElement('span');
-                            t.className = 'alm-perm-text';
-                            t.textContent = p;
-                            c.appendChild(t);
-                            out.appendChild(c);
-                        });
-                    })(ap);
-                })
-                .catch(function(){});
-        };
-
-        modal.querySelectorAll('[data-close]').forEach(function(el){ el.addEventListener('click', function(){ modal.classList.add('hidden'); }); });
-
-        var menu = modal.querySelector('.alm-preview-menu');
-        if (menu){
-            menu.addEventListener('click', function(e){
-                var toggle = e.target.closest && e.target.closest('.alm-menu-toggle');
-                if (toggle){
-                    var item = toggle.parentElement;
-                    var expanded = item.classList.contains('expanded');
-                    if (expanded){ item.classList.remove('expanded'); toggle.setAttribute('aria-expanded','false'); }
-                    else { item.classList.add('expanded'); toggle.setAttribute('aria-expanded','true'); }
-                }
-
-                var sub = e.target.closest && e.target.closest('.alm-sub-item');
-                if (sub){
-                    modal.querySelectorAll('.alm-sub-item').forEach(function(s){ s.classList.remove('active'); });
-                    sub.classList.add('active');
-                }
-            });
-        }
-
-        var save = document.getElementById('alm-save');
-        if (save){
-            save.addEventListener('click', function(){
-                var username = document.getElementById('alm-username').textContent;
-                var alEl = document.getElementById('alm-access-level');
-                var access = (alEl && alEl.dataset && alEl.dataset.value) ? alEl.dataset.value : (alEl ? alEl.textContent : '0');
-                var perms = Array.from(document.querySelectorAll('#alm-map .alm-map-sub.selected')).map(function(i){ return i.dataset.perm; });
-                perms = perms.filter(function(v, idx, arr){ return !!v && arr.indexOf(v) === idx; });
-                var idNumber = modal.dataset.idNumber || '';
-                if (!idNumber){
-                    modal.classList.add('hidden');
-                    return;
-                }
-
-                fetch(almBase + '/public/api/accesslevel-update.php', {
-                    method: 'POST',
-                    credentials: 'same-origin',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id_number: idNumber, access_level: access, permissions: perms })
-                }).then(function(r){ return r.json(); })
-                .then(function(json){
-                    if (json && json.success){
-                        if (window.refreshAccessLevelManagement) try{ window.refreshAccessLevelManagement(); }catch(e){}
-                        var successModal = document.getElementById('alm-success-modal');
-                        if (successModal){
-                            modal.classList.add('hidden');
-                            var nameEl = document.getElementById('alm-success-username');
-                            if (nameEl) nameEl.textContent = username;
-                            successModal.classList.remove('hidden');
-                            function closeSuccess(){
-                                successModal.classList.add('hidden');
-                                var ok = document.getElementById('alm-success-ok');
-                                if (ok) ok.removeEventListener('click', closeSuccess);
-                                successModal.querySelectorAll('[data-close-success]').forEach(function(el){ el.removeEventListener('click', closeSuccess); });
-                            }
-                            var okBtn = document.getElementById('alm-success-ok');
-                            if (okBtn) okBtn.addEventListener('click', closeSuccess);
-                            successModal.querySelectorAll('[data-close-success]').forEach(function(el){ el.addEventListener('click', closeSuccess); });
-                        } else {
-                            modal.classList.add('hidden');
-                        }
-                    } else {
-                        alert('Failed to save: ' + (json && json.error ? json.error : 'server error'));
-                    }
-                }).catch(function(){
-                    alert('Save request failed');
-                });
-            });
-        }
-
-        (function(){
-            var mapRoot = document.getElementById('alm-map');
-            if (!mapRoot) return;
-
-            function slugify(input){
-                return String(input || '')
-                    .toLowerCase()
-                    .replace(/[^a-z0-9]+/g, '-')
-                    .replace(/^-+|-+$/g, '') || 'item';
-            }
-
-            function normalizeMapData(permissionCatalog){
-                if (!Array.isArray(permissionCatalog) || permissionCatalog.length === 0) return [];
-                return permissionCatalog.map(function(menu, index){
-                    var menuKey = String(menu.key || menu.label || ('Menu ' + (index + 1)));
-                    var menuLabel = String(menu.label || menu.key || ('Menu ' + (index + 1)));
-                    var menuId = slugify(menuKey);
-                    var subs = Array.isArray(menu.children) ? menu.children : [];
-                    return {
-                        id: menuId,
-                        key: menuKey,
-                        label: menuLabel,
-                        icon: menu.icon || 'folder',
-                        subs: subs.map(function(sub, subIndex){
-                            var subKey = String(sub.key || sub.label || (menuLabel + ' Item ' + (subIndex + 1)));
-                            var subLabel = String(sub.label || sub.key || subKey);
-                            var subId = slugify(subKey);
-                            return {
-                                id: subId,
-                                key: subKey,
-                                label: subLabel,
-                                perm: subKey,
-                                target: sub.target || ''
-                            };
-                        })
-                    };
-                }).filter(function(menu){ return Array.isArray(menu.subs) && menu.subs.length > 0; });
-            }
-
-            var mapData = [];
-
-            function renderPreviewMenu(){
-                var list = document.getElementById('alm-preview-menu-list');
-                if (!list) return;
-                list.innerHTML = '';
-                mapData.forEach(function(menu){
-                    var li = document.createElement('li');
-                    li.className = 'alm-menu-item has-submenu';
-                    li.dataset.menu = menu.id;
-
-                    var btn = document.createElement('button');
-                    btn.className = 'alm-menu-toggle';
-                    btn.setAttribute('aria-expanded', 'false');
-                    btn.type = 'button';
-
-                    var icon = document.createElement('span');
-                    icon.className = 'material-icons';
-                    icon.textContent = menu.icon || 'folder';
-                    var label = document.createElement('span');
-                    label.className = 'label';
-                    label.textContent = menu.label;
-                    var chev = document.createElement('span');
-                    chev.className = 'chev material-icons';
-                    chev.textContent = 'expand_more';
-
-                    btn.appendChild(icon);
-                    btn.appendChild(label);
-                    btn.appendChild(chev);
-                    li.appendChild(btn);
-
-                    var subUl = document.createElement('ul');
-                    subUl.className = 'alm-submenu';
-                    menu.subs.forEach(function(sub){
-                        var subLi = document.createElement('li');
-                        subLi.className = 'alm-sub-item';
-                        subLi.dataset.preview = sub.id;
-                        subLi.dataset.menu = menu.id;
-                        var dot = document.createElement('span'); dot.className = 'dot';
-                        var subLabel = document.createElement('span'); subLabel.className = 'alm-sub-label'; subLabel.textContent = sub.label;
-                        subLi.appendChild(dot);
-                        subLi.appendChild(subLabel);
-                        subUl.appendChild(subLi);
-                    });
-
-                    li.appendChild(subUl);
-                    list.appendChild(li);
-                });
-            }
-
-            function loadAccessMap(){
-                var candidates = [
-                    almBase + '/src/assets/js/accesslevel-map.json',
-                    '/src/assets/js/accesslevel-map.json',
-                    'src/assets/js/accesslevel-map.json'
-                ];
-
-                var tryFetch = function(paths){
-                    if (!paths || paths.length === 0) return Promise.reject(new Error('no-path'));
-                    var p = paths.shift();
-                    return fetch(p + '?ts=' + Date.now(), { credentials: 'same-origin' })
-                        .then(function(r){ if (!r.ok) throw new Error('not-found:' + p); return r.json(); })
-                        .then(function(json){ return { json: json, path: p }; })
-                        .catch(function(){ return tryFetch(paths); });
+        function normalizeMapData(permissionCatalog){
+            if (!Array.isArray(permissionCatalog) || permissionCatalog.length === 0) return [];
+            return permissionCatalog.map(function(menu){
+                var menuKey = String(menu.key || menu.label || 'Menu');
+                var menuLabel = String(menu.label || menu.key || 'Menu');
+                var menuId = menuKey.replace(/[^a-z0-9]+/gi,'-').toLowerCase();
+                var subs = Array.isArray(menu.children) ? menu.children : [];
+                return {
+                    id: menuId,
+                    key: menuKey,
+                    label: menuLabel,
+                    icon: menu.icon || 'folder',
+                    subs: subs.map(function(sub){
+                        var subKey = String(sub.key || sub.label || 'Sub');
+                        var subLabel = String(sub.label || sub.key || subKey);
+                        var subId = subKey.replace(/[^a-z0-9]+/gi,'-').toLowerCase();
+                        return { id: subId, key: subKey, label: subLabel, perm: subKey, target: sub.target || '' };
+                    })
                 };
+            }).filter(function(menu){ return Array.isArray(menu.subs) && menu.subs.length > 0; });
+        }
 
-                return tryFetch(candidates.slice()).then(function(result){
-                    var json = result.json;
-                    window._almAccessMapJson = json || null;
-                    var normalized = normalizeMapData(json && json.permission_catalog ? json.permission_catalog : []);
-                    mapData = normalized.length ? normalized : [];
-                    renderPreviewMenu();
-                    renderMap();
-                    updatePreviewAndCode();
-                    return mapData;
-                }).catch(function(){
-                    window._almAccessMapJson = null;
-                    mapData = [];
-                    renderPreviewMenu();
-                    renderMap();
-                    var empty = document.querySelector('#alm-map .alm-map-empty');
-                    if (empty) empty.textContent = 'Access map not found - run tools/generate_access_map.php to create src/assets/js/accesslevel-map.json';
-                    updatePreviewAndCode();
-                    return mapData;
+        var mapData = [];
+
+        function renderPreviewMenu(){
+            var list = document.getElementById('alm-preview-menu-list');
+            if (!list) return;
+            list.innerHTML = '';
+            mapData.forEach(function(menu){
+                var li = document.createElement('li');
+                li.className = 'alm-menu-item has-submenu';
+                li.dataset.menu = menu.id;
+
+                var btn = document.createElement('button');
+                btn.className = 'alm-menu-toggle';
+                btn.setAttribute('aria-expanded', 'false');
+                btn.type = 'button';
+                btn.innerHTML = '<span class="material-icons">' + (menu.icon || 'folder') + '</span><span class="label">' + menu.label + '</span><span class="chev material-icons">expand_more</span>';
+                li.appendChild(btn);
+
+                var subUl = document.createElement('ul');
+                subUl.className = 'alm-submenu';
+                menu.subs.forEach(function(sub){
+                    var subLi = document.createElement('li');
+                    subLi.className = 'alm-sub-item';
+                    subLi.dataset.preview = sub.id;
+                    subLi.dataset.menu = menu.id;
+                    subLi.innerHTML = '<span class="dot"></span><span class="alm-sub-label">' + sub.label + '</span>';
+                    subUl.appendChild(subLi);
                 });
-            }
+                li.appendChild(subUl);
+                list.appendChild(li);
+            });
+        }
 
-            window.almLoadAccessMap = loadAccessMap;
+        function loadAccessMap(){
+            var candidates = [
+                almBase + '/src/assets/js/accesslevel-map.json',
+                '/src/assets/js/accesslevel-map.json',
+                'src/assets/js/accesslevel-map.json'
+            ];
 
-            function renderMap(){
-                var contentRoot = mapRoot.querySelector('#alm-map-content') || mapRoot;
-                contentRoot.innerHTML = '';
-                mapData.forEach(function(menu){
-                    var m = document.createElement('div'); m.className = 'alm-map-menu'; m.dataset.menu = menu.id;
-
-                    var mh = document.createElement('div'); mh.className = 'alm-map-menu-head';
-                    var iconSpan = document.createElement('span'); iconSpan.className = 'alm-map-icon material-icons'; iconSpan.textContent = menu.icon || 'folder';
-                    var labelSpan = document.createElement('span'); labelSpan.className = 'alm-map-menu-label'; labelSpan.textContent = menu.label;
-                    mh.appendChild(iconSpan);
-                    mh.appendChild(labelSpan);
-                    mh.addEventListener('click', function(){ m.classList.toggle('expanded'); });
-                    m.appendChild(mh);
-
-                    var list = document.createElement('div'); list.className = 'alm-map-sublist';
-                    menu.subs.forEach(function(s){
-                        var it = document.createElement('div'); it.className = 'alm-map-sub'; it.dataset.sub = s.id; it.dataset.menu = menu.id; it.dataset.perm = s.perm; it.dataset.permlabel = s.label;
-                        var subIcon = document.createElement('span'); subIcon.className = 'alm-sub-icon material-icons'; subIcon.textContent = 'subdirectory_arrow_right';
-                        var subLabel = document.createElement('span'); subLabel.className = 'alm-map-sub-label'; subLabel.textContent = s.label;
-                        it.appendChild(subIcon);
-                        it.appendChild(subLabel);
-                        it.addEventListener('click', function(e){
-                            e.stopPropagation();
-                            it.classList.toggle('selected');
-                            syncMenuSelection(menu.id);
-                            applySubToPermissions(s.id, s.perm, it.classList.contains('selected'), s.label);
-                            updatePreviewAndCode();
-                        });
-                        list.appendChild(it);
-                    });
-                    m.appendChild(list);
-                    contentRoot.appendChild(m);
-                });
-
-                var selectAll = document.getElementById('alm-map-select-all');
-                if (selectAll){
-                    selectAll.removeEventListener('change', window._almSelectAllHandler || function(){});
-                    window._almSelectAllHandler = function(e){
-                        var checked = !!e.target.checked;
-                        var allSubs = mapRoot.querySelectorAll('.alm-map-sub');
-                        allSubs.forEach(function(el){ if (checked) el.classList.add('selected'); else el.classList.remove('selected'); });
-                        mapData.forEach(function(menu){ syncMenuSelection(menu.id); });
-                        var cards = document.getElementById('alm-selected-perms-cards'); if (cards) cards.innerHTML = '';
-                        if (checked){
-                            var permSet = {};
-                            mapRoot.querySelectorAll('.alm-map-sub.selected').forEach(function(s){ var p = s.dataset.perm; if (p && !permSet[p]){ permSet[p] = true; createPermCard(p, s.dataset.permlabel || p); } });
-                        }
-                        updatePreviewAndCode();
-                    };
-                    selectAll.addEventListener('change', window._almSelectAllHandler);
-                }
-            }
-
-            function updateSelectAllCheckbox(){
-                var checkbox = document.getElementById('alm-map-select-all'); if (!checkbox) return;
-                var subs = mapRoot.querySelectorAll('.alm-map-sub');
-                if (!subs || subs.length === 0){ checkbox.checked = false; checkbox.indeterminate = false; return; }
-                var selected = mapRoot.querySelectorAll('.alm-map-sub.selected').length;
-                if (selected === 0){ checkbox.checked = false; checkbox.indeterminate = false; }
-                else if (selected === subs.length){ checkbox.checked = true; checkbox.indeterminate = false; }
-                else { checkbox.checked = false; checkbox.indeterminate = true; }
-            }
-
-            function syncMenuSelection(menuId){
-                var menuEl = mapRoot.querySelector('.alm-map-menu[data-menu="' + menuId + '"]');
-                if (!menuEl) return;
-                var any = menuEl.querySelectorAll('.alm-map-sub.selected').length > 0;
-                if (any) menuEl.classList.add('selected'); else menuEl.classList.remove('selected');
-            }
-
-            function applySubToPermissions(subId, permId, checked, permLabel){
-                if (checked){ createPermCard(permId, permLabel || permId); }
-                else {
-                    var stillSelectedForCard = document.querySelectorAll('#alm-map .alm-map-sub.selected[data-perm="' + permId + '"]').length > 0;
-                    if (!stillSelectedForCard) removePermCard(permId);
-                }
-            }
-
-            function createPermCard(permId, label){
-                var cards = document.getElementById('alm-selected-perms-cards');
-                if (!cards) return;
-                if (cards.querySelector('.alm-perm-card[data-perm="' + permId + '"]')) return;
-                var c = document.createElement('div'); c.className = 'alm-perm-card'; c.dataset.perm = permId;
-                var t = document.createElement('span'); t.className = 'alm-perm-text'; t.textContent = label || permId;
-                var rm = document.createElement('button'); rm.className = 'alm-perm-remove'; rm.type = 'button'; rm.setAttribute('aria-label', 'Remove ' + label);
-                rm.innerHTML = '&times;';
-                rm.addEventListener('click', function(){
-                    document.querySelectorAll('#alm-map .alm-map-sub[data-perm="' + permId + '"]').forEach(function(el){
-                        el.classList.remove('selected');
-                        syncMenuSelection(el.dataset.menu);
-                    });
-                    removePermCard(permId);
-                    updatePreviewAndCode();
-                });
-                c.appendChild(t); c.appendChild(rm); cards.appendChild(c);
-            }
-
-            function removePermCard(permId){
-                var cards = document.getElementById('alm-selected-perms-cards'); if (!cards) return;
-                var ex = cards.querySelector('.alm-perm-card[data-perm="' + permId + '"]'); if (ex) ex.remove();
-            }
-
-            function updatePreviewAndCode(){
-                var preview = modal.querySelector('.alm-preview-menu');
-                if (preview){
-                    var selected = mapRoot.querySelectorAll('.alm-map-sub.selected');
-                    mapData.forEach(function(menu){
-                        var m = preview.querySelector('.alm-menu-item[data-menu="' + menu.id + '"]');
-                        if (!m) return;
-                        var subs = m.querySelectorAll('.alm-sub-item');
-                        subs.forEach(function(s){ s.style.display = 'none'; s.classList.remove('active'); });
-                        selected.forEach(function(ss){
-                            var sid = ss.dataset.sub;
-                            var p = m.querySelector('.alm-sub-item[data-preview="' + sid + '"]') || m.querySelector('.alm-sub-item[data-target="' + sid + '"]');
-                            if (p) { p.style.display = 'flex'; p.classList.add('active'); }
-                        });
-                        if (!Array.from(selected).some(function(s){ return s.dataset.menu === menu.id; })){
-                            m.style.display = 'none';
-                        } else {
-                            m.style.display = '';
-                        }
-                    });
-                }
-
-                var selectedPermEls = mapRoot.querySelectorAll('.alm-map-sub.selected');
-                var perms = Array.from(selectedPermEls).map(function(el){ return String(el.dataset.perm || '').trim(); }).filter(Boolean);
-
-                if (!perms || perms.length === 0){
-                    var alDisplayEmpty = document.getElementById('alm-access-level');
-                    if (alDisplayEmpty){ alDisplayEmpty.textContent = '0'; alDisplayEmpty.dataset.value = '0'; }
-                    return;
-                }
-
-                function arraysEqualAsSets(a, b){
-                    if (!Array.isArray(a) || !Array.isArray(b)) return false;
-                    if (a.length !== b.length) return false;
-                    var sa = a.slice().map(String).sort();
-                    var sb = b.slice().map(String).sort();
-                    for (var i = 0; i < sa.length; i++){ if (sa[i] !== sb[i]) return false; }
-                    return true;
-                }
-
-                var code = 0;
-                if (window._almAccessMapJson && Array.isArray(window._almAccessMapJson.access_levels)){
-                    var matches = [];
-                    window._almAccessMapJson.access_levels.forEach(function(entry){
-                        var entryPerms = Array.isArray(entry.permissions) ? entry.permissions.map(function(p){ return String(p).trim(); }) : [];
-                        if (arraysEqualAsSets(perms, entryPerms)) matches.push(entry.access_level);
-                    });
-                    if (matches.length > 0){
-                        matches.sort(function(a, b){ if (a === -1) return -1; if (b === -1) return 1; return a - b; });
-                        code = matches[0];
-                    } else {
-                        var supers = [];
-                        window._almAccessMapJson.access_levels.forEach(function(entry){
-                            var entryPerms = Array.isArray(entry.permissions) ? entry.permissions.map(function(p){ return String(p).trim(); }) : [];
-                            var allPresent = perms.every(function(p){ return entryPerms.indexOf(p) !== -1; });
-                            if (allPresent) supers.push({ level: entry.access_level, count: entryPerms.length });
-                        });
-                        if (supers.length > 0){
-                            var full = supers.find(function(s){ return s.level === -1; });
-                            if (full) {
-                                code = -1;
-                            } else {
-                                supers.sort(function(a, b){
-                                    if (a.count !== b.count) return a.count - b.count;
-                                    return a.level - b.level;
-                                });
-                                code = supers[0].level;
-                            }
-                        } else {
-                            code = 0;
-                        }
-                    }
-                }
-
-                var alDisplay = document.getElementById('alm-access-level');
-                if (alDisplay){ alDisplay.textContent = String(code); alDisplay.dataset.value = String(code); }
-                try{ updateSelectAllCheckbox(); }catch(e){}
-            }
-
-            loadAccessMap();
-            window.almMapSetSelectedPerms = function(userPerms){
-                if (!userPerms) return;
-                userPerms = normalizeUserPerms(userPerms);
-                mapRoot.querySelectorAll('.alm-map-sub.selected').forEach(function(el){ el.classList.remove('selected'); });
-                var cards = document.getElementById('alm-selected-perms-cards');
-                if (cards) cards.innerHTML = '';
-                mapData.forEach(function(menu){
-                    menu.subs.forEach(function(s){
-                        if (userPerms.indexOf(s.perm) !== -1){
-                            var el = mapRoot.querySelector('.alm-map-sub[data-sub="' + s.id + '"]');
-                            if (el) el.classList.add('selected');
-                        }
-                    });
-                });
-                mapData.forEach(function(menu){ syncMenuSelection(menu.id); });
-                (userPerms || []).forEach(function(p){ createPermCard(p, p); });
-                updatePreviewAndCode();
+            var tryFetch = function(paths){
+                if (!paths || paths.length === 0) return Promise.reject(new Error('no-path'));
+                var p = paths.shift();
+                return fetch(p + '?ts=' + Date.now(), { credentials: 'same-origin' })
+                    .then(function(r){ if (!r.ok) throw new Error('not-found:'+p); return r.json(); })
+                    .then(function(json){ return { json: json, path: p }; })
+                    .catch(function(){ return tryFetch(paths); });
             };
 
-            mapRoot.addEventListener('click', function(){ updatePreviewAndCode(); });
-        })();
+            return tryFetch(candidates.slice()).then(function(result){
+                var json = result.json;
+                window._almAccessMapJson = json || null;
+                mapData = normalizeMapData(json && json.permission_catalog ? json.permission_catalog : []);
+                renderPreviewMenu();
+                renderMap();
+                updatePreviewAndCode();
+                return mapData;
+            }).catch(function(){
+                mapData = [];
+                renderPreviewMenu();
+                renderMap();
+                var empty = document.querySelector('#alm-map .alm-map-empty');
+                if (empty) empty.textContent = 'Access map not found - run ml gen or php tools/generate_access_map.php';
+                return mapData;
+            });
+        }
 
+        window.almLoadAccessMap = loadAccessMap;
+
+        function renderMap(){
+            var contentRoot = mapRoot.querySelector('#alm-map-content') || mapRoot;
+            contentRoot.innerHTML = '';
+            mapData.forEach(function(menu){
+                var m = document.createElement('div'); m.className = 'alm-map-menu'; m.dataset.menu = menu.id;
+                var mh = document.createElement('div'); mh.className = 'alm-map-menu-head';
+                mh.innerHTML = '<span class="alm-map-icon material-icons">' + (menu.icon || 'folder') + '</span><span class="alm-map-menu-label">' + menu.label + '</span>';
+                mh.addEventListener('click', function(){ m.classList.toggle('expanded'); });
+                m.appendChild(mh);
+
+                var list = document.createElement('div'); list.className = 'alm-map-sublist';
+                menu.subs.forEach(function(s){
+                    var it = document.createElement('div');
+                    it.className = 'alm-map-sub';
+                    it.dataset.sub = s.id;
+                    it.dataset.menu = menu.id;
+                    it.dataset.perm = s.perm;
+                    it.dataset.permlabel = s.label;
+                    it.innerHTML = '<span class="alm-sub-icon material-icons">subdirectory_arrow_right</span><span class="alm-map-sub-label">' + s.label + '</span>';
+                    it.addEventListener('click', function(e){
+                        e.stopPropagation();
+                        it.classList.toggle('selected');
+                        syncMenuSelection(menu.id);
+                        applySubToPermissions(s.id, s.perm, it.classList.contains('selected'), s.label);
+                        updatePreviewAndCode();
+                    });
+                    list.appendChild(it);
+                });
+
+                m.appendChild(list);
+                contentRoot.appendChild(m);
+            });
+        }
+
+        function syncMenuSelection(menuId){
+            var menuEl = mapRoot.querySelector('.alm-map-menu[data-menu="'+menuId+'"]');
+            if (!menuEl) return;
+            var any = menuEl.querySelectorAll('.alm-map-sub.selected').length > 0;
+            if (any) menuEl.classList.add('selected');
+            else menuEl.classList.remove('selected');
+        }
+
+        function createPermCard(permId, label){
+            var cards = document.getElementById('alm-selected-perms-cards');
+            if (!cards) return;
+            if (cards.querySelector('.alm-perm-card[data-perm="'+permId+'"]')) return;
+            var c = document.createElement('div');
+            c.className = 'alm-perm-card';
+            c.dataset.perm = permId;
+            c.innerHTML = '<span class="alm-perm-text">' + (label || permId) + '</span>';
+            cards.appendChild(c);
+        }
+
+        function removePermCard(permId){
+            var cards = document.getElementById('alm-selected-perms-cards');
+            if (!cards) return;
+            var ex = cards.querySelector('.alm-perm-card[data-perm="'+permId+'"]');
+            if (ex) ex.remove();
+        }
+
+        function applySubToPermissions(subId, permId, checked, permLabel){
+            if (checked) createPermCard(permId, permLabel || permId);
+            else {
+                var stillSelectedForCard = document.querySelectorAll('#alm-map .alm-map-sub.selected[data-perm="'+permId+'"]').length > 0;
+                if (!stillSelectedForCard) removePermCard(permId);
+            }
+        }
+
+        function arraysEqualAsSets(a, b){
+            if (!Array.isArray(a) || !Array.isArray(b)) return false;
+            if (a.length !== b.length) return false;
+            var sa = a.slice().map(String).sort();
+            var sb = b.slice().map(String).sort();
+            for (var i = 0; i < sa.length; i++) if (sa[i] !== sb[i]) return false;
+            return true;
+        }
+
+        function updatePreviewAndCode(){
+            var selectedPermEls = mapRoot.querySelectorAll('.alm-map-sub.selected');
+            var perms = Array.from(selectedPermEls).map(function(el){ return String(el.dataset.perm || '').trim(); }).filter(Boolean);
+
+            if (!perms.length){
+                var alDisplayEmpty = document.getElementById('alm-access-level');
+                if (alDisplayEmpty){ alDisplayEmpty.textContent = '0'; alDisplayEmpty.dataset.value = '0'; }
+                return;
+            }
+
+            var code = 0;
+            if (window._almAccessMapJson && Array.isArray(window._almAccessMapJson.access_levels)){
+                var matches = [];
+                window._almAccessMapJson.access_levels.forEach(function(entry){
+                    var entryPerms = Array.isArray(entry.permissions) ? entry.permissions.map(function(p){ return String(p).trim(); }) : [];
+                    if (arraysEqualAsSets(perms, entryPerms)) matches.push(entry.access_level);
+                });
+                if (matches.length > 0){
+                    matches.sort(function(a,b){ if (a === -1) return -1; if (b === -1) return 1; return a - b; });
+                    code = matches[0];
+                }
+            }
+
+            var alDisplay = document.getElementById('alm-access-level');
+            if (alDisplay){ alDisplay.textContent = String(code); alDisplay.dataset.value = String(code); }
+        }
+
+        window.almMapSetSelectedPerms = function(userPerms){
+            if (!userPerms) return;
+            userPerms = normalizeUserPerms(userPerms);
+            mapRoot.querySelectorAll('.alm-map-sub.selected').forEach(function(el){ el.classList.remove('selected'); });
+            var cards = document.getElementById('alm-selected-perms-cards'); if (cards) cards.innerHTML = '';
+            mapData.forEach(function(menu){
+                menu.subs.forEach(function(s){
+                    if (userPerms.indexOf(s.perm) !== -1){
+                        var el = mapRoot.querySelector('.alm-map-sub[data-sub="'+s.id+'"]');
+                        if (el) el.classList.add('selected');
+                    }
+                });
+            });
+            mapData.forEach(function(menu){ syncMenuSelection(menu.id); });
+            userPerms.forEach(function(p){ createPermCard(p, p); });
+            updatePreviewAndCode();
+        };
+
+        loadAccessMap();
     })();
+})();
 </script>
 PHP;
 }
@@ -1353,10 +1209,8 @@ function pbac_accesslevel_modal_css_template(): string
 .alm-close{position:absolute;right:12px;top:8px;border:0;background:transparent;font-size:22px;cursor:pointer}
 .alm-inner{display:flex;height:100%;flex:1;overflow:auto}
 
-/* Ensure sizing doesn't cause horizontal overflow */
 .alm-dialog *, .alm-dialog *:before, .alm-dialog *:after { box-sizing: border-box; }
-.alm-preview-sidebar{width:64px; /* mimic collapsed sidebar */
-    border-right:1px solid:var(--stroke);padding:14px;background:var(--accent);color:var(--surface);overflow:hidden;transition:width .28s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column}
+.alm-preview-sidebar{width:64px;border-right:1px solid:var(--stroke);padding:14px;background:var(--accent);color:var(--surface);overflow:hidden;transition:width .28s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column}
 .alm-preview-sidebar:hover{width:220px}
 .alm-preview-top{display:flex;gap:12px;align-items:center;margin-bottom:10px}
 .alm-preview-logo{width:36px;height:auto;display:block;filter:brightness(0) invert(1)}
@@ -1380,7 +1234,6 @@ function pbac_accesslevel_modal_css_template(): string
 .alm-sub-label{font-size:13px;font-weight:500;opacity:0;transition:opacity .18s ease}
 .alm-preview-sidebar:hover .alm-sub-label{opacity:1}
 .alm-sub-item.active{background:rgba(255,255,255,0.12)}
-.alm-menu-item.expanded .chev{transform:none}
 .alm-preview-sidebar:hover .alm-menu-item.expanded .chev{transform:rotate(180deg)}
 
 .alm-editor{flex:1;padding:18px;overflow:auto;position:relative;padding-bottom:80px}
@@ -1391,91 +1244,44 @@ function pbac_accesslevel_modal_css_template(): string
 .alm-editor label{width:150px;font-weight:600;color:var(--muted);display:flex;align-items:center}
 .alm-editor .field-value{flex:1;padding:8px;border:1px solid:var(--stroke);border-radius:6px;background:var(--surface);display:flex;align-items:center;min-height:36px}
 .alm-editor .field-row.map-row .field-value{width:100%;margin-top:8px;padding:10px;box-sizing:border-box}
-.alm-editor select{padding:8px;border-radius:6px;border:1px solid #d1d5db}
-.perms-list{display:flex;flex-direction:column;gap:6px}
-.alm-actions-row{display:flex;gap:8px;margin-top:8px}
 
-/* Footer for modal */
 .alm-footer{flex:0 0 auto;border-top:1px solid var(--stroke);padding:12px 18px;background:transparent}
 .alm-footer-inner{display:flex;justify-content:flex-end;gap:8px}
 .alm-footer .btn{padding:8px 12px;border-radius:6px;border:1px solid var(--stroke);background:var(--surface);cursor:pointer}
 .alm-footer .btn.btn-primary{background:var(--accent);color:var(--surface);border-color:var(--accent)}
-.alm-actions-row .btn.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
-.map-note{color:var(--muted)}
 
-/* Access level map card */
 .alm-map-card{background:transparent;border-radius:6px;padding:6px;width:100%;display:block}
 .alm-map-menu{border-radius:6px;margin-bottom:8px;overflow:visible;background:transparent;width:100%;}
 .alm-map-menu.expanded .alm-map-sublist{max-height:400px}
 .alm-map-menu.selected{box-shadow:inset 0 0 0 2px rgba(0,0,0,0.02)}
-
-/* Menu header: show icon + label; border-only when inactive, filled when selected */
 .alm-map-menu-head{display:flex;align-items:center;gap:10px;padding:8px 10px;cursor:pointer;font-weight:600;color:var(--accent);background:transparent;border:1px solid var(--accent);border-radius:6px}
 .alm-map-icon{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;background:rgba(0,0,0,0.03);color:var(--accent);font-size:18px}
 .alm-map-menu-label{flex:1}
 .alm-map-menu.selected > .alm-map-menu-head{background:var(--accent);color:var(--surface);border-color:var(--accent-dark)}
-
 .alm-map-sublist{max-height:0;overflow:hidden;transition:max-height .18s ease;padding:6px 0}
 .alm-map-sub{display:flex;align-items:center;gap:8px;padding:8px 12px;margin:6px 0;border-radius:6px;background:transparent;color:var(--accent);cursor:pointer;border:0;border-left:4px solid var(--accent);width:calc(100% - 22px);margin-left:18px;transition:box-shadow .18s ease, background .12s ease, transform .12s ease}
 .alm-sub-icon{color:var(--muted);font-size:16px;width:18px;display:inline-flex;align-items:center;justify-content:center}
 .alm-map-sub-label{flex:1}
-.alm-map-sub{box-shadow:0 4px 14px rgba(16,24,40,0.03);} /* subtle dropdown shadow to indicate depth when unselected */
+.alm-map-sub{box-shadow:0 4px 14px rgba(16,24,40,0.03)}
 .alm-map-sub:hover{box-shadow:0 6px 18px rgba(16,24,40,0.06);transform:translateY(-1px);background:rgba(0,0,0,0.02)}
 .alm-map-sub.selected{background:var(--accent);color:var(--surface);font-weight:600;border-left-color:var(--accent-dark);box-shadow:0 8px 22px rgba(0,0,0,0.08)}
 
-/* submenu icon and label should be white when selected */
 .alm-map-sub.selected .alm-sub-icon,
 .alm-map-sub.selected .alm-map-sub-label,
-.alm-map-sub.selected .material-icons{
-    color: var(--surface) !important;
-}
-
-/* menu icon should be white when its menu is selected */
+.alm-map-sub.selected .material-icons,
 .alm-map-menu.selected .alm-map-icon,
-.alm-map-menu.selected .alm-map-icon.material-icons{
-    color: var(--surface) !important;
-}
+.alm-map-menu.selected .alm-map-icon.material-icons{color:var(--surface)!important}
 
-/* stronger framed look when parent menu is expanded to emphasize dropdown */
-.alm-map-menu.expanded .alm-map-sub{background: rgba(255,255,255,0.02)}
+.alm-perm-cards{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.alm-perm-card{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:14px;background:var(--surface);border:1px solid var(--stroke);color:var(--muted);font-weight:600;font-size:13px}
+.alm-perm-card.active-perm{background:#16a34a;color:var(--surface);border-color:#15803d}
 
-/* ensure selected submenu keeps accent background even when parent menu is expanded */
-.alm-map-menu.expanded .alm-map-sub.selected{
-    background: var(--accent) !important;
-    color: var(--surface) !important;
-    font-weight: 600;
-    border-left-color: var(--accent-dark) !important;
-    box-shadow:0 8px 22px rgba(0,0,0,0.08);
-}
-.alm-map-menu.expanded .alm-map-sub.selected .alm-sub-icon,
-.alm-map-menu.expanded .alm-map-sub.selected .alm-map-sub-label,
-.alm-map-menu.expanded .alm-map-sub.selected .material-icons{
-    color: var(--surface) !important;
-}
-
-/* small responsive tweaks */
 @media (max-width:900px){
     .alm-inner{flex-direction:column}
     .alm-preview-sidebar{width:100%;border-right:0;border-bottom:1px solid #eef2f4}
     .alm-dialog{height:88vh;width:calc(100vw - 32px)}
     .alm-editor{padding-bottom:20px}
-    .alm-actions-row{position:static;right:auto;bottom:auto;margin-top:12px}
 }
-
-/* Selected permission cards (small chips) */
-.alm-perm-cards{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
-.alm-perm-card{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:14px;background:var(--surface);border:1px solid var(--stroke);color:var(--muted);font-weight:600;font-size:13px}
-.alm-perm-card .alm-perm-text{max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.alm-perm-card .alm-perm-remove{background:transparent;border:0;color:var(--muted);cursor:pointer;font-size:16px;line-height:1}
-.alm-perm-card[data-perm].selected{background:var(--accent);color:var(--surface);border-color:var(--accent)}
-
-/* Active permission styling: use a green 'success' chip */
-.alm-perm-card.active-perm{background:#16a34a;color:var(--surface);border-color:#15803d}
-.alm-perm-card.active-perm .alm-perm-remove{display:none}
-
-/* More specific selectors to override other perm-card rules */
-.alm-perm-card[data-perm].active-perm{background:#16a34a !important;color:var(--surface) !important;border-color:#15803d !important}
-.alm-perm-card[data-perm].active-perm .alm-perm-remove{display:none !important}
 CSS;
 }
 
@@ -2072,8 +1878,6 @@ This scaffold gives your project a menu to permission flow so users only see and
     - Menu and submenu visibility checks
 - `src/pages/maintenance/accesslevel/accesslevel.php`
 - `src/pages/maintenance/accesslevel/accesslevel.css`
-- `src/pages/maintenance/no-access/no-access-level-display.php`
-- `src/pages/maintenance/no-access/no-access-level-display.css`
 - `src/controllers/accesslevel/accesslevel-fetch-controller.php`
 - `src/controllers/accesslevel/accesslevel-update-controller.php`
 - `public/api/accesslevel-fetch.php`
@@ -2185,7 +1989,6 @@ function applyPbacScaffold(string $projectArg, bool $dryRun = false): array
 
     $dirs = [
         'src/pages/maintenance/accesslevel',
-        'src/pages/maintenance/no-access',
         'src/controllers/accesslevel',
         'src/modals/accesslevel-modal',
         'tools',
@@ -2209,8 +2012,6 @@ function applyPbacScaffold(string $projectArg, bool $dryRun = false): array
         'src/templates/sidebar.php' => pbac_sidebar_template(),
         'src/pages/maintenance/accesslevel/accesslevel.php' => pbac_accesslevel_page_template(),
         'src/pages/maintenance/accesslevel/accesslevel.css' => pbac_accesslevel_css_template(),
-        'src/pages/maintenance/no-access/no-access-level-display.php' => pbac_no_access_level_display_template(),
-        'src/pages/maintenance/no-access/no-access-level-display.css' => pbac_no_access_level_display_css_template(),
         'src/modals/accesslevel-modal/accesslevel-modal.php' => pbac_accesslevel_modal_template(),
         'src/modals/accesslevel-modal/accesslevel-modal.css' => pbac_accesslevel_modal_css_template(),
         'src/modals/accesslevel-modal/accesslevel-update-success-modal.php' => pbac_accesslevel_success_modal_template(),
