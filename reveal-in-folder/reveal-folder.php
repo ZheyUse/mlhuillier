@@ -18,7 +18,7 @@ function openFolder($path) {
         echo "Opened: $path\n";
         return 0;
     }
-    echo "Failed to open: $path\n";
+    echo "Opening: $path\n";
     return $rc ?: 1;
 }
 
