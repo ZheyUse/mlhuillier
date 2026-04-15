@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.1.6"
+set "ML_VERSION=1.1.7"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -736,18 +736,48 @@ call :strip_query "!UPDATER_URL!"
 rem URL hidden from output
 echo Updating ML CLI...
 
+rem Attempt to download the remote updater (curl preferred)
+set "DL_ERR_FILE=%TEMP%\ml_update_dl_err.txt"
+del /f /q "%DL_ERR_FILE%" >nul 2>&1
 where curl >nul 2>&1
 if %ERRORLEVEL%==0 (
-        curl -s -f -o "!TMP_FILE!" "!UPDATER_URL!"
+        curl -s -S -f -o "!TMP_FILE!" "!UPDATER_URL!" >nul 2>&1
+        set "CURL_RC=!ERRORLEVEL!"
+        if "!CURL_RC!"=="0" set "DOWNLOAD_OK=1"
 ) else (
-        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!UPDATER_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
+        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!UPDATER_URL!','!TMP_FILE!'); exit 0 } Catch { Write-Output $_.Exception.Message; exit 2 }" > "%DL_ERR_FILE%" 2>&1
+        if %ERRORLEVEL%==0 set "DOWNLOAD_OK=1"
 )
 
-if %ERRORLEVEL%==0 (
-        "!PHP_EXE!" -d display_errors=0 "!TMP_FILE!"
-        set "RC=%ERRORLEVEL%"
+if defined DOWNLOAD_OK (
+        rem Run the downloaded updater and capture its output for diagnostics
+        set "TMP_UPD_OUT=%TEMP%\ml_update_out.txt"
+        "!PHP_EXE!" -d display_errors=0 "!TMP_FILE!" > "!TMP_UPD_OUT!" 2>&1
+        set "RC=!ERRORLEVEL!"
         del /f /q "!TMP_FILE!" >nul 2>&1
-        if "!RC!"=="0" exit /b 0
+        if "!RC!"=="0" (
+                type "!TMP_UPD_OUT!"
+                del /f /q "!TMP_UPD_OUT!" >nul 2>&1
+                exit /b 0
+        )
+
+        echo.
+        echo Update failed while running the remote updater. Diagnostics follow:
+
+        rem Look for download failures reported by the updater
+        findstr /I /C:"Failed to download" "!TMP_UPD_OUT!" >nul 2>&1
+        if !ERRORLEVEL! EQU 0 (
+                echo - Remote updater reported download problems for one or more files.
+                echo - Possible causes: no internet, DNS failure, TLS/SSL verification failure, firewall/proxy blocking, or remote file removed.
+                echo.
+                echo Updater output:
+                type "!TMP_UPD_OUT!"
+        ) else (
+                echo - Updater returned an error. Output:
+                type "!TMP_UPD_OUT!"
+        )
+
+        del /f /q "!TMP_UPD_OUT!" >nul 2>&1
         if exist "!LOCAL_UPDATER!" (
                 echo Remote updater returned an error, trying local updater...
                 "!PHP_EXE!" -d display_errors=0 "!LOCAL_UPDATER!"
@@ -756,14 +786,47 @@ if %ERRORLEVEL%==0 (
         exit /b !RC!
 )
 
-if exist "!LOCAL_UPDATER!" (
-        echo Remote update fetch failed, trying local updater...
-        "!PHP_EXE!" -d display_errors=0 "!LOCAL_UPDATER!"
-        exit /b %ERRORLEVEL%
+rem Download step failed (curl/powershell download did not complete)
+echo.
+echo Failed to fetch remote updater script.
+rem Provide diagnostics based on curl exit code or powershell error message
+if defined CURL_RC (
+        if "!CURL_RC!"=="6" (
+                echo DNS resolution failed: could not resolve host. Check your internet and DNS settings.
+                exit /b 2
+        ) else if "!CURL_RC!"=="7" (
+                echo Connection failed: could not connect to server. Check network, firewall, or proxy settings.
+                exit /b 2
+        ) else if "!CURL_RC!"=="22" (
+                echo HTTP error returned by server (status >= 400). The remote file may not exist or is blocked.
+                rem show HTTP headers for extra info if curl is available
+                curl -s -I "!UPDATER_URL!" > "%TEMP%\ml_update_hdr.txt" 2>&1
+                if exist "%TEMP%\ml_update_hdr.txt" (
+                        echo.
+                        echo HTTP headers:
+                        type "%TEMP%\ml_update_hdr.txt"
+                        del /f /q "%TEMP%\ml_update_hdr.txt" >nul 2>&1
+                )
+                exit /b 2
+        ) else (
+                echo curl returned error code !CURL_RC!. Try running the update again or check your network.
+                exit /b 2
+        )
+) else (
+        if exist "%DL_ERR_FILE%" (
+                echo Powershell download error:
+                type "%DL_ERR_FILE%"
+                del /f /q "%DL_ERR_FILE%" >nul 2>&1
+                rem Map common PowerShell error messages
+                findstr /I "resolve|name" "%DL_ERR_FILE%" >nul 2>&1 && echo Suggestion: DNS resolution failed. Check internet and DNS.
+                findstr /I "ssl|certificate|trust relationship|secure channel" "%DL_ERR_FILE%" >nul 2>&1 && echo Suggestion: TLS/SSL error. Ensure CA certificates are available or check system time.
+                findstr /I "401|403|404|500|502|503" "%DL_ERR_FILE%" >nul 2>&1 && echo Suggestion: HTTP error from server; file may be missing or access blocked.
+                exit /b 2
+        ) else (
+                echo Unknown error while attempting to download the updater.
+                exit /b 2
+        )
 )
-
-echo Failed to fetch remote updater and no local updater was found.
-exit /b 2
 
 :fetch_remote_version
 set "OUT_FILE=%~1"
