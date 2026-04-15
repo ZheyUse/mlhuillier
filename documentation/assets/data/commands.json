@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-04-15T04:06:29.361Z",
+  "generatedAt": "2026-04-15T08:29:37.255Z",
   "source": "ml.bat",
-  "cliVersion": "1.1.5",
+  "cliVersion": "1.1.7",
   "commands": [
     {
       "name": "ml --b",
@@ -512,6 +512,87 @@
         "command": "ml serve",
         "explanation": "Open project in browser and begin development.",
         "expectedResult": "Browser launches local project URL."
+      }
+    ],
+    "convertionPbac": [
+      {
+        "step": 1,
+        "command": "ml nav --<project_name>",
+        "explanation": "Open your existing default scaffold project where PBAC will be applied.",
+        "expectedResult": "Moves shell to selected project folder under htdocs."
+      },
+      {
+        "step": 2,
+        "command": "ml create --pbac <project_name>",
+        "explanation": "Create PBAC table and apply PBAC scaffold",
+        "expectedResult": "Runs the command workflow and returns success or actionable error output."
+      },
+      {
+        "step": 3,
+        "command": "Y",
+        "explanation": "Confirm the prompt so the conversion continues and scaffold files are applied.",
+        "expectedResult": "PBAC conversion proceeds and project files are updated."
+      },
+      {
+        "step": 4,
+        "command": "ml gen",
+        "explanation": "Generate local PBAC access map (ml gen)",
+        "expectedResult": "Access map is generated/refreshed for menu and permission checks."
+      },
+      {
+        "step": 5,
+        "command": "ml serve",
+        "explanation": "Run the app and verify menu-level and permission-level checks work as expected.",
+        "expectedResult": "Opens the local project URL in your browser."
+      }
+    ],
+    "convertionPbacGuide": {
+      "buttonLabel": "HOW TO USE?",
+      "title": "How to Use PBAC After Conversion",
+      "intro": "PBAC controls parent menu visibility (access levels) and submenu/action permissions. Use the provided helpers and access map to manage visibility and route protection.",
+      "steps": [
+        "Edit src/templates/sidebar.php and wrap the parent menu with a parent guard: <?php if (has_menu_access('Maintenance')): ?> ... <?php endif; ?>",
+        "Protect each submenu link with has_permission('MenuLabel SubmenuLabel'). Example: <?php if (has_permission('Maintenance Access Level')): ?> <li> <a href=\"/src/pages/maintenance/accesslevel/accesslevel.php\">Access Level</a> </li> <?php endif; ?>",
+        "Keep permission keys stable. The default generator uses the format 'MenuLabel SubmenuLabel' (for example 'Maintenance Access Level') — use the same string when calling has_permission() and when assigning permissions to users.",
+        "Run 'ml gen' (or 'php tools/generate_access_map.php') from your project root to generate src/assets/js/accesslevel-map.json. This file maps menus, submenu permission ids, and access_level bitmasks used by the admin UI.",
+        "Use the Access Level page (Maintenance → Access Level) to assign an access_level and a set of permission ids to a user. At login the PBAC session loader populates $_SESSION['user_access_level'] and $_SESSION['user_permissions'].",
+        "To protect routes or controllers use require_mapped_permission_for_current_route() or call has_permission('Permission Key') in your middleware/controllers. The scaffold also provides helpers like requirePermission() and requireMenuAccess().",
+        "Admin rule: an access_level of -1 grants all permissions. Admin rows with missing permissions may be auto-populated by the scaffold's session loader."
+      ],
+      "commands": [
+        "ml gen",
+        "php tools/generate_access_map.php"
+      ],
+      "notes": [
+        "Permission ID format: 'MenuLabel SubmenuLabel' (space-separated). The generator uses this convention — changing sidebar labels requires re-running 'ml gen' to keep the map in sync.",
+        "If 'ml gen' is not available, run tools/generate_access_map.php manually from the project root to produce src/assets/js/accesslevel-map.json.",
+        "Sidebar PHP snippet patterns are used by the map generator: ensure submenu link labels (span.sidebar__submenu-label) and href targets are correct so permissions and targets are extracted properly."
+      ]
+    },
+    "convertionRbac": [
+      {
+        "step": 1,
+        "command": "ml nav --<project_name>",
+        "explanation": "Open your target project before running RBAC table setup.",
+        "expectedResult": "Moves shell to selected project folder under htdocs."
+      },
+      {
+        "step": 2,
+        "command": "ml create --rbac <project_name>",
+        "explanation": "Create RBAC table in userdb",
+        "expectedResult": "Runs the command workflow and returns success or actionable error output."
+      },
+      {
+        "step": 3,
+        "command": "ml test userdb",
+        "explanation": "Validate DB connectivity and ensure RBAC-related schema is reachable.",
+        "expectedResult": "Shows DB connection status and schema check result."
+      },
+      {
+        "step": 4,
+        "command": "ml serve",
+        "explanation": "Run the app and validate role-based page/action access in browser.",
+        "expectedResult": "Opens the local project URL in your browser."
       }
     ],
     "generalUsage": [
