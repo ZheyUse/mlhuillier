@@ -678,8 +678,26 @@ set "SUMMARY_SCRIPT=%~dp0version-history\print-changelog-summary.ps1"
 echo.
 echo Latest release summary:
 if exist "%SUMMARY_SCRIPT%" (
-        powershell -NoProfile -ExecutionPolicy Bypass -File "%SUMMARY_SCRIPT%" -TargetVersion "%TARGET_VER%" -LocalJsonPath "%LOCAL_JSON%" -PrimaryUrl "%FETCH_URL%" -FallbackUrl "%RAW_CHG_URL%"
-        exit /b %ERRORLEVEL%
+                powershell -NoProfile -ExecutionPolicy Bypass -File "%SUMMARY_SCRIPT%" -TargetVersion "%TARGET_VER%" -LocalJsonPath "%LOCAL_JSON%" -PrimaryUrl "%FETCH_URL%" -FallbackUrl "%RAW_CHG_URL%"
+                exit /b %ERRORLEVEL%
+)
+
+rem If the local helper isn't available, attempt to download it to a temp file and run it
+set "TMP_SCRIPT=%TEMP%\ml_print_changelog_summary.ps1"
+set "REMOTE_HELPER=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/version-history/print-changelog-summary.ps1?t=%CACHE_BUST%"
+
+where curl >nul 2>&1
+if %ERRORLEVEL%==0 (
+        curl -s -f -o "%TMP_SCRIPT%" "%REMOTE_HELPER%"
+) else (
+        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('%REMOTE_HELPER%','%TMP_SCRIPT%'); exit 0 } Catch { exit 2 }"
+)
+
+if exist "%TMP_SCRIPT%" (
+        powershell -NoProfile -ExecutionPolicy Bypass -File "%TMP_SCRIPT%" -TargetVersion "%TARGET_VER%" -LocalJsonPath "%LOCAL_JSON%" -PrimaryUrl "%FETCH_URL%" -FallbackUrl "%RAW_CHG_URL%"
+        set "RC=%ERRORLEVEL%"
+        del /f /q "%TMP_SCRIPT%" >nul 2>&1
+        exit /b %RC%
 )
 
 echo Unable to load changelog summary right now.

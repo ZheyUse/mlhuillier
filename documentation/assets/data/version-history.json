@@ -1,15 +1,48 @@
 {
-  "generatedAt": "2026-04-15T04:06:47.626Z",
-  "latestVersion": "1.1.5",
+  "generatedAt": "2026-04-15T08:07:27.157Z",
+  "latestVersion": "1.1.6",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 157
+    "commitCount": 158
   },
   "releases": [
     {
-      "version": "1.1.5",
+      "version": "1.1.6",
       "isLatest": true,
+      "commitCount": 1,
+      "dateRange": {
+        "from": "2026-04-15",
+        "to": "2026-04-15"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 0,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "chore(version): update version to 1.1.6 and adjust related files"
+      ],
+      "commits": [
+        {
+          "hash": "bae3994bc13a421f56aa168ff81bd0bccc76bf43",
+          "shortHash": "bae3994",
+          "date": "2026-04-15",
+          "title": "chore(version): update version to 1.1.6 and adjust related files",
+          "type": "release"
+        }
+      ]
+    },
+    {
+      "version": "1.1.5",
+      "isLatest": false,
       "commitCount": 1,
       "dateRange": {
         "from": "2026-04-15",
