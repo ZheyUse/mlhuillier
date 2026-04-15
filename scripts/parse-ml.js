@@ -412,8 +412,8 @@ function buildTutorials(commands) {
       },
       {
         step: 4,
-        command: 'ml gen <project_name>',
-        explanation: cmdGen ? cmdGen.description : 'Generate or refresh the PBAC access map from your project tools.',
+        command: 'ml gen',
+        explanation: cmdGen ? cmdGen.description : 'Run ml gen which auto-reads tools\\generate_access_map.php in the current working directory to generate or refresh the PBAC access map.',
         expectedResult: 'Access map is generated/refreshed for menu and permission checks.',
       },
       {
@@ -435,10 +435,10 @@ function buildTutorials(commands) {
       ],
       commands: [
         'ml create --pbac <project_name>',
-        'ml gen <project_name>',
+        'ml gen',
       ],
       notes: [
-        'ml gen looks for tools\\generate_access_map.php in your current or specified project.',
+        'ml gen looks for tools\\generate_access_map.php in the current working directory and runs it (local gen).',
         'If no map script exists, convert the project to PBAC first before generating map.',
       ],
     },

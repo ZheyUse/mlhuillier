@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-15T01:30:22.684Z",
+  "generatedAt": "2026-04-15T01:34:08.672Z",
   "source": "ml.bat",
   "cliVersion": "1.1.3",
   "commands": [
@@ -535,7 +535,7 @@
       },
       {
         "step": 4,
-        "command": "ml gen <project_name>",
+        "command": "ml gen",
         "explanation": "Generate local PBAC access map (ml gen)",
         "expectedResult": "Access map is generated/refreshed for menu and permission checks."
       },
@@ -558,10 +558,10 @@
       ],
       "commands": [
         "ml create --pbac <project_name>",
-        "ml gen <project_name>"
+        "ml gen"
       ],
       "notes": [
-        "ml gen looks for tools\\generate_access_map.php in your current or specified project.",
+        "ml gen looks for tools\\generate_access_map.php in the current working directory and runs it (local gen).",
         "If no map script exists, convert the project to PBAC first before generating map."
       ]
     },
