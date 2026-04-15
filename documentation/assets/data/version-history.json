@@ -1,16 +1,56 @@
 {
-  "generatedAt": "2026-04-15T08:30:38.844Z",
-  "latestVersion": "1.1.7",
+  "generatedAt": "2026-04-15T14:34:36.368Z",
+  "latestVersion": "1.1.8",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 162
+    "commitCount": 163
   },
   "releases": [
     {
-      "version": "1.1.7",
+      "version": "1.1.8",
       "isLatest": true,
-      "commitCount": 3,
+      "commitCount": 2,
+      "dateRange": {
+        "from": "2026-04-15",
+        "to": "2026-04-15"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 0,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 1,
+        "other": 0
+      },
+      "highlights": [
+        "chore(version): update version to 1.1.8 and adjust related files; add npm global install instructions"
+      ],
+      "commits": [
+        {
+          "hash": "89e3feacd4bd695e2ae6c45724d843776658097c",
+          "shortHash": "89e3fea",
+          "date": "2026-04-15",
+          "title": "chore(version): update version to 1.1.8 and adjust related files; add npm global install instructions",
+          "type": "release"
+        },
+        {
+          "hash": "c2ac4d6291a3de3e3727292708c24dcc918ac9c4",
+          "shortHash": "c2ac4d6",
+          "date": "2026-04-15",
+          "title": "chore(version): update generatedAt timestamp and increment commit counts in version history",
+          "type": "chore"
+        }
+      ]
+    },
+    {
+      "version": "1.1.7",
+      "isLatest": false,
+      "commitCount": 2,
       "dateRange": {
         "from": "2026-04-15",
         "to": "2026-04-15"
@@ -24,7 +64,7 @@
         "performance": 0,
         "security": 0,
         "test": 0,
-        "chore": 1,
+        "chore": 0,
         "other": 0
       },
       "highlights": [
@@ -32,13 +72,6 @@
         "chore(version): update version to 1.1.7 and adjust related files"
       ],
       "commits": [
-        {
-          "hash": "c2ac4d6291a3de3e3727292708c24dcc918ac9c4",
-          "shortHash": "c2ac4d6",
-          "date": "2026-04-15",
-          "title": "chore(version): update generatedAt timestamp and increment commit counts in version history",
-          "type": "chore"
-        },
         {
           "hash": "8cf92471862a21c538ebc8a9a88080545cb5be68",
           "shortHash": "8cf9247",
