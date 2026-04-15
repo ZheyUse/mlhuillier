@@ -7,7 +7,7 @@ set "USER_ML_CMD=%USER_BIN%\ml.cmd"
 set "USER_ML_BAT=%USER_BIN%\ml.bat"
 set "USER_ML_PS1=%USER_BIN%\ml.ps1"
 set "USER_WRAPPER_HELPER=%USER_BIN%\install-wrappers-auto.ps1"
-set "UNINSTALL_VERSION=1.1.4"
+set "UNINSTALL_VERSION=1.1.5"
 
 rem Determine installed CLI version from installed VERSION file if present
 set "CLI_VERSION=%UNINSTALL_VERSION%"

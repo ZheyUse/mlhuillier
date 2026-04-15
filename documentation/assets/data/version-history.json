@@ -1,26 +1,26 @@
 {
-  "generatedAt": "2026-04-15T04:00:54.008Z",
-  "latestVersion": "1.1.3",
+  "generatedAt": "2026-04-15T04:01:59.462Z",
+  "latestVersion": "1.1.4",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 155
+    "commitCount": 156
   },
   "releases": [
     {
-      "version": "1.1.3",
+      "version": "1.1.4",
       "isLatest": true,
-      "commitCount": 17,
+      "commitCount": 7,
       "dateRange": {
-        "from": "2026-04-14",
+        "from": "2026-04-15",
         "to": "2026-04-15"
       },
       "stats": {
         "release": 1,
-        "feature": 12,
+        "feature": 4,
         "fix": 0,
         "docs": 0,
-        "refactor": 2,
+        "refactor": 0,
         "performance": 0,
         "security": 0,
         "test": 0,
@@ -28,16 +28,20 @@
         "other": 1
       },
       "highlights": [
+        "chore(version): update version to 1.1.4 and adjust related files",
         "feat(version-history): add scripts for dynamic changelog generation",
         "Enhance documentation: Add copyable code blocks to PBAC guides and improve step descriptions for clarity",
         "Enhance tutorials: Add PBAC and RBAC conversion guides with detailed steps and expected results",
-        "Enhance MySQL Workbench launcher: Add support for \"CE\" folder names and expand search patterns for executable discovery",
-        "Update CLI version to 1.1.3, enhance documentation with PBAC and RBAC guides, and add MySQL Workbench launcher script",
-        "Enhance ML Updater: Add normalizeWindowsLineEndings function and apply it to .bat and .cmd files during update",
-        "Enhance PBAC functionality: Load environment and database configuration files, and improve session handling for user access levels",
-        "Enhance PBAC debug access functionality: Add detailed session lookup information and improve error handling"
+        "Enhance MySQL Workbench launcher: Add support for \"CE\" folder names and expand search patterns for executable discovery"
       ],
       "commits": [
+        {
+          "hash": "60143e653db983beccf5df210491950c39d8427a",
+          "shortHash": "60143e6",
+          "date": "2026-04-15",
+          "title": "chore(version): update version to 1.1.4 and adjust related files",
+          "type": "release"
+        },
         {
           "hash": "eb1987b0606b5f61d9227de0198daed992ca1e78",
           "shortHash": "eb1987b",
@@ -79,7 +83,40 @@
           "date": "2026-04-15",
           "title": "Enhance MySQL Workbench launcher: Add support for \"CE\" folder names and expand search patterns for executable discovery",
           "type": "feature"
-        },
+        }
+      ]
+    },
+    {
+      "version": "1.1.3",
+      "isLatest": false,
+      "commitCount": 11,
+      "dateRange": {
+        "from": "2026-04-14",
+        "to": "2026-04-15"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 8,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 2,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "Update CLI version to 1.1.3, enhance documentation with PBAC and RBAC guides, and add MySQL Workbench launcher script",
+        "Enhance ML Updater: Add normalizeWindowsLineEndings function and apply it to .bat and .cmd files during update",
+        "Enhance PBAC functionality: Load environment and database configuration files, and improve session handling for user access levels",
+        "Enhance PBAC debug access functionality: Add detailed session lookup information and improve error handling",
+        "Enhance middleware functionality: Normalize legacy middleware snippets and improve access checks for admin roles",
+        "Enhance PBAC functionality: Add session handling, access map details, and debug access features",
+        "Enhance middleware functionality: Implement patching for middleware file and add permission checks for route access",
+        "Enhance access level modal functionality: Add close button behavior and escape key handling; Implement admin role checks and session management updates"
+      ],
+      "commits": [
         {
           "hash": "3fc14019756f8de0b19cfaf950f392917e3e8760",
           "shortHash": "3fc1401",

@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.1.4"
+set "ML_VERSION=1.1.5"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -673,8 +673,14 @@ set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
 set "FETCH_URL=%CHANGELOG_URL%?t=%CACHE_BUST%"
 
 echo.
-echo Fetching changelog for version %TARGET_VER% ...
-powershell -NoProfile -Command "Try { $u = '%FETCH_URL%'; $j = Invoke-RestMethod -Uri $u -ErrorAction Stop; $r = $j.releases | Where-Object { $_.version -eq '%TARGET_VER%' } | Select-Object -First 1; if(-not $r) { $r = $j.releases | Where-Object { $_.isLatest -eq $true } | Select-Object -First 1 }; if(-not $r) { $r = $j.releases[0] }; Write-Output ''; Write-Output '--- Changelog: ' + $r.version + ' ---'; if($r.dateRange) { Write-Output ('Date: ' + $r.dateRange.from + ' to ' + $r.dateRange.to) }; if($r.commitCount) { Write-Output ('Commits: ' + $r.commitCount) }; Write-Output ''; if($r.highlights) { Write-Output 'Highlights:'; $r.highlights | ForEach-Object { Write-Output ('  - ' + $_) } }; if($r.commits) { Write-Output ''; Write-Output 'Recent commits (top 5):'; $r.commits | Select-Object -First 5 | ForEach-Object { Write-Output ('  - ' + $_.shortHash + ' ' + $_.date + ' ' + $_.title) } }; exit 0 } Catch { Write-Output 'Failed to fetch changelog JSON from %CHANGELOG_URL%'; exit 2 }"
+echo Latest release summary:
+set "LOCAL_JSON=%~dp0documentation\assets\data\version-history.json"
+if exist "%LOCAL_JSON%" (
+        powershell -NoProfile -Command "Try { $j = Get-Content -Raw -Path '%LOCAL_JSON%' | ConvertFrom-Json; $r = $j.releases | Where-Object { $_.version -eq '%TARGET_VER%' } | Select-Object -First 1; if(-not $r) { $r = $j.releases | Where-Object { $_.isLatest -eq $true } | Select-Object -First 1 }; if(-not $r) { $r = $j.releases[0] }; $h = @($r.highlights); Write-Output ('What''s New in v' + $r.version); if($r.dateRange) { Write-Output ('Period: ' + $r.dateRange.from + ' to ' + $r.dateRange.to) }; Write-Output ''; Write-Output 'Top highlights:'; if($h.Count -gt 0) { $h | Select-Object -First 3 | ForEach-Object { Write-Output ('  - ' + $_) } } else { Write-Output '  - No highlight summary available yet.' }; Write-Output ''; Write-Output 'Full changelog: https://zheyuse.github.io/mlhuillier/documentation/'; exit 0 } Catch { Write-Output 'Unable to load changelog summary right now.'; exit 2 }"
+) else (
+        set "RAW_CHG_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/documentation/assets/data/version-history.json?t=%CACHE_BUST%"
+        powershell -NoProfile -Command "Try { $u = '%FETCH_URL%'; $j = Invoke-RestMethod -Uri $u -ErrorAction Stop } Catch { Try { $j = Invoke-RestMethod -Uri '%RAW_CHG_URL%' -ErrorAction Stop } Catch { Write-Output 'Unable to load changelog summary right now.'; exit 2 } }; $r = $j.releases | Where-Object { $_.version -eq '%TARGET_VER%' } | Select-Object -First 1; if(-not $r) { $r = $j.releases | Where-Object { $_.isLatest -eq $true } | Select-Object -First 1 }; if(-not $r) { $r = $j.releases[0] }; $h = @($r.highlights); Write-Output ('What''s New in v' + $r.version); if($r.dateRange) { Write-Output ('Period: ' + $r.dateRange.from + ' to ' + $r.dateRange.to) }; Write-Output ''; Write-Output 'Top highlights:'; if($h.Count -gt 0) { $h | Select-Object -First 3 | ForEach-Object { Write-Output ('  - ' + $_) } } else { Write-Output '  - No highlight summary available yet.' }; Write-Output ''; Write-Output 'Full changelog: https://zheyuse.github.io/mlhuillier/documentation/'; exit 0 } Catch { Write-Output 'Unable to load changelog summary right now.'; exit 2 }"
+)
 exit /b 0
 
  

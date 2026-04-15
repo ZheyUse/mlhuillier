@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-04-15T04:01:43.291Z",
+  "generatedAt": "2026-04-15T04:06:29.361Z",
   "source": "ml.bat",
-  "cliVersion": "1.1.4",
+  "cliVersion": "1.1.5",
   "commands": [
     {
       "name": "ml --b",
