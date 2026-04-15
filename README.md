@@ -1,5 +1,10 @@
 # ML CLI (M Lhuillier)
 
+Quick install (curl)
+```bat
+curl -L https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/install-ml.bat -o install-ml.bat && install-ml.bat
+```
+
 ML CLI is a Windows-first PHP command-line toolkit for scaffolding projects, managing a shared user database, and automating common local development workflows.
 
 It is designed for teams building multiple PHP apps (typically under XAMPP) that need:
