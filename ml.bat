@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.1.2"
+set "ML_VERSION=1.1.3"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -43,6 +43,7 @@ if /I "%~1"=="create" if /I "%~2"=="--rbac" goto :cmd_create_rbac
 if /I "%~1"=="create" if /I "%~3"=="--rbac" goto :cmd_create_rbac
 if /I "%~1"=="create" if "%~2"=="" goto :cmd_create_list
 if /I "%~1"=="gen" goto :cmd_gen
+if /I "%~1"=="wb" goto :cmd_wb
 if /I "%~1"=="--c" goto :cmd_check_version
 if /I "%~1"=="update" goto :cmd_update
 if /I "%~1"=="nav" goto :cmd_nav
@@ -86,6 +87,7 @@ echo   test ^<database^>     Run DB connection test for a specified database (e.
 echo   add userdb         Import userdb SQL (migration/userdb)
 echo   nav                Navigate or open a project (ml nav)
 echo   serve              Open current project in browser (ml serve)
+echo   wb                 Open MySQL Workbench (ml wb)
 echo   doc                Open online documentation (GitHub Pages)
 echo   create --a         Create interactive account (add user)
 echo   create --config    Create DB config for backups
@@ -782,6 +784,39 @@ if %ERRORLEVEL%==0 (
 )
 if %ERRORLEVEL% neq 0 (
         echo Failed to fetch remote account script
+        exit /b 2
+)
+
+"%PHP_EXE%" -d display_errors=0 "!TMP_FILE!"
+set "RC=%ERRORLEVEL%"
+call :maybe_show_update_notice
+del /f /q "!TMP_FILE!" >nul 2>&1
+exit /b %RC%
+
+:cmd_wb
+set "LOCAL_PHP=%~dp0workbench\open-workbench.php"
+if exist "!LOCAL_PHP!" (
+        "%PHP_EXE%" -d display_errors=0 "!LOCAL_PHP!"
+        set "RC=%ERRORLEVEL%"
+        exit /b %RC%
+)
+set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/workbench/open-workbench.php"
+set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
+set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
+set "TMP_FILE=%TEMP%\open-workbench.php"
+call :strip_query "!RAW_URL!"
+rem URL hidden from output
+echo Opening MySQL Workbench...
+echo.
+
+where curl >nul 2>&1
+if %ERRORLEVEL%==0 (
+        curl -s -f -o "!TMP_FILE!" "!RAW_URL!"
+) else (
+        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!RAW_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
+)
+if %ERRORLEVEL% neq 0 (
+        echo Failed to fetch open-workbench script
         exit /b 2
 )
 

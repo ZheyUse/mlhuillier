@@ -111,6 +111,92 @@ function renderTutorialSection(root, title, subtitle, steps) {
   root.append(h, p, cards);
 }
 
+function renderPbacHowToGuide(root, guide) {
+  if (!guide || !Array.isArray(guide.steps) || guide.steps.length === 0) {
+    return '';
+  }
+
+  const actions = document.createElement('div');
+  actions.className = 'section-actions';
+
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'section-action-btn';
+  btn.textContent = guide.buttonLabel || 'HOW TO USE?';
+
+  const details = document.createElement('details');
+  details.className = 'guide-details';
+
+  const summary = document.createElement('summary');
+  summary.textContent = guide.title || 'How to Use PBAC After Conversion';
+
+  const intro = document.createElement('p');
+  intro.textContent = guide.intro || 'This guide explains PBAC usage after conversion.';
+
+  const stepsTitle = document.createElement('p');
+  stepsTitle.className = 'guide-subtitle';
+  stepsTitle.textContent = 'How To Work With PBAC';
+
+  const steps = document.createElement('ol');
+  steps.className = 'guide-list';
+  guide.steps.forEach((item) => {
+    const li = document.createElement('li');
+    li.textContent = item;
+    steps.append(li);
+  });
+
+  details.append(summary, intro, stepsTitle, steps);
+
+  if (Array.isArray(guide.commands) && guide.commands.length > 0) {
+    const commandsTitle = document.createElement('p');
+    commandsTitle.className = 'guide-subtitle';
+    commandsTitle.textContent = 'Generate Or Refresh Access Map';
+
+    const commands = document.createElement('ul');
+    commands.className = 'guide-list';
+    guide.commands.forEach((item) => {
+      const li = document.createElement('li');
+      li.textContent = item;
+      commands.append(li);
+    });
+
+    details.append(commandsTitle, commands);
+  }
+
+  if (Array.isArray(guide.notes) && guide.notes.length > 0) {
+    const notesTitle = document.createElement('p');
+    notesTitle.className = 'guide-subtitle';
+    notesTitle.textContent = 'Notes';
+
+    const notes = document.createElement('ul');
+    notes.className = 'guide-list';
+    guide.notes.forEach((item) => {
+      const li = document.createElement('li');
+      li.textContent = item;
+      notes.append(li);
+    });
+
+    details.append(notesTitle, notes);
+  }
+
+  btn.addEventListener('click', () => {
+    details.open = true;
+    details.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  actions.append(btn);
+  root.append(actions, details);
+
+  return [
+    guide.buttonLabel,
+    guide.title,
+    guide.intro,
+    (guide.steps || []).join(' '),
+    (guide.commands || []).join(' '),
+    (guide.notes || []).join(' '),
+  ].join(' ');
+}
+
 function renderCommands(root, commands) {
   root.innerHTML = '';
   root.dataset.searchText = commands
@@ -295,6 +381,8 @@ function buildNav() {
   const sections = [
     ['Introduction', 'intro'],
     ['First Time Setup', 'first-time-setup'],
+    ['PBAC Conversion', 'convertion-pbac'],
+    ['RBAC Setup', 'convertion-rbac'],
     ['General Usage', 'general-usage'],
     ['Commands', 'commands-reference'],
     ['Scenarios', 'scenarios'],
@@ -338,6 +426,23 @@ async function init() {
     'First Time Setup',
     'Guided setup from zero to first successful browser run.',
     data.tutorials.firstTimeSetup
+  );
+  const pbacRoot = document.getElementById('convertion-pbac');
+  renderTutorialSection(
+    pbacRoot,
+    'PBAC Conversion',
+    'Permission Based Access Control conversion flow for an existing default scaffold.',
+    data.tutorials.convertionPbac
+  );
+  const pbacGuideSearchText = renderPbacHowToGuide(pbacRoot, data.tutorials.convertionPbacGuide);
+  if (pbacGuideSearchText) {
+    pbacRoot.dataset.searchText = `${pbacRoot.dataset.searchText || ''} ${pbacGuideSearchText}`.trim().toLowerCase();
+  }
+  renderTutorialSection(
+    document.getElementById('convertion-rbac'),
+    'RBAC Setup',
+    'Role Based Access Control setup flow. This is separate from PBAC and should be selected as an alternative path.',
+    data.tutorials.convertionRbac
   );
   renderTutorialSection(
     document.getElementById('general-usage'),

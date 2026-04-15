@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-04-14T11:52:28.776Z",
+  "generatedAt": "2026-04-15T01:06:14.689Z",
   "source": "ml.bat",
-  "cliVersion": "1.1.2",
+  "cliVersion": "1.1.3",
   "commands": [
     {
       "name": "ml --b",
@@ -431,6 +431,24 @@
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
       }
+    },
+    {
+      "name": "ml wb",
+      "description": "Open MySQL Workbench (ml wb)",
+      "syntax": "ml wb",
+      "params": [],
+      "example": "ml wb",
+      "category": "general",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml wb.",
+        "steps": [
+          "Run: ml wb",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
     }
   ],
   "tutorials": {
@@ -755,6 +773,16 @@
         "steps": [
           "Run: ml update",
           "Review output and confirm expected result: Downloads latest CLI runtime and refreshes installed tools.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml wb",
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml wb.",
+        "steps": [
+          "Run: ml wb",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
       }
