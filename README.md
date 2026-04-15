@@ -76,6 +76,26 @@ You can also pass a custom destination:
 php ml-local.php "C:\Some\Path"
 ```
 
+### Option C: NPM Global Install (CLI command only)
+
+This installs the `ml` command through npm so users do not need to run the
+manual curl installer command.
+
+```bat
+npm install -g mlhuillier-cli
+```
+
+After install, open a new terminal and verify:
+
+```bat
+ml --v
+```
+
+Note:
+
+- This package is Windows-first and intended to expose the `ml` command.
+- PHP is still required on the machine for CLI features that execute PHP scripts.
+
 ### PowerShell Wrapper Setup
 
 ```powershell

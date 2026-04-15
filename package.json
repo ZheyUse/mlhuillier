@@ -1,8 +1,38 @@
 {
-  "name": "mlhuillier-docs",
-  "private": true,
-  "version": "1.0.0",
-  "description": "Dynamic documentation builder for ml.bat",
+  "name": "mlhuillier-cli",
+  "private": false,
+  "version": "1.1.7",
+  "description": "ML CLI installer package for Windows users",
+  "bin": {
+    "ml": "bin/ml.js"
+  },
+  "files": [
+    "ml.bat",
+    "ml-update.php",
+    "VERSION",
+    "generate-file-structure.php",
+    "bin/",
+    "version-history/"
+  ],
+  "preferGlobal": true,
+  "keywords": [
+    "ml",
+    "cli",
+    "windows",
+    "php",
+    "scaffolding"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZheyUse/mlhuillier.git"
+  },
+  "homepage": "https://github.com/ZheyUse/mlhuillier#readme",
+  "bugs": {
+    "url": "https://github.com/ZheyUse/mlhuillier/issues"
+  },
+  "engines": {
+    "node": ">=16"
+  },
   "scripts": {
     "docs:build": "node scripts/parse-ml.js",
     "docs:build:all": "node scripts/parse-ml.js && node version-history/generate-version-history.js",

@@ -7,7 +7,7 @@ set "MODE=INSTALL"
 if /I "%~1"=="--update" set "MODE=UPDATE"
 
 rem Determine CLI version from local VERSION file if present (fallback 1.0.3)
-set "CLI_VERSION=1.1.7"
+set "CLI_VERSION=1.1.8"
 if exist "%SOURCE_DIR%VERSION" (
   for /f "usebackq delims=" %%v in ("%SOURCE_DIR%VERSION") do set "CLI_VERSION=%%v"
 )
@@ -106,7 +106,7 @@ echo [3/5] Installing wrappers...
 echo Downloading wrapper files...
 
 rem Step: download wrappers and installer helper into the target folder
-powershell -NoProfile -ExecutionPolicy Bypass -Command "try{ (New-Object Net.WebClient).DownloadFile('%RAW_BASE%/ml.cmd?t=%RANDOM%%RANDOM%%RANDOM%', '%TARGET_DIR%\ml.cmd'); (New-Object Net.WebClient).DownloadFile('%RAW_BASE%/install-wrappers-auto.ps1?t=%RANDOM%%RANDOM%%RANDOM%', '%TARGET_DIR%\install-wrappers-auto.ps1'); if(Test-Path '%TARGET_DIR%\ml.ps1'){ Remove-Item -Force '%TARGET_DIR%\ml.ps1' }; exit 0 } catch { exit 2 }"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "try{ (New-Object Net.WebClient).DownloadFile('%RAW_BASE%/ml.cmd?t=%RANDOM%%RANDOM%%RANDOM%', '%TARGET_DIR%\ml.cmd'); (New-Object Net.WebClient).DownloadFile('%RAW_BASE%/ml.ps1?t=%RANDOM%%RANDOM%%RANDOM%', '%TARGET_DIR%\ml.ps1'); (New-Object Net.WebClient).DownloadFile('%RAW_BASE%/install-wrappers-auto.ps1?t=%RANDOM%%RANDOM%%RANDOM%', '%TARGET_DIR%\install-wrappers-auto.ps1'); exit 0 } catch { exit 2 }"
 if errorlevel 1 (
   echo [!] Failed to download one or more wrapper files (continuing)
 ) else (
@@ -181,17 +181,11 @@ echo [5/5] Finalizing setup...
 echo Writing metadata...
 
 
-rem Write the "Made By" ASCII art into the installed CLI folder (safe batch write)
+rem Write installer metadata into the installed CLI folder
 (
-  echo ┏┳┓┏━┓╺┳┓┏━╸   ┏┓ ╻ ╻
-  echo ┃┃┃┣━┫ ┃┃┣╸    ┣┻┓┗┳┛
-  echo ╹ ╹╹ ╹╺┻┛┗━╸   ┗━┛ ╹
-  echo  ██████╗ ██████╗ ██████╗ ███████╗███████╗
-  echo ██╔════╝██╔═══██╗██╔══██╗██╔════╝╚══███╔╝
-  echo ██║     ██║   ██║██║  ██║█████╗    ███╔╝
-  echo ██║     ██║   ██║██║  ██║██╔══╝   ███╔╝
-  echo ╚██████╗╚██████╔╝██████╔╝███████╗███████╗
-  echo  ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝╚══════╝
+  echo ML CLI
+  echo M LHUILLIER FILE GENERATOR
+  echo Version: %CLI_VERSION%
   echo Follow: https://github.com/ZheyUse
 )> "%TARGET_DIR%\made-by.txt"
 
