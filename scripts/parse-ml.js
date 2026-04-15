@@ -320,6 +320,14 @@ function buildCommands(content) {
 }
 
 function buildTutorials(commands) {
+  const byName = (name) => commands.find((cmd) => cmd.name.toLowerCase() === name.toLowerCase());
+  const cmdNav = byName('ml nav');
+  const cmdCreatePbac = byName('ml create --pbac');
+  const cmdCreateRbac = byName('ml create --rbac');
+  const cmdGen = byName('ml gen');
+  const cmdServe = byName('ml serve');
+  const cmdTestUserdb = byName('ml test userdb');
+
   return {
     firstTimeSetup: [
       {
@@ -381,6 +389,83 @@ function buildTutorials(commands) {
         command: 'ml serve',
         explanation: 'Open project in browser and begin development.',
         expectedResult: 'Browser launches local project URL.',
+      },
+    ],
+    convertionPbac: [
+      {
+        step: 1,
+        command: 'ml nav --<project_name>',
+        explanation: 'Open your existing default scaffold project where PBAC will be applied.',
+        expectedResult: cmdNav ? cmdNav.expectedResult : 'Terminal is inside your selected project.',
+      },
+      {
+        step: 2,
+        command: 'ml create --pbac <project_name>',
+        explanation: cmdCreatePbac ? cmdCreatePbac.description : 'Create PBAC table and apply PBAC scaffold files.',
+        expectedResult: cmdCreatePbac ? cmdCreatePbac.expectedResult : 'PBAC helper runs successfully for your target project.',
+      },
+      {
+        step: 3,
+        command: 'Y',
+        explanation: 'Confirm the prompt so the conversion continues and scaffold files are applied.',
+        expectedResult: 'PBAC conversion proceeds and project files are updated.',
+      },
+      {
+        step: 4,
+        command: 'ml gen <project_name>',
+        explanation: cmdGen ? cmdGen.description : 'Generate or refresh the PBAC access map from your project tools.',
+        expectedResult: 'Access map is generated/refreshed for menu and permission checks.',
+      },
+      {
+        step: 5,
+        command: 'ml serve',
+        explanation: 'Run the app and verify menu-level and permission-level checks work as expected.',
+        expectedResult: cmdServe ? cmdServe.expectedResult : 'Project opens and PBAC-gated navigation is testable in browser.',
+      },
+    ],
+    convertionPbacGuide: {
+      buttonLabel: 'HOW TO USE?',
+      title: 'How to Use PBAC After Conversion',
+      intro: 'After conversion, manage menu access (access level) and submenu/action permissions, then regenerate access map when rules change.',
+      steps: [
+        'Convert your project to PBAC using ml create --pbac <project_name>.',
+        'Define access level as parent menu and permissions as child actions/submenus.',
+        'Update your project access map whenever menu/permission mappings change.',
+        'Verify restricted pages and actions using accounts with different access levels.',
+      ],
+      commands: [
+        'ml create --pbac <project_name>',
+        'ml gen <project_name>',
+      ],
+      notes: [
+        'ml gen looks for tools\\generate_access_map.php in your current or specified project.',
+        'If no map script exists, convert the project to PBAC first before generating map.',
+      ],
+    },
+    convertionRbac: [
+      {
+        step: 1,
+        command: 'ml nav --<project_name>',
+        explanation: 'Open your target project before running RBAC table setup.',
+        expectedResult: cmdNav ? cmdNav.expectedResult : 'Terminal is inside your selected project.',
+      },
+      {
+        step: 2,
+        command: 'ml create --rbac <project_name>',
+        explanation: cmdCreateRbac ? cmdCreateRbac.description : 'Create RBAC table for your target project in userdb.',
+        expectedResult: cmdCreateRbac ? cmdCreateRbac.expectedResult : 'RBAC helper runs successfully for your target project.',
+      },
+      {
+        step: 3,
+        command: 'ml test userdb',
+        explanation: 'Validate DB connectivity and ensure RBAC-related schema is reachable.',
+        expectedResult: cmdTestUserdb ? cmdTestUserdb.expectedResult : 'Connection test passes for userdb.',
+      },
+      {
+        step: 4,
+        command: 'ml serve',
+        explanation: 'Run the app and validate role-based page/action access in browser.',
+        expectedResult: cmdServe ? cmdServe.expectedResult : 'Project opens and RBAC flow can be verified.',
       },
     ],
     generalUsage: [

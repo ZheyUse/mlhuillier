@@ -76,8 +76,9 @@ function renderIntro(root, data) {
 }
 
 function renderTutorialSection(root, title, subtitle, steps) {
+  const safeSteps = Array.isArray(steps) ? steps : [];
   root.innerHTML = '';
-  root.dataset.searchText = [title, subtitle, steps.map((s) => `${s.command} ${s.explanation} ${s.expectedResult}`).join(' ')].join(' ').toLowerCase();
+  root.dataset.searchText = [title, subtitle, safeSteps.map((s) => `${s.command || ''} ${s.explanation || ''} ${s.expectedResult || ''}`).join(' ')].join(' ').toLowerCase();
 
   const h = document.createElement('h3');
   h.className = 'section-title';
@@ -89,7 +90,7 @@ function renderTutorialSection(root, title, subtitle, steps) {
   const cards = document.createElement('div');
   cards.className = 'cards';
 
-  steps.forEach((step) => {
+  safeSteps.forEach((step) => {
     const card = document.createElement('article');
     card.className = 'step-card';
 
@@ -272,8 +273,9 @@ function renderCommands(root, commands) {
 }
 
 function renderScenarios(root, scenarios) {
+  const safeScenarios = Array.isArray(scenarios) ? scenarios : [];
   root.innerHTML = '';
-  root.dataset.searchText = scenarios.map((s) => `${s.title} ${s.steps.join(' ')}`).join(' ').toLowerCase();
+  root.dataset.searchText = safeScenarios.map((s) => `${s.title || ''} ${Array.isArray(s.steps) ? s.steps.join(' ') : ''}`).join(' ').toLowerCase();
 
   const h = document.createElement('h3');
   h.className = 'section-title';
@@ -285,14 +287,14 @@ function renderScenarios(root, scenarios) {
   const cards = document.createElement('div');
   cards.className = 'cards';
 
-  scenarios.forEach((scenario) => {
+  safeScenarios.forEach((scenario) => {
     const card = document.createElement('article');
     card.className = 'scenario-card';
     const title = document.createElement('h4');
     title.textContent = scenario.title;
     const list = document.createElement('ol');
     list.className = 'list';
-    scenario.steps.forEach((step) => {
+    (Array.isArray(scenario.steps) ? scenario.steps : []).forEach((step) => {
       const li = document.createElement('li');
       li.textContent = step;
       list.append(li);
@@ -305,8 +307,9 @@ function renderScenarios(root, scenarios) {
 }
 
 function renderErrors(root, errors) {
+  const safeErrors = Array.isArray(errors) ? errors : [];
   root.innerHTML = '';
-  root.dataset.searchText = errors.map((e) => `${e.error} ${e.meaning} ${e.fix}`).join(' ').toLowerCase();
+  root.dataset.searchText = safeErrors.map((e) => `${e.error || ''} ${e.meaning || ''} ${e.fix || ''}`).join(' ').toLowerCase();
 
   const h = document.createElement('h3');
   h.className = 'section-title';
@@ -315,7 +318,7 @@ function renderErrors(root, errors) {
   const cards = document.createElement('div');
   cards.className = 'cards';
 
-  errors.forEach((item) => {
+  safeErrors.forEach((item) => {
     const card = document.createElement('article');
     card.className = 'error-card';
 
@@ -337,8 +340,10 @@ function renderErrors(root, errors) {
 }
 
 function renderFaq(root, faq, tips) {
+  const safeFaq = Array.isArray(faq) ? faq : [];
+  const safeTips = Array.isArray(tips) ? tips : [];
   root.innerHTML = '';
-  root.dataset.searchText = [...faq.map((f) => `${f.q} ${f.a}`), ...tips].join(' ').toLowerCase();
+  root.dataset.searchText = [...safeFaq.map((f) => `${f.q || ''} ${f.a || ''}`), ...safeTips].join(' ').toLowerCase();
 
   const h = document.createElement('h3');
   h.className = 'section-title';
@@ -347,7 +352,7 @@ function renderFaq(root, faq, tips) {
   const cards = document.createElement('div');
   cards.className = 'cards';
 
-  faq.forEach((item) => {
+  safeFaq.forEach((item) => {
     const card = document.createElement('article');
     card.className = 'faq-card';
     const q = document.createElement('h4');
@@ -358,14 +363,14 @@ function renderFaq(root, faq, tips) {
     cards.append(card);
   });
 
-  if (tips && tips.length) {
+  if (safeTips.length) {
     const tipsCard = document.createElement('article');
     tipsCard.className = 'faq-card';
     const title = document.createElement('h4');
     title.textContent = 'Best Practices';
     const list = document.createElement('ul');
     list.className = 'list';
-    tips.forEach((tip) => {
+    safeTips.forEach((tip) => {
       const li = document.createElement('li');
       li.textContent = tip;
       list.append(li);
@@ -418,6 +423,7 @@ function buildNav() {
 
 async function init() {
   const data = await loadData();
+  const tutorials = data.tutorials || {};
   document.getElementById('cliVersion').textContent = `Version: ${data.cliVersion}`;
 
   renderIntro(document.getElementById('intro'), data);
@@ -425,16 +431,16 @@ async function init() {
     document.getElementById('first-time-setup'),
     'First Time Setup',
     'Guided setup from zero to first successful browser run.',
-    data.tutorials.firstTimeSetup
+    tutorials.firstTimeSetup
   );
   const pbacRoot = document.getElementById('convertion-pbac');
   renderTutorialSection(
     pbacRoot,
     'PBAC Conversion',
     'Permission Based Access Control conversion flow for an existing default scaffold.',
-    data.tutorials.convertionPbac
+    tutorials.convertionPbac || []
   );
-  const pbacGuideSearchText = renderPbacHowToGuide(pbacRoot, data.tutorials.convertionPbacGuide);
+  const pbacGuideSearchText = renderPbacHowToGuide(pbacRoot, tutorials.convertionPbacGuide);
   if (pbacGuideSearchText) {
     pbacRoot.dataset.searchText = `${pbacRoot.dataset.searchText || ''} ${pbacGuideSearchText}`.trim().toLowerCase();
   }
@@ -442,18 +448,18 @@ async function init() {
     document.getElementById('convertion-rbac'),
     'RBAC Setup',
     'Role Based Access Control setup flow. This is separate from PBAC and should be selected as an alternative path.',
-    data.tutorials.convertionRbac
+    tutorials.convertionRbac || []
   );
   renderTutorialSection(
     document.getElementById('general-usage'),
     'General Usage',
     'Standard day-to-day command path with common pitfalls in mind.',
-    data.tutorials.generalUsage
+    tutorials.generalUsage
   );
   renderCommands(document.getElementById('commands-reference'), data.commands);
-  renderScenarios(document.getElementById('scenarios'), data.tutorials.scenarios);
-  renderErrors(document.getElementById('error-handling'), data.tutorials.errors);
-  renderFaq(document.getElementById('faq-tips'), data.tutorials.faq, data.tutorials.commonMistakes);
+  renderScenarios(document.getElementById('scenarios'), tutorials.scenarios);
+  renderErrors(document.getElementById('error-handling'), tutorials.errors);
+  renderFaq(document.getElementById('faq-tips'), tutorials.faq, tutorials.commonMistakes);
 
   buildNav();
   DocsSearch.bindSearch(document.getElementById('searchInput'));
