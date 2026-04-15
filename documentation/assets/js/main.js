@@ -37,6 +37,34 @@ function createCopyBlock(command) {
   return wrap;
 }
 
+function createCopyPreBlock(text) {
+  const wrap = document.createElement('div');
+  wrap.className = 'guide-code-block';
+
+  const pre = document.createElement('pre');
+  const code = document.createElement('code');
+  code.textContent = text;
+  pre.appendChild(code);
+
+  const btn = document.createElement('button');
+  btn.className = 'copy-btn';
+  btn.type = 'button';
+  btn.textContent = 'Copy';
+  btn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      btn.textContent = 'Copied';
+      setTimeout(() => { btn.textContent = 'Copy'; }, 800);
+    } catch {
+      btn.textContent = 'Failed';
+      setTimeout(() => { btn.textContent = 'Copy'; }, 800);
+    }
+  });
+
+  wrap.append(pre, btn);
+  return wrap;
+}
+
 function renderIntro(root, data) {
   root.innerHTML = '';
   root.dataset.searchText = [
@@ -113,9 +141,7 @@ function renderTutorialSection(root, title, subtitle, steps) {
 }
 
 function renderPbacHowToGuide(root, guide) {
-  if (!guide || !Array.isArray(guide.steps) || guide.steps.length === 0) {
-    return '';
-  }
+  if (!guide || !Array.isArray(guide.steps) || guide.steps.length === 0) return '';
 
   const actions = document.createElement('div');
   actions.className = 'section-actions';
@@ -131,71 +157,97 @@ function renderPbacHowToGuide(root, guide) {
   const summary = document.createElement('summary');
   summary.textContent = guide.title || 'How to Use PBAC After Conversion';
 
+  const content = document.createElement('div');
+  content.className = 'guide-content';
+
   const intro = document.createElement('p');
   intro.textContent = guide.intro || 'This guide explains PBAC usage after conversion.';
+  content.appendChild(intro);
 
+  // Steps
   const stepsTitle = document.createElement('p');
   stepsTitle.className = 'guide-subtitle';
   stepsTitle.textContent = 'How To Work With PBAC';
+  content.appendChild(stepsTitle);
 
-  const steps = document.createElement('ol');
-  steps.className = 'guide-list';
+  const stepsOl = document.createElement('ol');
+  stepsOl.className = 'guide-list';
+
   guide.steps.forEach((item) => {
     const li = document.createElement('li');
-    li.textContent = item;
-    steps.append(li);
+
+    if (typeof item === 'string') {
+      const exIndex = item.indexOf('Example:');
+      if (exIndex !== -1) {
+        const textPart = item.substring(0, exIndex).trim();
+        const codePart = item.substring(exIndex + 'Example:'.length).trim();
+        if (textPart) {
+          const p = document.createElement('div');
+          p.textContent = textPart;
+          li.appendChild(p);
+        }
+        if (codePart) li.appendChild(createCopyPreBlock(codePart));
+      } else if (item.includes('<?php') || item.includes('<li') || item.includes('<a')) {
+        // treat as code-heavy step
+        li.appendChild(createCopyPreBlock(item));
+      } else {
+        li.textContent = item;
+      }
+    } else {
+      li.textContent = String(item);
+    }
+
+    stepsOl.appendChild(li);
   });
 
-  details.append(summary, intro, stepsTitle, steps);
+  content.appendChild(stepsOl);
 
+  // Commands (copyable)
   if (Array.isArray(guide.commands) && guide.commands.length > 0) {
     const commandsTitle = document.createElement('p');
     commandsTitle.className = 'guide-subtitle';
     commandsTitle.textContent = 'Generate Or Refresh Access Map';
+    content.appendChild(commandsTitle);
 
-    const commands = document.createElement('ul');
-    commands.className = 'guide-list';
-    guide.commands.forEach((item) => {
+    const commandsUl = document.createElement('ul');
+    commandsUl.className = 'guide-list';
+    guide.commands.forEach((cmd) => {
       const li = document.createElement('li');
-      li.textContent = item;
-      commands.append(li);
+      li.appendChild(createCopyBlock(cmd));
+      commandsUl.appendChild(li);
     });
-
-    details.append(commandsTitle, commands);
+    content.appendChild(commandsUl);
   }
 
+  // Notes
   if (Array.isArray(guide.notes) && guide.notes.length > 0) {
     const notesTitle = document.createElement('p');
     notesTitle.className = 'guide-subtitle';
     notesTitle.textContent = 'Notes';
+    content.appendChild(notesTitle);
 
-    const notes = document.createElement('ul');
-    notes.className = 'guide-list';
-    guide.notes.forEach((item) => {
+    const notesUl = document.createElement('ul');
+    notesUl.className = 'guide-list';
+    guide.notes.forEach((n) => {
       const li = document.createElement('li');
-      li.textContent = item;
-      notes.append(li);
+      li.textContent = n;
+      notesUl.appendChild(li);
     });
-
-    details.append(notesTitle, notes);
+    content.appendChild(notesUl);
   }
+
+  details.appendChild(summary);
+  details.appendChild(content);
 
   btn.addEventListener('click', () => {
     details.open = true;
     details.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
-  actions.append(btn);
+  actions.appendChild(btn);
   root.append(actions, details);
 
-  return [
-    guide.buttonLabel,
-    guide.title,
-    guide.intro,
-    (guide.steps || []).join(' '),
-    (guide.commands || []).join(' '),
-    (guide.notes || []).join(' '),
-  ].join(' ');
+  return [guide.buttonLabel, guide.title, guide.intro, (guide.steps || []).join(' '), (guide.commands || []).join(' '), (guide.notes || []).join(' ')].join(' ');
 }
 
 function renderCommands(root, commands) {

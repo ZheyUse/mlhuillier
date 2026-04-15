@@ -208,6 +208,34 @@ body {
   color: var(--muted);
 }
 
+.guide-code-block {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: #f8fafc;
+  border: 1px solid var(--stroke);
+  border-radius: 10px;
+  padding: 10px;
+  margin-top: 8px;
+}
+
+.guide-code-block pre {
+  margin: 0;
+  padding: 10px;
+  background: #ffffff;
+  border-radius: 8px;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.9rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+.guide-code-block code { display: block; }
+
+.guide-code-block .copy-btn { align-self: flex-start; height: 36px; }
+
 .guide-subtitle {
   margin: 10px 0 4px;
   font-size: 0.78rem;

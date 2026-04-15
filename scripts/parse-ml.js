@@ -426,20 +426,24 @@ function buildTutorials(commands) {
     convertionPbacGuide: {
       buttonLabel: 'HOW TO USE?',
       title: 'How to Use PBAC After Conversion',
-      intro: 'After conversion, manage menu access (access level) and submenu/action permissions, then regenerate access map when rules change.',
+      intro: 'PBAC controls parent menu visibility (access levels) and submenu/action permissions. Use the provided helpers and access map to manage visibility and route protection.',
       steps: [
-        'Convert your project to PBAC using ml create --pbac <project_name>.',
-        'Define access level as parent menu and permissions as child actions/submenus.',
-        'Update your project access map whenever menu/permission mappings change.',
-        'Verify restricted pages and actions using accounts with different access levels.',
+        "Edit src/templates/sidebar.php and wrap the parent menu with a parent guard: <?php if (has_menu_access('Maintenance')): ?> ... <?php endif; ?>",
+        "Protect each submenu link with has_permission('MenuLabel SubmenuLabel'). Example: <?php if (has_permission('Maintenance Access Level')): ?> <li> <a href=\"/src/pages/maintenance/accesslevel/accesslevel.php\">Access Level</a> </li> <?php endif; ?>",
+        "Keep permission keys stable. The default generator uses the format 'MenuLabel SubmenuLabel' (for example 'Maintenance Access Level') — use the same string when calling has_permission() and when assigning permissions to users.",
+        "Run 'ml gen' (or 'php tools/generate_access_map.php') from your project root to generate src/assets/js/accesslevel-map.json. This file maps menus, submenu permission ids, and access_level bitmasks used by the admin UI.",
+        "Use the Access Level page (Maintenance → Access Level) to assign an access_level and a set of permission ids to a user. At login the PBAC session loader populates $_SESSION['user_access_level'] and $_SESSION['user_permissions'].",
+        "To protect routes or controllers use require_mapped_permission_for_current_route() or call has_permission('Permission Key') in your middleware/controllers. The scaffold also provides helpers like requirePermission() and requireMenuAccess().",
+        "Admin rule: an access_level of -1 grants all permissions. Admin rows with missing permissions may be auto-populated by the scaffold's session loader.",
       ],
       commands: [
-        'ml create --pbac <project_name>',
         'ml gen',
+        'php tools/generate_access_map.php'
       ],
       notes: [
-        'ml gen looks for tools\\generate_access_map.php in the current working directory and runs it (local gen).',
-        'If no map script exists, convert the project to PBAC first before generating map.',
+        "Permission ID format: 'MenuLabel SubmenuLabel' (space-separated). The generator uses this convention — changing sidebar labels requires re-running 'ml gen' to keep the map in sync.",
+        "If 'ml gen' is not available, run tools/generate_access_map.php manually from the project root to produce src/assets/js/accesslevel-map.json.",
+        "Sidebar PHP snippet patterns are used by the map generator: ensure submenu link labels (span.sidebar__submenu-label) and href targets are correct so permissions and targets are extracted properly.",
       ],
     },
     convertionRbac: [
