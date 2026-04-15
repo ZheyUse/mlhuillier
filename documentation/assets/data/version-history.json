@@ -1,0 +1,2451 @@
+{
+  "generatedAt": "2026-04-15T02:09:59.753Z",
+  "latestVersion": "1.1.3",
+  "source": {
+    "versionFile": "VERSION",
+    "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
+    "commitCount": 153
+  },
+  "releases": [
+    {
+      "version": "1.1.3",
+      "isLatest": true,
+      "commitCount": 15,
+      "dateRange": {
+        "from": "2026-04-14",
+        "to": "2026-04-15"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 11,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 2,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 1
+      },
+      "highlights": [
+        "Enhance documentation: Add copyable code blocks to PBAC guides and improve step descriptions for clarity",
+        "Enhance tutorials: Add PBAC and RBAC conversion guides with detailed steps and expected results",
+        "Enhance MySQL Workbench launcher: Add support for \"CE\" folder names and expand search patterns for executable discovery",
+        "Update CLI version to 1.1.3, enhance documentation with PBAC and RBAC guides, and add MySQL Workbench launcher script",
+        "Enhance ML Updater: Add normalizeWindowsLineEndings function and apply it to .bat and .cmd files during update",
+        "Enhance PBAC functionality: Load environment and database configuration files, and improve session handling for user access levels",
+        "Enhance PBAC debug access functionality: Add detailed session lookup information and improve error handling",
+        "Enhance middleware functionality: Normalize legacy middleware snippets and improve access checks for admin roles"
+      ],
+      "commits": [
+        {
+          "hash": "0bf7545822e8487355560633d0325d591ab009d2",
+          "shortHash": "0bf7545",
+          "date": "2026-04-15",
+          "title": "Enhance documentation: Add copyable code blocks to PBAC guides and improve step descriptions for clarity",
+          "type": "feature"
+        },
+        {
+          "hash": "c16f07ab64de9b66af3eba87b49447c42ad1e776",
+          "shortHash": "c16f07a",
+          "date": "2026-04-15",
+          "title": "Update command tutorials: Simplify 'ml gen' command usage and clarify explanation for PBAC access map generation",
+          "type": "other"
+        },
+        {
+          "hash": "b44487e0ad678a61919ca441519837659e0c42bc",
+          "shortHash": "b44487e",
+          "date": "2026-04-15",
+          "title": "Enhance tutorials: Add PBAC and RBAC conversion guides with detailed steps and expected results",
+          "type": "feature"
+        },
+        {
+          "hash": "ddca483838063c3378fbf86bea01bfc8d066e903",
+          "shortHash": "ddca483",
+          "date": "2026-04-15",
+          "title": "Enhance MySQL Workbench launcher: Add support for \"CE\" folder names and expand search patterns for executable discovery",
+          "type": "feature"
+        },
+        {
+          "hash": "3fc14019756f8de0b19cfaf950f392917e3e8760",
+          "shortHash": "3fc1401",
+          "date": "2026-04-15",
+          "title": "Update CLI version to 1.1.3, enhance documentation with PBAC and RBAC guides, and add MySQL Workbench launcher script",
+          "type": "release"
+        },
+        {
+          "hash": "5c5ee692f41a94f6ac585d902ea8850ce7aaba4b",
+          "shortHash": "5c5ee69",
+          "date": "2026-04-14",
+          "title": "Enhance ML Updater: Add normalizeWindowsLineEndings function and apply it to .bat and .cmd files during update",
+          "type": "feature"
+        },
+        {
+          "hash": "0c882b3e3f30a8702be31bf842f8b2f306d32d7d",
+          "shortHash": "0c882b3",
+          "date": "2026-04-14",
+          "title": "Enhance PBAC functionality: Load environment and database configuration files, and improve session handling for user access levels",
+          "type": "feature"
+        },
+        {
+          "hash": "ef85f0c4c1d43f543704236bbafb4bfa3976eea0",
+          "shortHash": "ef85f0c",
+          "date": "2026-04-14",
+          "title": "Enhance PBAC debug access functionality: Add detailed session lookup information and improve error handling",
+          "type": "feature"
+        },
+        {
+          "hash": "bbff312f70c892900f239474543c40efd699e5df",
+          "shortHash": "bbff312",
+          "date": "2026-04-14",
+          "title": "Refactor access control logic: Remove redundant admin role checks and simplify permission handling",
+          "type": "refactor"
+        },
+        {
+          "hash": "45f0d81b163ebc042e6d6955ca5cd735ebe8e7d9",
+          "shortHash": "45f0d81",
+          "date": "2026-04-14",
+          "title": "Refactor PBAC debug access functionality: Simplify debug access flag handling and improve debug display styling",
+          "type": "refactor"
+        },
+        {
+          "hash": "58b7abd84995c3f7d3a7722fd8d1c5fc9b9915db",
+          "shortHash": "58b7abd",
+          "date": "2026-04-14",
+          "title": "Enhance middleware functionality: Normalize legacy middleware snippets and improve access checks for admin roles",
+          "type": "feature"
+        },
+        {
+          "hash": "c062d6b6f349b5d9b07fe8c864ee125ec857700f",
+          "shortHash": "c062d6b",
+          "date": "2026-04-14",
+          "title": "Enhance PBAC functionality: Add session handling, access map details, and debug access features",
+          "type": "feature"
+        },
+        {
+          "hash": "32126a64f0d7da4d0b0807e56688e23e60740eeb",
+          "shortHash": "32126a6",
+          "date": "2026-04-14",
+          "title": "Enhance middleware functionality: Implement patching for middleware file and add permission checks for route access",
+          "type": "feature"
+        },
+        {
+          "hash": "1bf6d32223a356c126dba604cd924961853a8b15",
+          "shortHash": "1bf6d32",
+          "date": "2026-04-14",
+          "title": "Enhance access level modal functionality: Add close button behavior and escape key handling; Implement admin role checks and session management updates",
+          "type": "feature"
+        },
+        {
+          "hash": "1e646c5541d920b58740f6067819b85477ed5cd7",
+          "shortHash": "1e646c5",
+          "date": "2026-04-14",
+          "title": "Enhance permission selection functionality: Add select all checkbox and update access level display",
+          "type": "feature"
+        }
+      ]
+    },
+    {
+      "version": "1.1.2",
+      "isLatest": false,
+      "commitCount": 6,
+      "dateRange": {
+        "from": "2026-04-14",
+        "to": "2026-04-14"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 4,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 1,
+        "other": 0
+      },
+      "highlights": [
+        "chore: update version numbers to 1.1.2 in various files",
+        "Implement code changes to enhance functionality and improve performance",
+        "Implement code changes to enhance functionality and improve performance",
+        "Implement code changes to enhance functionality and improve performance",
+        "Enhance PBAC CLI Tool: Add remote scaffold application and confirmation prompt"
+      ],
+      "commits": [
+        {
+          "hash": "612e89a02c92b8ae5ecadbcc89f5ffb7529d5f70",
+          "shortHash": "612e89a",
+          "date": "2026-04-14",
+          "title": "chore: update version numbers to 1.1.2 in various files",
+          "type": "release"
+        },
+        {
+          "hash": "f2defeec53a4d6d595261577cc7c4289d7e892d5",
+          "shortHash": "f2defee",
+          "date": "2026-04-14",
+          "title": "Implement code changes to enhance functionality and improve performance",
+          "type": "feature"
+        },
+        {
+          "hash": "18d8364b2f3c72ab3dee0c685671e42bfeaf0907",
+          "shortHash": "18d8364",
+          "date": "2026-04-14",
+          "title": "Implement code changes to enhance functionality and improve performance",
+          "type": "feature"
+        },
+        {
+          "hash": "c39ebd49c9568b974c3617d0d861216b862d1172",
+          "shortHash": "c39ebd4",
+          "date": "2026-04-14",
+          "title": "Implement code changes to enhance functionality and improve performance",
+          "type": "feature"
+        },
+        {
+          "hash": "df323b3e4d8a56d0b599ac74dc40b70bbd4e18b5",
+          "shortHash": "df323b3",
+          "date": "2026-04-14",
+          "title": "Enhance PBAC CLI Tool: Add remote scaffold application and confirmation prompt",
+          "type": "feature"
+        },
+        {
+          "hash": "b7487144c3be90a92800fbd25312bef071da13c6",
+          "shortHash": "b748714",
+          "date": "2026-04-14",
+          "title": "chore: update message for failed folder opening to clarify status",
+          "type": "chore"
+        }
+      ]
+    },
+    {
+      "version": "1.0.50",
+      "isLatest": false,
+      "commitCount": 3,
+      "dateRange": {
+        "from": "2026-04-13",
+        "to": "2026-04-14"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 2,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "chore: update version to 1.0.50 and enhance commands.json with new 'rev' and 'reveal' commands",
+        "chore: add user and system prompt templates for access analysis and PBAC instructions",
+        "chore: add README.md for project documentation and update commands.json timestamp"
+      ],
+      "commits": [
+        {
+          "hash": "8c703c1370f3f1cf2e450647027f95693fcc76ba",
+          "shortHash": "8c703c1",
+          "date": "2026-04-14",
+          "title": "chore: update version to 1.0.50 and enhance commands.json with new 'rev' and 'reveal' commands",
+          "type": "release"
+        },
+        {
+          "hash": "ada16064616e4a35d68cbd36d1282a9f47318aa8",
+          "shortHash": "ada1606",
+          "date": "2026-04-14",
+          "title": "chore: add user and system prompt templates for access analysis and PBAC instructions",
+          "type": "feature"
+        },
+        {
+          "hash": "9e9fea28de58f3865d5ee64cda10e04bee7bf1e4",
+          "shortHash": "9e9fea2",
+          "date": "2026-04-13",
+          "title": "chore: add README.md for project documentation and update commands.json timestamp",
+          "type": "feature"
+        }
+      ]
+    },
+    {
+      "version": "1.0.49",
+      "isLatest": false,
+      "commitCount": 2,
+      "dateRange": {
+        "from": "2026-04-08",
+        "to": "2026-04-08"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 1,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "chore: update version to 1.0.49 and refresh related files for consistency",
+        "chore: update commands.json timestamp and enhance ml.bat help text with new subcommands and examples"
+      ],
+      "commits": [
+        {
+          "hash": "bebff3bf39567b037c33fa778a1c749126812ca7",
+          "shortHash": "bebff3b",
+          "date": "2026-04-08",
+          "title": "chore: update version to 1.0.49 and refresh related files for consistency",
+          "type": "release"
+        },
+        {
+          "hash": "1281396744564ad2dcc062cb8820ef3a635eda6b",
+          "shortHash": "1281396",
+          "date": "2026-04-08",
+          "title": "chore: update commands.json timestamp and enhance ml.bat help text with new subcommands and examples",
+          "type": "feature"
+        }
+      ]
+    },
+    {
+      "version": "1.0.48",
+      "isLatest": false,
+      "commitCount": 2,
+      "dateRange": {
+        "from": "2026-04-08",
+        "to": "2026-04-08"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 1,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "chore: update version to 1.0.48, enhance commands.json with new database test commands, and update installation scripts",
+        "chore: update README and index.html for clarity, refresh commands.json timestamp, and enhance main.js intro text"
+      ],
+      "commits": [
+        {
+          "hash": "0657bd1595921f490cdc506b191a0f4c02e3df9a",
+          "shortHash": "0657bd1",
+          "date": "2026-04-08",
+          "title": "chore: update version to 1.0.48, enhance commands.json with new database test commands, and update installation scripts",
+          "type": "release"
+        },
+        {
+          "hash": "eb3d5ffa73ce4958c5ba95dd991221230fdedb7c",
+          "shortHash": "eb3d5ff",
+          "date": "2026-04-08",
+          "title": "chore: update README and index.html for clarity, refresh commands.json timestamp, and enhance main.js intro text",
+          "type": "feature"
+        }
+      ]
+    },
+    {
+      "version": "1.0.47",
+      "isLatest": false,
+      "commitCount": 1,
+      "dateRange": {
+        "from": "2026-04-08",
+        "to": "2026-04-08"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 0,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "chore: update version to 1.0.47, enhance commands.json with RBAC creation command, and update installation scripts"
+      ],
+      "commits": [
+        {
+          "hash": "7712107a4f74b871db29a1ddd865ddb239e2dfc9",
+          "shortHash": "7712107",
+          "date": "2026-04-08",
+          "title": "chore: update version to 1.0.47, enhance commands.json with RBAC creation command, and update installation scripts",
+          "type": "release"
+        }
+      ]
+    },
+    {
+      "version": "1.0.46",
+      "isLatest": false,
+      "commitCount": 6,
+      "dateRange": {
+        "from": "2026-04-01",
+        "to": "2026-04-08"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 4,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 1,
+        "other": 0
+      },
+      "highlights": [
+        "chore: update version to 1.0.46, enhance commands.json with PBAC creation command, and update installation scripts",
+        "chore: update commands.json timestamp, enhance .htaccess rewrite rule, and improve navigation handling in ml.bat",
+        "chore: update commands.json timestamp and enhance project slug normalization in ml-serve.php",
+        "chore: update generated timestamp in commands.json and enhance project URL handling in ml.bat",
+        "chore: update commands.json and ml.bat for new navigation and cloning features"
+      ],
+      "commits": [
+        {
+          "hash": "17bfd668002626746d152e08abe0c2dde52f2f1a",
+          "shortHash": "17bfd66",
+          "date": "2026-04-08",
+          "title": "chore: update version to 1.0.46, enhance commands.json with PBAC creation command, and update installation scripts",
+          "type": "release"
+        },
+        {
+          "hash": "795afcf1dfe52052fa247f72d23844cf70cd2b11",
+          "shortHash": "795afcf",
+          "date": "2026-04-01",
+          "title": "chore: update commands.json timestamp, enhance .htaccess rewrite rule, and improve navigation handling in ml.bat",
+          "type": "feature"
+        },
+        {
+          "hash": "e7063ec9bc5a4495191ae0143927c1584a11a869",
+          "shortHash": "e7063ec",
+          "date": "2026-04-01",
+          "title": "chore: update commands.json timestamp and enhance project slug normalization in ml-serve.php",
+          "type": "feature"
+        },
+        {
+          "hash": "4e33a7beabdf118db9f0acfcab91597c0eca1c7f",
+          "shortHash": "4e33a7b",
+          "date": "2026-04-01",
+          "title": "chore: update generated timestamp in commands.json and enhance project URL handling in ml.bat",
+          "type": "feature"
+        },
+        {
+          "hash": "79bc6faf2b9cd873b9fd90ed6699817425266b44",
+          "shortHash": "79bc6fa",
+          "date": "2026-04-01",
+          "title": "chore: update commands.json and ml.bat for navigation command enhancements",
+          "type": "chore"
+        },
+        {
+          "hash": "59756c65490d4e4e54f202e8e9a35e5fd640622a",
+          "shortHash": "59756c6",
+          "date": "2026-04-01",
+          "title": "chore: update commands.json and ml.bat for new navigation and cloning features",
+          "type": "feature"
+        }
+      ]
+    },
+    {
+      "version": "1.0.45",
+      "isLatest": false,
+      "commitCount": 2,
+      "dateRange": {
+        "from": "2026-04-01",
+        "to": "2026-04-01"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 1,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "chore: bump version to 1.0.45 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+        "chore: update generated timestamp in commands.json and enhance Apache startup logic in ml.bat"
+      ],
+      "commits": [
+        {
+          "hash": "7cfafa7d4507efebf0f494aef380a917371a8448",
+          "shortHash": "7cfafa7",
+          "date": "2026-04-01",
+          "title": "chore: bump version to 1.0.45 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+          "type": "release"
+        },
+        {
+          "hash": "eeffd52dcad01e412dbc1626c5e819668c6688a5",
+          "shortHash": "eeffd52",
+          "date": "2026-04-01",
+          "title": "chore: update generated timestamp in commands.json and enhance Apache startup logic in ml.bat",
+          "type": "feature"
+        }
+      ]
+    },
+    {
+      "version": "1.0.44",
+      "isLatest": false,
+      "commitCount": 3,
+      "dateRange": {
+        "from": "2026-04-01",
+        "to": "2026-04-01"
+      },
+      "stats": {
+        "release": 2,
+        "feature": 0,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 1,
+        "other": 0
+      },
+      "highlights": [
+        "chore: update CLI version to 1.0.44 and enhance command handling in ml.bat",
+        "chore: bump version to 1.0.44 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat"
+      ],
+      "commits": [
+        {
+          "hash": "6e0a93448472c294181d002abdde15befda89059",
+          "shortHash": "6e0a934",
+          "date": "2026-04-01",
+          "title": "chore: update CLI version to 1.0.44 and enhance command handling in ml.bat",
+          "type": "release"
+        },
+        {
+          "hash": "c056b4b0b1c7510e2e5dcaf0bc8dc245db5db451",
+          "shortHash": "c056b4b",
+          "date": "2026-04-01",
+          "title": "chore: bump version to 1.0.44 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+          "type": "release"
+        },
+        {
+          "hash": "26585feb05a1980d00481404dbd2f60de82eea82",
+          "shortHash": "26585fe",
+          "date": "2026-04-01",
+          "title": "chore: update mysqldump detection logic to prioritize official MySQL 8 and Workbench locations in backup-db.php and db-config.php",
+          "type": "chore"
+        }
+      ]
+    },
+    {
+      "version": "1.0.43",
+      "isLatest": false,
+      "commitCount": 1,
+      "dateRange": {
+        "from": "2026-04-01",
+        "to": "2026-04-01"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 0,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "chore: bump version to 1.0.43 in VERSION, install-ml.bat, ml.bat, uninstall-ml.bat; enhance backup functionality in backup-db.php and db-config.php; update commands.json and parse-ml.js for new backup commands"
+      ],
+      "commits": [
+        {
+          "hash": "9529ba94d19b941d33d48f9f71d39cbb7f2b8001",
+          "shortHash": "9529ba9",
+          "date": "2026-04-01",
+          "title": "chore: bump version to 1.0.43 in VERSION, install-ml.bat, ml.bat, uninstall-ml.bat; enhance backup functionality in backup-db.php and db-config.php; update commands.json and parse-ml.js for new backup commands",
+          "type": "release"
+        }
+      ]
+    },
+    {
+      "version": "1.0.42",
+      "isLatest": false,
+      "commitCount": 1,
+      "dateRange": {
+        "from": "2026-04-01",
+        "to": "2026-04-01"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 0,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "chore: bump version to 1.0.42 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat"
+      ],
+      "commits": [
+        {
+          "hash": "72de9e79c6600b732e5e51189e11e21f9bc7ffdc",
+          "shortHash": "72de9e7",
+          "date": "2026-04-01",
+          "title": "chore: bump version to 1.0.42 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+          "type": "release"
+        }
+      ]
+    },
+    {
+      "version": "1.0.41",
+      "isLatest": false,
+      "commitCount": 2,
+      "dateRange": {
+        "from": "2026-03-26",
+        "to": "2026-04-01"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 0,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 1,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "chore: bump version to 1.0.41 in VERSION, install-ml.bat, ml.bat, uninstall-ml.bat, and db-config.php; add backup-db.php and db-config.php for database backup functionality"
+      ],
+      "commits": [
+        {
+          "hash": "10213fda864a8c7195ac8419009554686f195dae",
+          "shortHash": "10213fd",
+          "date": "2026-04-01",
+          "title": "chore: bump version to 1.0.41 in VERSION, install-ml.bat, ml.bat, uninstall-ml.bat, and db-config.php; add backup-db.php and db-config.php for database backup functionality",
+          "type": "release"
+        },
+        {
+          "hash": "53960ce23a56958bb3754ca1ceb1fa92de748894",
+          "shortHash": "53960ce",
+          "date": "2026-03-26",
+          "title": "Refactor code structure for improved readability and maintainability",
+          "type": "refactor"
+        }
+      ]
+    },
+    {
+      "version": "1.0.39",
+      "isLatest": false,
+      "commitCount": 2,
+      "dateRange": {
+        "from": "2026-03-26",
+        "to": "2026-03-26"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 1,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "chore: bump version to 1.0.39 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+        "feat: add dynamic documentation for ML CLI"
+      ],
+      "commits": [
+        {
+          "hash": "62f181cd19542b07c00790a0bab8e1a669179e6b",
+          "shortHash": "62f181c",
+          "date": "2026-03-26",
+          "title": "chore: bump version to 1.0.39 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+          "type": "release"
+        },
+        {
+          "hash": "43a57bd6169d1608d846b75e917b18df57611b65",
+          "shortHash": "43a57bd",
+          "date": "2026-03-26",
+          "title": "feat: add dynamic documentation for ML CLI",
+          "type": "feature"
+        }
+      ]
+    },
+    {
+      "version": "1.0.38",
+      "isLatest": false,
+      "commitCount": 3,
+      "dateRange": {
+        "from": "2026-03-25",
+        "to": "2026-03-25"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 2,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "Bump version to 1.0.38 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+        "Enhance mirror-audit script and instructions for generator validation and audit interpretation",
+        "Enhance scaffoldProject to use embedded templates by default and add new modals for account management"
+      ],
+      "commits": [
+        {
+          "hash": "d52953bd82582b8cc7dfd5a0b11d0c518dd10d0c",
+          "shortHash": "d52953b",
+          "date": "2026-03-25",
+          "title": "Bump version to 1.0.38 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+          "type": "release"
+        },
+        {
+          "hash": "9d21929fccf6ccfeec21a845071570063b7c76bc",
+          "shortHash": "9d21929",
+          "date": "2026-03-25",
+          "title": "Enhance mirror-audit script and instructions for generator validation and audit interpretation",
+          "type": "feature"
+        },
+        {
+          "hash": "9c8ad14c008d82d1552d6979aa0eaa53b41c40a2",
+          "shortHash": "9c8ad14",
+          "date": "2026-03-25",
+          "title": "Enhance scaffoldProject to use embedded templates by default and add new modals for account management",
+          "type": "feature"
+        }
+      ]
+    },
+    {
+      "version": "1.0.37",
+      "isLatest": false,
+      "commitCount": 4,
+      "dateRange": {
+        "from": "2026-03-25",
+        "to": "2026-03-25"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 3,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "Bump version to 1.0.37 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+        "Implement new feature for user authentication and improve error handling",
+        "Add account management template synchronization and inline classifier script for auditing",
+        "Update .gitignore to include /audit; add create-instruction for scaffolding and auditing processes"
+      ],
+      "commits": [
+        {
+          "hash": "fc0756c02169a833d9ce905577fc58b3548526e7",
+          "shortHash": "fc0756c",
+          "date": "2026-03-25",
+          "title": "Bump version to 1.0.37 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+          "type": "release"
+        },
+        {
+          "hash": "e5ba486353f3774e21683d12ba26ab4b56ca68fa",
+          "shortHash": "e5ba486",
+          "date": "2026-03-25",
+          "title": "Implement new feature for user authentication and improve error handling",
+          "type": "feature"
+        },
+        {
+          "hash": "87494b9e5434cadec1fd4c05483f864807e62df3",
+          "shortHash": "87494b9",
+          "date": "2026-03-25",
+          "title": "Add account management template synchronization and inline classifier script for auditing",
+          "type": "feature"
+        },
+        {
+          "hash": "d7ece21912e2d2d9562cd1fa231df21bed26fcc7",
+          "shortHash": "d7ece21",
+          "date": "2026-03-25",
+          "title": "Update .gitignore to include /audit; add create-instruction for scaffolding and auditing processes",
+          "type": "feature"
+        }
+      ]
+    },
+    {
+      "version": "1.0.36",
+      "isLatest": false,
+      "commitCount": 4,
+      "dateRange": {
+        "from": "2026-03-24",
+        "to": "2026-03-24"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 3,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "Bump version to 1.0.36 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat; update generate-file-structure.php for improved command usage and error handling",
+        "Add mirror audit instructions and update .gitignore to include audit directory",
+        "Add mirror audit scripts and template extraction functionality; update .gitignore to include scaffold_templates and samples",
+        "Update .gitignore to include /test and /samples; add account management feature with associated files and styles"
+      ],
+      "commits": [
+        {
+          "hash": "d11801927977dbfff06dcab4bc8c5568861bd62c",
+          "shortHash": "d118019",
+          "date": "2026-03-24",
+          "title": "Bump version to 1.0.36 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat; update generate-file-structure.php for improved command usage and error handling",
+          "type": "release"
+        },
+        {
+          "hash": "1b2c34e9c547c9755b432f90fc96daae8ff0fed8",
+          "shortHash": "1b2c34e",
+          "date": "2026-03-24",
+          "title": "Add mirror audit instructions and update .gitignore to include audit directory",
+          "type": "feature"
+        },
+        {
+          "hash": "3ad03bf405ba83af39187e3a5ba87656c5f93aba",
+          "shortHash": "3ad03bf",
+          "date": "2026-03-24",
+          "title": "Add mirror audit scripts and template extraction functionality; update .gitignore to include scaffold_templates and samples",
+          "type": "feature"
+        },
+        {
+          "hash": "da019bfcba9e7fedc20be5cd13320b8c53b987d1",
+          "shortHash": "da019bf",
+          "date": "2026-03-24",
+          "title": "Update .gitignore to include /test and /samples; add account management feature with associated files and styles",
+          "type": "feature"
+        }
+      ]
+    },
+    {
+      "version": "1.0.35",
+      "isLatest": false,
+      "commitCount": 4,
+      "dateRange": {
+        "from": "2026-03-24",
+        "to": "2026-03-24"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 2,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 1,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "Bump version to 1.0.35 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+        "Update .htaccess generation to use relative redirect to public/; enhance navigation in ml.bat, ml.cmd, and ml.ps1 for improved user experience",
+        "Enhance project name determination in ml.bat to use path relative to htdocs; improve handling of leading slashes and public folder detection"
+      ],
+      "commits": [
+        {
+          "hash": "22c408beb492bf84e89fde58952c55da62487588",
+          "shortHash": "22c408b",
+          "date": "2026-03-24",
+          "title": "Bump version to 1.0.35 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+          "type": "release"
+        },
+        {
+          "hash": "0c8aea1cabfbe606259d560d3901ce17d2fc6e54",
+          "shortHash": "0c8aea1",
+          "date": "2026-03-24",
+          "title": "Update .htaccess generation to use relative redirect to public/; enhance navigation in ml.bat, ml.cmd, and ml.ps1 for improved user experience",
+          "type": "feature"
+        },
+        {
+          "hash": "284279369f7edb86201f9470894c33a4d530d51a",
+          "shortHash": "2842793",
+          "date": "2026-03-24",
+          "title": "Refactor project name handling in ml.bat; streamline directory path processing and improve public folder detection",
+          "type": "refactor"
+        },
+        {
+          "hash": "4a00054c0c84c7f45a124e80dd7407129d6286b8",
+          "shortHash": "4a00054",
+          "date": "2026-03-24",
+          "title": "Enhance project name determination in ml.bat to use path relative to htdocs; improve handling of leading slashes and public folder detection",
+          "type": "feature"
+        }
+      ]
+    },
+    {
+      "version": "1.0.34",
+      "isLatest": false,
+      "commitCount": 3,
+      "dateRange": {
+        "from": "2026-03-23",
+        "to": "2026-03-23"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 2,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "Bump version to 1.0.34 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+        "Enhance navigation functionality in ml.cmd and ml.bat; improve project name handling and streamline directory changes",
+        "Enhance navigation helper in ml.cmd and ml.bat for improved user experience; add output messages and streamline directory navigation"
+      ],
+      "commits": [
+        {
+          "hash": "f37988a790509355950d07dc5aaa61aa2603afb1",
+          "shortHash": "f37988a",
+          "date": "2026-03-23",
+          "title": "Bump version to 1.0.34 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+          "type": "release"
+        },
+        {
+          "hash": "3d41df677b007ab0accebf98a4273a0d97737e32",
+          "shortHash": "3d41df6",
+          "date": "2026-03-23",
+          "title": "Enhance navigation functionality in ml.cmd and ml.bat; improve project name handling and streamline directory changes",
+          "type": "feature"
+        },
+        {
+          "hash": "700d18911350d3f2a72d3bb0af40761a55aeb84c",
+          "shortHash": "700d189",
+          "date": "2026-03-23",
+          "title": "Enhance navigation helper in ml.cmd and ml.bat for improved user experience; add output messages and streamline directory navigation",
+          "type": "feature"
+        }
+      ]
+    },
+    {
+      "version": "1.0.33",
+      "isLatest": false,
+      "commitCount": 8,
+      "dateRange": {
+        "from": "2026-03-23",
+        "to": "2026-03-23"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 5,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 2,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "Bump version to 1.0.33 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+        "Enhance installation script with improved progress reporting and error handling; update output messages for clarity",
+        "Refactor installation and update scripts for improved clarity and functionality; enhance logging for better user feedback",
+        "Enhance uninstall script to clean user wrappers and PowerShell profile shim for improved uninstallation process",
+        "Enhance ml.bat and ml.cmd to enable extensions for improved functionality",
+        "Enhance installation and uninstallation scripts to manage ml.cmd in user bin directory"
+      ],
+      "commits": [
+        {
+          "hash": "b2a935a482f1596b3a3686341d19893b97359655",
+          "shortHash": "b2a935a",
+          "date": "2026-03-23",
+          "title": "Bump version to 1.0.33 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+          "type": "release"
+        },
+        {
+          "hash": "52671be387c23ed13dc42761a25abd06eb725217",
+          "shortHash": "52671be",
+          "date": "2026-03-23",
+          "title": "Refactor PowerShell profile update logic to handle multiple profile paths and ensure execution policy is set for the current user; improve shim function integration",
+          "type": "refactor"
+        },
+        {
+          "hash": "379bfdbacbd1082472527f5c87952886f86d94ca",
+          "shortHash": "379bfdb",
+          "date": "2026-03-23",
+          "title": "Enhance installation script with improved progress reporting and error handling; update output messages for clarity",
+          "type": "feature"
+        },
+        {
+          "hash": "2c6ef0b7fa2da319fcd8c62f53b2b796b8bdaefa",
+          "shortHash": "2c6ef0b",
+          "date": "2026-03-23",
+          "title": "Refactor installation and update scripts for improved clarity and functionality; enhance logging for better user feedback",
+          "type": "feature"
+        },
+        {
+          "hash": "fa809a2fd594f00bb6fcbe3e7c55ae0921e7a278",
+          "shortHash": "fa809a2",
+          "date": "2026-03-23",
+          "title": "Enhance uninstall script to clean user wrappers and PowerShell profile shim for improved uninstallation process",
+          "type": "feature"
+        },
+        {
+          "hash": "46d0e8a5e504084ca3d58bfb283b2a965c74b43a",
+          "shortHash": "46d0e8a",
+          "date": "2026-03-23",
+          "title": "Refactor ml.cmd to simplify command execution and remove temporary output handling",
+          "type": "refactor"
+        },
+        {
+          "hash": "ea40e87c0b0ab3f368c4bac5c60e55c5580c5680",
+          "shortHash": "ea40e87",
+          "date": "2026-03-23",
+          "title": "Enhance ml.bat and ml.cmd to enable extensions for improved functionality",
+          "type": "feature"
+        },
+        {
+          "hash": "41d70c420be1e7bb41ed29cc0330c5f1df63df6a",
+          "shortHash": "41d70c4",
+          "date": "2026-03-23",
+          "title": "Enhance installation and uninstallation scripts to manage ml.cmd in user bin directory",
+          "type": "feature"
+        }
+      ]
+    },
+    {
+      "version": "1.0.32",
+      "isLatest": false,
+      "commitCount": 2,
+      "dateRange": {
+        "from": "2026-03-23",
+        "to": "2026-03-23"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 1,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "Bump version to 1.0.32 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat; update installation scripts for improved error handling",
+        "Enhance installation scripts and navigation helper for improved user experience"
+      ],
+      "commits": [
+        {
+          "hash": "2ab14eb67362eb24144e45769edfaf17b3812895",
+          "shortHash": "2ab14eb",
+          "date": "2026-03-23",
+          "title": "Bump version to 1.0.32 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat; update installation scripts for improved error handling",
+          "type": "release"
+        },
+        {
+          "hash": "56252454fdba10983af9f9b38c283c70d9fe9dfb",
+          "shortHash": "5625245",
+          "date": "2026-03-23",
+          "title": "Enhance installation scripts and navigation helper for improved user experience",
+          "type": "feature"
+        }
+      ]
+    },
+    {
+      "version": "1.0.31",
+      "isLatest": false,
+      "commitCount": 3,
+      "dateRange": {
+        "from": "2026-03-23",
+        "to": "2026-03-23"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 1,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 1
+      },
+      "highlights": [
+        "Bump version to 1.0.31 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+        "Add PowerShell shim function `ml` to forward commands to ml.cmd or ml.ps1"
+      ],
+      "commits": [
+        {
+          "hash": "2e818e83cd7a85ffae031552ffc1476ea448b49f",
+          "shortHash": "2e818e8",
+          "date": "2026-03-23",
+          "title": "Bump version to 1.0.31 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+          "type": "release"
+        },
+        {
+          "hash": "a8c73559526aaafc238d7f80e6d4181f68796e93",
+          "shortHash": "a8c7355",
+          "date": "2026-03-23",
+          "title": "Add PowerShell shim function `ml` to forward commands to ml.cmd or ml.ps1",
+          "type": "feature"
+        },
+        {
+          "hash": "b2823ab762840d8defb2f497036d07b6dd535020",
+          "shortHash": "b2823ab",
+          "date": "2026-03-23",
+          "title": "Merge branch 'main' of https://github.com/ZheyUse/mlhuillier",
+          "type": "other"
+        }
+      ]
+    },
+    {
+      "version": "1.0.30",
+      "isLatest": false,
+      "commitCount": 5,
+      "dateRange": {
+        "from": "2026-03-23",
+        "to": "2026-03-23"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 2,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 2
+      },
+      "highlights": [
+        "Bump version to 1.0.30 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat; update PowerShell commands for better compatibility",
+        "Add installation of shell wrappers and helper installer in install-ml.bat",
+        "Add remote installer for ML wrappers and update download instructions"
+      ],
+      "commits": [
+        {
+          "hash": "e2c4ced83aca37843630d837d2e2ec7c95af535a",
+          "shortHash": "e2c4ced",
+          "date": "2026-03-23",
+          "title": "Bump version to 1.0.30 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat; update PowerShell commands for better compatibility",
+          "type": "release"
+        },
+        {
+          "hash": "d65132ee3f2f143d921009da5aece537e74f6985",
+          "shortHash": "d65132e",
+          "date": "2026-03-23",
+          "title": "Merge pull request #5 from ZheyUse/cli_test",
+          "type": "other"
+        },
+        {
+          "hash": "1119782f17afdcb34de392f8fb0873dbdf530ff6",
+          "shortHash": "1119782",
+          "date": "2026-03-23",
+          "title": "Add installation of shell wrappers and helper installer in install-ml.bat",
+          "type": "feature"
+        },
+        {
+          "hash": "26737273d792a2993551c5df0bd67b24e3d30308",
+          "shortHash": "2673727",
+          "date": "2026-03-23",
+          "title": "Add remote installer for ML wrappers and update download instructions",
+          "type": "feature"
+        },
+        {
+          "hash": "37f1e2256e261554bc9dfc2385e512ff5b1a35c0",
+          "shortHash": "37f1e22",
+          "date": "2026-03-23",
+          "title": "Merge pull request #4 from ZheyUse/cli_test",
+          "type": "other"
+        }
+      ]
+    },
+    {
+      "version": "1.0.29",
+      "isLatest": false,
+      "commitCount": 2,
+      "dateRange": {
+        "from": "2026-03-23",
+        "to": "2026-03-23"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 0,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 1
+      },
+      "highlights": [
+        "Bump version to 1.0.29 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat"
+      ],
+      "commits": [
+        {
+          "hash": "d4fc59da1cc8289e73c3b0e8a47eb7d35e6295be",
+          "shortHash": "d4fc59d",
+          "date": "2026-03-23",
+          "title": "Bump version to 1.0.29 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+          "type": "release"
+        },
+        {
+          "hash": "3148c356749b19fed4394e7673f5c1daf1e7237c",
+          "shortHash": "3148c35",
+          "date": "2026-03-23",
+          "title": "Merge pull request #3 from ZheyUse/cli_test",
+          "type": "other"
+        }
+      ]
+    },
+    {
+      "version": "1.0.28",
+      "isLatest": false,
+      "commitCount": 2,
+      "dateRange": {
+        "from": "2026-03-23",
+        "to": "2026-03-23"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 0,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 1
+      },
+      "highlights": [
+        "Bump version to 1.0.28 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat; update download.md"
+      ],
+      "commits": [
+        {
+          "hash": "28662a2e1056a1a196c15fb8b8ab718580e7b13a",
+          "shortHash": "28662a2",
+          "date": "2026-03-23",
+          "title": "Bump version to 1.0.28 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat; update download.md",
+          "type": "release"
+        },
+        {
+          "hash": "da41ed4846a1084527b667446e99b7cfdcdcfa17",
+          "shortHash": "da41ed4",
+          "date": "2026-03-23",
+          "title": "Merge pull request #2 from ZheyUse/cli_test",
+          "type": "other"
+        }
+      ]
+    },
+    {
+      "version": "1.0.27",
+      "isLatest": false,
+      "commitCount": 4,
+      "dateRange": {
+        "from": "2026-03-23",
+        "to": "2026-03-23"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 1,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 1,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 1
+      },
+      "highlights": [
+        "Bump version to 1.0.27 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat; add local installation helper script ml-local.php",
+        "Enhance argument handling in ml.bat to show help for unrecognized long flags"
+      ],
+      "commits": [
+        {
+          "hash": "b524c1a66689fc2586bf68b2a1f017e2631737cf",
+          "shortHash": "b524c1a",
+          "date": "2026-03-23",
+          "title": "Bump version to 1.0.27 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat; add local installation helper script ml-local.php",
+          "type": "release"
+        },
+        {
+          "hash": "bd51661e3000e53a95df52611c991f29b2a71e41",
+          "shortHash": "bd51661",
+          "date": "2026-03-23",
+          "title": "Merge pull request #1 from ZheyUse/cli_test",
+          "type": "other"
+        },
+        {
+          "hash": "239f1f2fc319df8975c8d3893e9bac5d4316e10a",
+          "shortHash": "239f1f2",
+          "date": "2026-03-23",
+          "title": "Refactor PowerShell profile check to streamline ML wrapper addition",
+          "type": "refactor"
+        },
+        {
+          "hash": "931e145ff68f4f0f373953fc38e016abdab67dbe",
+          "shortHash": "931e145",
+          "date": "2026-03-23",
+          "title": "Enhance argument handling in ml.bat to show help for unrecognized long flags",
+          "type": "feature"
+        }
+      ]
+    },
+    {
+      "version": "1.0.26",
+      "isLatest": false,
+      "commitCount": 1,
+      "dateRange": {
+        "from": "2026-03-23",
+        "to": "2026-03-23"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 0,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "Bump version to 1.0.26 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat"
+      ],
+      "commits": [
+        {
+          "hash": "4b282bfcb294c6c71509d31282335984fe46e65b",
+          "shortHash": "4b282bf",
+          "date": "2026-03-23",
+          "title": "Bump version to 1.0.26 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+          "type": "release"
+        }
+      ]
+    },
+    {
+      "version": "1.0.25",
+      "isLatest": false,
+      "commitCount": 1,
+      "dateRange": {
+        "from": "2026-03-23",
+        "to": "2026-03-23"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 0,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "Add CLI wrappers and update version to 1.0.25 in various scripts"
+      ],
+      "commits": [
+        {
+          "hash": "c09691648cd9384a259580866981485670ef92fd",
+          "shortHash": "c096916",
+          "date": "2026-03-23",
+          "title": "Add CLI wrappers and update version to 1.0.25 in various scripts",
+          "type": "release"
+        }
+      ]
+    },
+    {
+      "version": "1.0.24",
+      "isLatest": false,
+      "commitCount": 1,
+      "dateRange": {
+        "from": "2026-03-23",
+        "to": "2026-03-23"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 0,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "Bump version to 1.0.24 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat"
+      ],
+      "commits": [
+        {
+          "hash": "dd543b09e4ea4ae9670c4e56c90fe94399f339d9",
+          "shortHash": "dd543b0",
+          "date": "2026-03-23",
+          "title": "Bump version to 1.0.24 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+          "type": "release"
+        }
+      ]
+    },
+    {
+      "version": "1.0.23",
+      "isLatest": false,
+      "commitCount": 2,
+      "dateRange": {
+        "from": "2026-03-21",
+        "to": "2026-03-23"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 1,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "Bump version to 1.0.23 in VERSION, install-ml.bat, ml.bat, uninstall-ml.bat, and add ml-nav.php for interactive navigation",
+        "Add download script for automated installation of mlhuillier"
+      ],
+      "commits": [
+        {
+          "hash": "8995a475e35b1806b896496e57522d6c5d422501",
+          "shortHash": "8995a47",
+          "date": "2026-03-23",
+          "title": "Bump version to 1.0.23 in VERSION, install-ml.bat, ml.bat, uninstall-ml.bat, and add ml-nav.php for interactive navigation",
+          "type": "release"
+        },
+        {
+          "hash": "767df173f200a65fd2bf8c352170e33cc34868f4",
+          "shortHash": "767df17",
+          "date": "2026-03-21",
+          "title": "Add download script for automated installation of mlhuillier",
+          "type": "feature"
+        }
+      ]
+    },
+    {
+      "version": "1.0.22",
+      "isLatest": false,
+      "commitCount": 1,
+      "dateRange": {
+        "from": "2026-03-21",
+        "to": "2026-03-21"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 0,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "Bump version to 1.0.22 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat"
+      ],
+      "commits": [
+        {
+          "hash": "3dc22b0debd3954b3f9d7f249f9b24b34bfa58b9",
+          "shortHash": "3dc22b0",
+          "date": "2026-03-21",
+          "title": "Bump version to 1.0.22 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+          "type": "release"
+        }
+      ]
+    },
+    {
+      "version": "1.0.21",
+      "isLatest": false,
+      "commitCount": 3,
+      "dateRange": {
+        "from": "2026-03-21",
+        "to": "2026-03-21"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 2,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "Bump version to 1.0.21 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+        "Add v-update.php script for version management and updates",
+        "Add cache token to URLs and enhance fetchUrl with user agent and follow location options"
+      ],
+      "commits": [
+        {
+          "hash": "72207aecbb836a10bc1b18feb54453cb5c829b74",
+          "shortHash": "72207ae",
+          "date": "2026-03-21",
+          "title": "Bump version to 1.0.21 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+          "type": "release"
+        },
+        {
+          "hash": "c3ea0a7dc33fbf458acc46c9577e3c3ecf9d0ac6",
+          "shortHash": "c3ea0a7",
+          "date": "2026-03-21",
+          "title": "Add v-update.php script for version management and updates",
+          "type": "feature"
+        },
+        {
+          "hash": "acd3b13cdd288270dcb137743d57b6a4381fb615",
+          "shortHash": "acd3b13",
+          "date": "2026-03-21",
+          "title": "Add cache token to URLs and enhance fetchUrl with user agent and follow location options",
+          "type": "feature"
+        }
+      ]
+    },
+    {
+      "version": "1.0.20",
+      "isLatest": false,
+      "commitCount": 2,
+      "dateRange": {
+        "from": "2026-03-21",
+        "to": "2026-03-21"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 0,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 1
+      },
+      "highlights": [
+        "Bump version to 1.0.20 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat"
+      ],
+      "commits": [
+        {
+          "hash": "76848a8981badc4a291c34ae0b1e34cc330ded3e",
+          "shortHash": "76848a8",
+          "date": "2026-03-21",
+          "title": "Bump version to 1.0.20 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+          "type": "release"
+        },
+        {
+          "hash": "bb09a926b8ccd5a93a5c4f86e1413b306198c67f",
+          "shortHash": "bb09a92",
+          "date": "2026-03-21",
+          "title": "Remove 'Alpha Release!!!' suffix from version in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+          "type": "other"
+        }
+      ]
+    },
+    {
+      "version": "1.1.1",
+      "isLatest": false,
+      "commitCount": 1,
+      "dateRange": {
+        "from": "2026-03-21",
+        "to": "2026-03-21"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 0,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "Bump version to 1.1.1 Alpha Release!!! in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat"
+      ],
+      "commits": [
+        {
+          "hash": "a1e206e2d19893b7e5cc41f09b38badad0cebd0c",
+          "shortHash": "a1e206e",
+          "date": "2026-03-21",
+          "title": "Bump version to 1.1.1 Alpha Release!!! in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+          "type": "release"
+        }
+      ]
+    },
+    {
+      "version": "1.0.18",
+      "isLatest": false,
+      "commitCount": 1,
+      "dateRange": {
+        "from": "2026-03-21",
+        "to": "2026-03-21"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 0,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "Bump version to 1.0.18 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat"
+      ],
+      "commits": [
+        {
+          "hash": "62962e14be0a1abc45bb6ad92a7406680a397f75",
+          "shortHash": "62962e1",
+          "date": "2026-03-21",
+          "title": "Bump version to 1.0.18 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+          "type": "release"
+        }
+      ]
+    },
+    {
+      "version": "1.0.17",
+      "isLatest": false,
+      "commitCount": 2,
+      "dateRange": {
+        "from": "2026-03-21",
+        "to": "2026-03-21"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 1,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "Bump version to 1.0.17 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat; update echo statements for clarity",
+        "Update help commands in ml.bat to include 'serve' and 'add userdb'; enhance serve description"
+      ],
+      "commits": [
+        {
+          "hash": "39e1fb6eb53a192822db7dc6a0dc5bea5135245e",
+          "shortHash": "39e1fb6",
+          "date": "2026-03-21",
+          "title": "Bump version to 1.0.17 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat; update echo statements for clarity",
+          "type": "release"
+        },
+        {
+          "hash": "48c2410e07da4852e1a58067012b70f9c70b2e42",
+          "shortHash": "48c2410",
+          "date": "2026-03-21",
+          "title": "Update help commands in ml.bat to include 'serve' and 'add userdb'; enhance serve description",
+          "type": "feature"
+        }
+      ]
+    },
+    {
+      "version": "1.0.16",
+      "isLatest": false,
+      "commitCount": 1,
+      "dateRange": {
+        "from": "2026-03-21",
+        "to": "2026-03-21"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 0,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "Bump version to 1.0.16 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat; add ml-serve.php for project serving functionality"
+      ],
+      "commits": [
+        {
+          "hash": "fe25f8290431b966e12e523cfc23c0f93dedc2c8",
+          "shortHash": "fe25f82",
+          "date": "2026-03-21",
+          "title": "Bump version to 1.0.16 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat; add ml-serve.php for project serving functionality",
+          "type": "release"
+        }
+      ]
+    },
+    {
+      "version": "1.0.15",
+      "isLatest": false,
+      "commitCount": 1,
+      "dateRange": {
+        "from": "2026-03-20",
+        "to": "2026-03-20"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 0,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "Bump version to 1.0.15 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat"
+      ],
+      "commits": [
+        {
+          "hash": "9617a1138d1d8a38b7f330298c54dad15147c9fd",
+          "shortHash": "9617a11",
+          "date": "2026-03-20",
+          "title": "Bump version to 1.0.15 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+          "type": "release"
+        }
+      ]
+    },
+    {
+      "version": "1.0.14",
+      "isLatest": false,
+      "commitCount": 1,
+      "dateRange": {
+        "from": "2026-03-20",
+        "to": "2026-03-20"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 0,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "Bump version to 1.0.14 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat"
+      ],
+      "commits": [
+        {
+          "hash": "10a85ecd175114db53df772c65ff7eb7d815d230",
+          "shortHash": "10a85ec",
+          "date": "2026-03-20",
+          "title": "Bump version to 1.0.14 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+          "type": "release"
+        }
+      ]
+    },
+    {
+      "version": "1.0.13",
+      "isLatest": false,
+      "commitCount": 1,
+      "dateRange": {
+        "from": "2026-03-20",
+        "to": "2026-03-20"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 0,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "Bump version to 1.0.13 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat"
+      ],
+      "commits": [
+        {
+          "hash": "3c4795c5d6338538d108f1cfd7891d07ba83acbe",
+          "shortHash": "3c4795c",
+          "date": "2026-03-20",
+          "title": "Bump version to 1.0.13 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+          "type": "release"
+        }
+      ]
+    },
+    {
+      "version": "1.0.12",
+      "isLatest": false,
+      "commitCount": 2,
+      "dateRange": {
+        "from": "2026-03-20",
+        "to": "2026-03-20"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 1,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "Bump version to 1.0.12 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+        "Update install-ml.bat and ml.bat to clarify download steps and implement cache busting for version checks"
+      ],
+      "commits": [
+        {
+          "hash": "b104f2db2470c0cc80850f8d9170bac182a3c1f2",
+          "shortHash": "b104f2d",
+          "date": "2026-03-20",
+          "title": "Bump version to 1.0.12 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+          "type": "release"
+        },
+        {
+          "hash": "55a75476d9a028633f269c7247c9244fd5be84a8",
+          "shortHash": "55a7547",
+          "date": "2026-03-20",
+          "title": "Update install-ml.bat and ml.bat to clarify download steps and implement cache busting for version checks",
+          "type": "feature"
+        }
+      ]
+    },
+    {
+      "version": "1.0.11",
+      "isLatest": false,
+      "commitCount": 1,
+      "dateRange": {
+        "from": "2026-03-20",
+        "to": "2026-03-20"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 0,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "Bump version to 1.0.11 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat"
+      ],
+      "commits": [
+        {
+          "hash": "f914f66656b53aecfc0d9a597b7a61d52845c644",
+          "shortHash": "f914f66",
+          "date": "2026-03-20",
+          "title": "Bump version to 1.0.11 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+          "type": "release"
+        }
+      ]
+    },
+    {
+      "version": "1.0.10",
+      "isLatest": false,
+      "commitCount": 3,
+      "dateRange": {
+        "from": "2026-03-20",
+        "to": "2026-03-20"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 1,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 1,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "Bump version to 1.0.10 in VERSION, install-ml.bat, ml.bat, uninstall-ml.bat, and add download-installer.php for remote installer downloading",
+        "Enhance database configuration handling by prioritizing USERDB_NAME/UserDB from .env and prompting for settings if not found"
+      ],
+      "commits": [
+        {
+          "hash": "e6fb4a4496b1e0be3f898843c31ad99902c25fc5",
+          "shortHash": "e6fb4a4",
+          "date": "2026-03-20",
+          "title": "Bump version to 1.0.10 in VERSION, install-ml.bat, ml.bat, uninstall-ml.bat, and add download-installer.php for remote installer downloading",
+          "type": "release"
+        },
+        {
+          "hash": "7a956c93a8834f1b943623bcc9dd1c9517d57e87",
+          "shortHash": "7a956c9",
+          "date": "2026-03-20",
+          "title": "Refactor database name handling to prioritize USERDB_NAME and provide clear error messaging for missing values",
+          "type": "refactor"
+        },
+        {
+          "hash": "f576d56f73232acbf64e0f27f4ea6db113bae983",
+          "shortHash": "f576d56",
+          "date": "2026-03-20",
+          "title": "Enhance database configuration handling by prioritizing USERDB_NAME/UserDB from .env and prompting for settings if not found",
+          "type": "feature"
+        }
+      ]
+    },
+    {
+      "version": "1.0.9",
+      "isLatest": false,
+      "commitCount": 2,
+      "dateRange": {
+        "from": "2026-03-20",
+        "to": "2026-03-20"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 0,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 1
+      },
+      "highlights": [
+        "Bump version to 1.0.9 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat"
+      ],
+      "commits": [
+        {
+          "hash": "2d5c5cef443850209e5de2dd86b40f19124f0033",
+          "shortHash": "2d5c5ce",
+          "date": "2026-03-20",
+          "title": "Bump version to 1.0.9 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+          "type": "release"
+        },
+        {
+          "hash": "aeba7adce1d2fb8bf2e743b08a809ef8649d5ffc",
+          "shortHash": "aeba7ad",
+          "date": "2026-03-20",
+          "title": "Improve version comparison logic in update process to handle CR/LF and whitespace mismatches",
+          "type": "other"
+        }
+      ]
+    },
+    {
+      "version": "1.0.8",
+      "isLatest": false,
+      "commitCount": 3,
+      "dateRange": {
+        "from": "2026-03-20",
+        "to": "2026-03-20"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 1,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 1
+      },
+      "highlights": [
+        "Bump version to 1.0.8 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+        "Add newline before remote account creation message in ml.bat"
+      ],
+      "commits": [
+        {
+          "hash": "2b6682933fa1948a202d65937939bc43dba7a04c",
+          "shortHash": "2b66829",
+          "date": "2026-03-20",
+          "title": "Bump version to 1.0.8 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+          "type": "release"
+        },
+        {
+          "hash": "ff17f0b7bfc1e06043d5b35037e97f59bd92d12e",
+          "shortHash": "ff17f0b",
+          "date": "2026-03-20",
+          "title": "Add newline before remote account creation message in ml.bat",
+          "type": "feature"
+        },
+        {
+          "hash": "1740fb1393f3cfac39b444186e745438b61b8857",
+          "shortHash": "1740fb1",
+          "date": "2026-03-20",
+          "title": "Improve error handling for .env file and database connection in account creation script",
+          "type": "other"
+        }
+      ]
+    },
+    {
+      "version": "1.0.7",
+      "isLatest": false,
+      "commitCount": 5,
+      "dateRange": {
+        "from": "2026-03-20",
+        "to": "2026-03-20"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 2,
+        "fix": 1,
+        "docs": 0,
+        "refactor": 1,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "Bump version to 1.0.7 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+        "Fix password generation to use username instead of random value",
+        "Enhance userlogs insertion by detecting available timestamp columns in account creation script",
+        "Enhance database connection handling and .env file parsing in account creation script"
+      ],
+      "commits": [
+        {
+          "hash": "39cb23734e6368dbbd9a6ba69bc3d2484d848b43",
+          "shortHash": "39cb237",
+          "date": "2026-03-20",
+          "title": "Bump version to 1.0.7 in VERSION, install-ml.bat, ml.bat, and uninstall-ml.bat",
+          "type": "release"
+        },
+        {
+          "hash": "96dedc0b5f5d283c512c7e9525202bdfec2a55e1",
+          "shortHash": "96dedc0",
+          "date": "2026-03-20",
+          "title": "Fix password generation to use username instead of random value",
+          "type": "fix"
+        },
+        {
+          "hash": "0a213ff5f9cd5db755106c9518d8dda09bbb984a",
+          "shortHash": "0a213ff",
+          "date": "2026-03-20",
+          "title": "Refactor userlogs insertion to only include id_number and status",
+          "type": "refactor"
+        },
+        {
+          "hash": "a617d381016aa1b40893493c2023f271ac63cb8f",
+          "shortHash": "a617d38",
+          "date": "2026-03-20",
+          "title": "Enhance userlogs insertion by detecting available timestamp columns in account creation script",
+          "type": "feature"
+        },
+        {
+          "hash": "1d9cb5c72c5fb211c4e8f1f1d21ef4bb0c9ec82d",
+          "shortHash": "1d9cb5c",
+          "date": "2026-03-20",
+          "title": "Enhance database connection handling and .env file parsing in account creation script",
+          "type": "feature"
+        }
+      ]
+    },
+    {
+      "version": "1.0.6",
+      "isLatest": false,
+      "commitCount": 2,
+      "dateRange": {
+        "from": "2026-03-20",
+        "to": "2026-03-20"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 1,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "Bump version to 1.0.6 in VERSION, ml.bat, install-ml.bat, and uninstall-ml.bat",
+        "Add account creation script and enhance ml.bat with help commands"
+      ],
+      "commits": [
+        {
+          "hash": "d51f8f53bbc3058bacbd64c9354971c3cf6738a5",
+          "shortHash": "d51f8f5",
+          "date": "2026-03-20",
+          "title": "Bump version to 1.0.6 in VERSION, ml.bat, install-ml.bat, and uninstall-ml.bat",
+          "type": "release"
+        },
+        {
+          "hash": "6ca3290b751e533a0efc1c44ffdc847651270576",
+          "shortHash": "6ca3290",
+          "date": "2026-03-20",
+          "title": "Add account creation script and enhance ml.bat with help commands",
+          "type": "feature"
+        }
+      ]
+    },
+    {
+      "version": "1.0.5",
+      "isLatest": false,
+      "commitCount": 2,
+      "dateRange": {
+        "from": "2026-03-20",
+        "to": "2026-03-20"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 1,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "Bump version to 1.0.5 in VERSION, ml.bat, install-ml.bat, and uninstall-ml.bat; add v-update.php for version management",
+        "Add version update notification in ml.bat for available updates"
+      ],
+      "commits": [
+        {
+          "hash": "a0f51b2d07c2155c9d81aeb1ffa230bc47839d6d",
+          "shortHash": "a0f51b2",
+          "date": "2026-03-20",
+          "title": "Bump version to 1.0.5 in VERSION, ml.bat, install-ml.bat, and uninstall-ml.bat; add v-update.php for version management",
+          "type": "release"
+        },
+        {
+          "hash": "86187f328e83cf2739e2f8a495544ba87b6b0d8e",
+          "shortHash": "86187f3",
+          "date": "2026-03-20",
+          "title": "Add version update notification in ml.bat for available updates",
+          "type": "feature"
+        }
+      ]
+    },
+    {
+      "version": "1.0.4",
+      "isLatest": false,
+      "commitCount": 3,
+      "dateRange": {
+        "from": "2026-03-20",
+        "to": "2026-03-20"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 2,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "Bump CLI version to 1.0.4 in VERSION, install-ml.bat, and ml.bat",
+        "Refactor ml-update.php and ml.bat to enhance version handling and error reporting for version.txt",
+        "Add remote updater script and CLI version check functionality"
+      ],
+      "commits": [
+        {
+          "hash": "0df2dbe9919ae5ef64fa1704bed5f8fda4f02c78",
+          "shortHash": "0df2dbe",
+          "date": "2026-03-20",
+          "title": "Bump CLI version to 1.0.4 in VERSION, install-ml.bat, and ml.bat",
+          "type": "release"
+        },
+        {
+          "hash": "77177d6c4184c6d06df7b97efb3e52c1eeed33ef",
+          "shortHash": "77177d6",
+          "date": "2026-03-20",
+          "title": "Refactor ml-update.php and ml.bat to enhance version handling and error reporting for version.txt",
+          "type": "feature"
+        },
+        {
+          "hash": "683f2748c0d4b4a3a4eed119fb7701996300bb49",
+          "shortHash": "683f274",
+          "date": "2026-03-20",
+          "title": "Add remote updater script and CLI version check functionality",
+          "type": "feature"
+        }
+      ]
+    },
+    {
+      "version": "1.0.3",
+      "isLatest": false,
+      "commitCount": 15,
+      "dateRange": {
+        "from": "2026-03-20",
+        "to": "2026-03-20"
+      },
+      "stats": {
+        "release": 2,
+        "feature": 9,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 1,
+        "performance": 0,
+        "security": 0,
+        "test": 1,
+        "chore": 0,
+        "other": 2
+      },
+      "highlights": [
+        "Bump CLI version to 1.0.3 in ml.bat and VERSION file",
+        "Update fallback CLI version in installer script to 1.0.3",
+        "Enhance userdb connection test and import functionality with error handling and user prompts",
+        "Update .gitignore to include /test directory and enhance ml.bat for remote userdb connection testing",
+        "Add user database connection test script and custom command handling in ml.bat",
+        "Add password change functionality with validation and controller integration",
+        "Implement forced password change modal and update login flow for user authentication",
+        "Add appBase function for dynamic base path and update redirect logic in generate-file-structure.php"
+      ],
+      "commits": [
+        {
+          "hash": "5cfcf82e1f91e6744b7d4bb0e49ef2026e7e9d27",
+          "shortHash": "5cfcf82",
+          "date": "2026-03-20",
+          "title": "Bump CLI version to 1.0.3 in ml.bat and VERSION file",
+          "type": "release"
+        },
+        {
+          "hash": "d0e146c6f67f5064ff59b18df4a1f55afb1e951e",
+          "shortHash": "d0e146c",
+          "date": "2026-03-20",
+          "title": "Update fallback CLI version in installer script to 1.0.3",
+          "type": "release"
+        },
+        {
+          "hash": "cc449ea3e18d955d6e4cc5f54926a249456a121f",
+          "shortHash": "cc449ea",
+          "date": "2026-03-20",
+          "title": "Enhance userdb connection test and import functionality with error handling and user prompts",
+          "type": "feature"
+        },
+        {
+          "hash": "dea3a490b98ec6d4b4e7aebaa114ab665b47649b",
+          "shortHash": "dea3a49",
+          "date": "2026-03-20",
+          "title": "Update connection message in userdb connection test script",
+          "type": "test"
+        },
+        {
+          "hash": "f033301eed8e3a09cacba13ab84923ccc172a2bc",
+          "shortHash": "f033301",
+          "date": "2026-03-20",
+          "title": "Update .gitignore to include /test directory and enhance ml.bat for remote userdb connection testing",
+          "type": "feature"
+        },
+        {
+          "hash": "93a8a52698c3d4cfebd7fbb8fd273f962162f132",
+          "shortHash": "93a8a52",
+          "date": "2026-03-20",
+          "title": "Add user database connection test script and custom command handling in ml.bat",
+          "type": "feature"
+        },
+        {
+          "hash": "8359f5f8252b6c8d059065c9ffe821451db25bf8",
+          "shortHash": "8359f5f",
+          "date": "2026-03-20",
+          "title": "Add password change functionality with validation and controller integration",
+          "type": "feature"
+        },
+        {
+          "hash": "365188c0ab79af9e3b4b06fbd8e3c6425c441e7d",
+          "shortHash": "365188c",
+          "date": "2026-03-20",
+          "title": "Implement forced password change modal and update login flow for user authentication",
+          "type": "feature"
+        },
+        {
+          "hash": "a713ab77c4613a0356039391fc3ff631343864cf",
+          "shortHash": "a713ab7",
+          "date": "2026-03-20",
+          "title": "Add appBase function for dynamic base path and update redirect logic in generate-file-structure.php",
+          "type": "feature"
+        },
+        {
+          "hash": "96ac66308e6044b0c43b9e4cf64998742c332dd0",
+          "shortHash": "96ac663",
+          "date": "2026-03-20",
+          "title": "Update redirect paths for guest and authenticated users in generate-file-structure.php",
+          "type": "other"
+        },
+        {
+          "hash": "a3bcac2ef51a9c86f92afc137a86005af7a4f959",
+          "shortHash": "a3bcac2",
+          "date": "2026-03-20",
+          "title": "Refactor home page routing and enhance logout modal functionality",
+          "type": "feature"
+        },
+        {
+          "hash": "2e10801556f4e65f3725d8ecf4a7259b64d99248",
+          "shortHash": "2e10801",
+          "date": "2026-03-20",
+          "title": "Add user profile display to sidebar and enhance styling",
+          "type": "feature"
+        },
+        {
+          "hash": "dfa2d413dcf83c2417212faea7d3afced82cfde5",
+          "shortHash": "dfa2d41",
+          "date": "2026-03-20",
+          "title": "Refactor environment and login controller configuration for improved readability and consistency",
+          "type": "refactor"
+        },
+        {
+          "hash": "c726aebbc24102ee6ad25a8e01335ea30cf6dc3b",
+          "shortHash": "c726aeb",
+          "date": "2026-03-20",
+          "title": "updated",
+          "type": "other"
+        },
+        {
+          "hash": "17a3e0b3198fe591040ac3f7b2fb19992688fa9e",
+          "shortHash": "17a3e0b",
+          "date": "2026-03-20",
+          "title": "Add version management to installation and uninstallation scripts",
+          "type": "feature"
+        }
+      ]
+    },
+    {
+      "version": "1.0.2",
+      "isLatest": false,
+      "commitCount": 6,
+      "dateRange": {
+        "from": "2026-03-20",
+        "to": "2026-03-20"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 3,
+        "fix": 1,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 1
+      },
+      "highlights": [
+        "Update ML CLI version to 1.0.2 in batch script",
+        "Enhance project scaffolding by adding user database migration files and implementing login/logout functionality with modals",
+        "Refactor database connection and enhance login handling with CSRF protection",
+        "Update remote URLs in generator scripts and .bat installer to point to the correct repository",
+        "Add installation and uninstallation scripts for ML CLI"
+      ],
+      "commits": [
+        {
+          "hash": "d1198795aa00d3689127ad9268325b988efc4dc6",
+          "shortHash": "d119879",
+          "date": "2026-03-20",
+          "title": "Update ML CLI version to 1.0.2 in batch script",
+          "type": "release"
+        },
+        {
+          "hash": "d0ad2d1ace80f001463b38c771ad03ea791315ec",
+          "shortHash": "d0ad2d1",
+          "date": "2026-03-20",
+          "title": "Enhance project scaffolding by adding user database migration files and implementing login/logout functionality with modals",
+          "type": "feature"
+        },
+        {
+          "hash": "e816b5986a187fcddd5db1d7599d9983c7b29d5e",
+          "shortHash": "e816b59",
+          "date": "2026-03-20",
+          "title": "Migration Folder and DB",
+          "type": "other"
+        },
+        {
+          "hash": "1200734306e0e00863b866c4dd55d51652c07c78",
+          "shortHash": "1200734",
+          "date": "2026-03-20",
+          "title": "Refactor database connection and enhance login handling with CSRF protection",
+          "type": "feature"
+        },
+        {
+          "hash": "21b6efe457dbb9e2042871e98042a39f8f7fd9e1",
+          "shortHash": "21b6efe",
+          "date": "2026-03-20",
+          "title": "Update remote URLs in generator scripts and .bat installer to point to the correct repository",
+          "type": "fix"
+        },
+        {
+          "hash": "472091d3b6143bae7f164a8b9f07e6972687ba2d",
+          "shortHash": "472091d",
+          "date": "2026-03-20",
+          "title": "Add installation and uninstallation scripts for ML CLI",
+          "type": "feature"
+        }
+      ]
+    }
+  ]
+}

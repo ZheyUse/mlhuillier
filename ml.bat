@@ -166,7 +166,8 @@ exit /b 2
 echo.
 echo HELP: Check remote version
 echo Usage: ml --c
-echo Description: Fetches remote VERSION and compares with local ML CLI version.
+echo Description: Fetches remote VERSION, compares with local ML CLI version,
+echo   and displays changelog highlights from the online documentation.
 exit /b 0
 
 :help_update
@@ -652,6 +653,7 @@ if "%REMOTE_VER%"=="%ML_VERSION%" (
         echo.
         echo Version is up to date.
         echo Current Version: %ML_VERSION%
+        call :display_changelog "%ML_VERSION%"
         exit /b 0
 )
 
@@ -661,8 +663,21 @@ echo version: %REMOTE_VER%
 echo.
 echo to update to the latest version
 echo Use: ml update
+call :display_changelog "%REMOTE_VER%"
+exit /b 0
+:display_changelog
+set "TARGET_VER=%~1"
+if "%TARGET_VER%"=="" set "TARGET_VER=%ML_VERSION%"
+set "CHANGELOG_URL=https://zheyuse.github.io/mlhuillier/documentation/assets/data/version-history.json"
+set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
+set "FETCH_URL=%CHANGELOG_URL%?t=%CACHE_BUST%"
+
+echo.
+echo Fetching changelog for version %TARGET_VER% ...
+powershell -NoProfile -Command "Try { $u = '%FETCH_URL%'; $j = Invoke-RestMethod -Uri $u -ErrorAction Stop; $r = $j.releases | Where-Object { $_.version -eq '%TARGET_VER%' } | Select-Object -First 1; if(-not $r) { $r = $j.releases | Where-Object { $_.isLatest -eq $true } | Select-Object -First 1 }; if(-not $r) { $r = $j.releases[0] }; Write-Output ''; Write-Output '--- Changelog: ' + $r.version + ' ---'; if($r.dateRange) { Write-Output ('Date: ' + $r.dateRange.from + ' to ' + $r.dateRange.to) }; if($r.commitCount) { Write-Output ('Commits: ' + $r.commitCount) }; Write-Output ''; if($r.highlights) { Write-Output 'Highlights:'; $r.highlights | ForEach-Object { Write-Output ('  - ' + $_) } }; if($r.commits) { Write-Output ''; Write-Output 'Recent commits (top 5):'; $r.commits | Select-Object -First 5 | ForEach-Object { Write-Output ('  - ' + $_.shortHash + ' ' + $_.date + ' ' + $_.title) } }; exit 0 } Catch { Write-Output 'Failed to fetch changelog JSON from %CHANGELOG_URL%'; exit 2 }"
 exit /b 0
 
+ 
 :cmd_update
 set "TMP_VER=%TEMP%\ml_remote_version.txt"
 set "REMOTE_VER="

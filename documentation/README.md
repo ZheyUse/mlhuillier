@@ -13,6 +13,10 @@ npm run docs:build
 ```bash
 npm run docs:watch
 ```
+## Version
+```bash
+npm run docs:version-history
+```
 
 ## Open
 

@@ -5,6 +5,9 @@
   "description": "Dynamic documentation builder for ml.bat",
   "scripts": {
     "docs:build": "node scripts/parse-ml.js",
-    "docs:watch": "node scripts/parse-ml.js --watch"
+    "docs:build:all": "node scripts/parse-ml.js && node version-history/generate-version-history.js",
+    "docs:watch": "node scripts/parse-ml.js --watch",
+    "docs:version-history": "node version-history/generate-version-history.js",
+    "version-history:install-hook": "node version-history/install-post-commit-hook.js"
   }
 }

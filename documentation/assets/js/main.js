@@ -7,6 +7,18 @@ async function loadData() {
   return response.json();
 }
 
+async function loadVersionHistory() {
+  try {
+    const response = await fetch('assets/data/version-history.json', { cache: 'no-store' });
+    if (!response.ok) {
+      return null;
+    }
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
+
 function createCopyBlock(command) {
   const wrap = document.createElement('div');
   wrap.className = 'code-line';
@@ -434,6 +446,166 @@ function renderFaq(root, faq, tips) {
   root.append(h, cards);
 }
 
+function renderLatestReleaseMini(root, history) {
+  if (!root) return;
+  root.innerHTML = '';
+
+  if (!history || !Array.isArray(history.releases) || history.releases.length === 0) {
+    root.classList.add('is-empty');
+    root.textContent = 'Latest release highlights unavailable.';
+    return;
+  }
+
+  root.classList.remove('is-empty');
+  const latest = history.releases.find((x) => x.isLatest) || history.releases[0];
+  const highlights = Array.isArray(latest.highlights) ? latest.highlights.slice(0, 3) : [];
+
+  const card = document.createElement('div');
+  card.className = 'latest-mini-card';
+
+  const head = document.createElement('div');
+  head.className = 'latest-mini-head';
+
+  const version = document.createElement('span');
+  version.className = 'latest-mini-version';
+  version.textContent = `Latest: ${latest.version || 'unknown'}`;
+
+  const count = document.createElement('span');
+  count.className = 'latest-mini-meta';
+  count.textContent = `${latest.commitCount || 0} commits`;
+
+  head.append(version, count);
+  card.appendChild(head);
+
+  if (highlights.length > 0) {
+    const list = document.createElement('ul');
+    list.className = 'latest-mini-list';
+    highlights.forEach((item) => {
+      const li = document.createElement('li');
+      li.textContent = item;
+      list.appendChild(li);
+    });
+    card.appendChild(list);
+  }
+
+  const jump = document.createElement('a');
+  jump.className = 'latest-mini-link';
+  jump.href = '#version-history';
+  jump.textContent = 'View full changelog';
+  card.appendChild(jump);
+
+  root.appendChild(card);
+}
+
+function renderVersionHistory(root, history) {
+  root.innerHTML = '';
+
+  const h = document.createElement('h3');
+  h.className = 'section-title';
+  h.textContent = 'Version History';
+
+  const sub = document.createElement('p');
+  sub.className = 'section-sub';
+
+  if (!history || !Array.isArray(history.releases) || history.releases.length === 0) {
+    sub.textContent = 'No version history data found yet. Generate it with node version-history/generate-version-history.js';
+    root.dataset.searchText = 'version history changelog releases';
+    root.append(h, sub);
+    return;
+  }
+
+  const latestVersion = history.latestVersion || 'unknown';
+  const generatedAt = history.generatedAt || '';
+  sub.textContent = `Latest version: ${latestVersion}${generatedAt ? ` | Generated: ${generatedAt}` : ''}`;
+
+  const cards = document.createElement('div');
+  cards.className = 'version-cards';
+
+  const typeOrder = ['release', 'feature', 'fix', 'docs', 'refactor', 'performance', 'security', 'test', 'chore', 'other'];
+  const typeLabel = {
+    release: 'Release',
+    feature: 'Feature',
+    fix: 'Fix',
+    docs: 'Docs',
+    refactor: 'Refactor',
+    performance: 'Performance',
+    security: 'Security',
+    test: 'Test',
+    chore: 'Chore',
+    other: 'Other',
+  };
+
+  const searchTokens = ['version history', latestVersion];
+
+  history.releases.forEach((release) => {
+    const card = document.createElement('article');
+    card.className = 'release-card';
+
+    const top = document.createElement('div');
+    top.className = 'release-top';
+
+    const versionBadge = document.createElement('span');
+    versionBadge.className = `release-version${release.isLatest ? ' is-latest' : ''}`;
+    versionBadge.textContent = release.isLatest ? `${release.version} (Latest)` : String(release.version || 'unversioned');
+
+    const meta = document.createElement('span');
+    meta.className = 'release-meta';
+    const from = release.dateRange && release.dateRange.from ? release.dateRange.from : 'n/a';
+    const to = release.dateRange && release.dateRange.to ? release.dateRange.to : 'n/a';
+    meta.textContent = `${release.commitCount || 0} commits | ${from} -> ${to}`;
+
+    top.append(versionBadge, meta);
+
+    const statWrap = document.createElement('div');
+    statWrap.className = 'release-stats';
+    typeOrder.forEach((type) => {
+      const count = release.stats && release.stats[type] ? release.stats[type] : 0;
+      if (!count) return;
+      const badge = document.createElement('span');
+      badge.className = `change-type change-${type}`;
+      badge.textContent = `${typeLabel[type]}: ${count}`;
+      statWrap.append(badge);
+    });
+
+    const details = document.createElement('details');
+    details.className = 'release-details';
+
+    const summary = document.createElement('summary');
+    summary.textContent = 'Show changelog';
+
+    const list = document.createElement('ul');
+    list.className = 'release-list';
+
+    const commits = Array.isArray(release.commits) ? release.commits : [];
+    commits.forEach((commit) => {
+      const item = document.createElement('li');
+      item.className = 'release-item';
+
+      const type = document.createElement('span');
+      type.className = `change-type change-${commit.type || 'other'}`;
+      type.textContent = typeLabel[commit.type] || 'Other';
+
+      const text = document.createElement('span');
+      text.className = 'release-item-text';
+      const shortHash = commit.shortHash || (commit.hash || '').slice(0, 7);
+      text.textContent = `${commit.date || ''} | ${shortHash} | ${commit.title || ''}`;
+
+      item.append(type, text);
+      list.append(item);
+
+      searchTokens.push(commit.title || '');
+      searchTokens.push(release.version || '');
+    });
+
+    details.append(summary, list);
+    card.append(top, statWrap, details);
+    cards.append(card);
+  });
+
+  root.dataset.searchText = searchTokens.join(' ').toLowerCase();
+  root.append(h, sub, cards);
+}
+
 function buildNav() {
   const sections = [
     ['Introduction', 'intro'],
@@ -445,6 +617,7 @@ function buildNav() {
     ['Scenarios', 'scenarios'],
     ['Error Handling', 'error-handling'],
     ['FAQ / Tips', 'faq-tips'],
+    ['Version History', 'version-history'],
   ];
 
   const nav = document.getElementById('sideNav');
@@ -474,9 +647,10 @@ function buildNav() {
 }
 
 async function init() {
-  const data = await loadData();
+  const [data, versionHistory] = await Promise.all([loadData(), loadVersionHistory()]);
   const tutorials = data.tutorials || {};
   document.getElementById('cliVersion').textContent = `Version: ${data.cliVersion}`;
+  renderLatestReleaseMini(document.getElementById('latest-release-mini'), versionHistory);
 
   renderIntro(document.getElementById('intro'), data);
   renderTutorialSection(
@@ -512,6 +686,7 @@ async function init() {
   renderScenarios(document.getElementById('scenarios'), tutorials.scenarios);
   renderErrors(document.getElementById('error-handling'), tutorials.errors);
   renderFaq(document.getElementById('faq-tips'), tutorials.faq, tutorials.commonMistakes);
+  renderVersionHistory(document.getElementById('version-history'), versionHistory);
 
   buildNav();
   DocsSearch.bindSearch(document.getElementById('searchInput'));
