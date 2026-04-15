@@ -23,6 +23,9 @@ $candidates[] = 'C:\\Program Files\\MySQL\\MySQL Workbench 8.0\\MySQLWorkbench.e
 $candidates[] = 'C:\\Program Files (x86)\\MySQL\\MySQL Workbench 8.0\\MySQLWorkbench.exe';
 $candidates[] = 'C:\\Program Files\\MySQL\\MySQL Workbench 6.3\\MySQLWorkbench.exe';
 $candidates[] = 'C:\\Program Files\\MySQL\\MySQL Workbench 8.0\\wb.exe';
+// Some installers include "CE" in the folder name (e.g. "MySQL Workbench 8.0 CE")
+$candidates[] = 'C:\\Program Files\\MySQL\\MySQL Workbench 8.0 CE\\MySQLWorkbench.exe';
+$candidates[] = 'C:\\Program Files\\MySQL\\MySQL Workbench 8.0 CE\\wb.exe';
 
 $found = null;
 foreach ($candidates as $p) {
@@ -33,12 +36,36 @@ foreach ($candidates as $p) {
     }
 }
 
+// If not found from the simple candidates, expand search using common install patterns.
 if (!$found) {
-    // Try `where` to discover it on PATH
-    $out = [];
-    exec('where MySQLWorkbench.exe 2>NUL', $out, $rc);
-    if ($rc === 0 && !empty($out)) {
-        $found = $out[0];
+    $patterns = [
+        'C:\\Program Files\\MySQL Workbench*\\MySQLWorkbench.exe',
+        'C:\\Program Files\\MySQL Workbench*\\wb.exe',
+        'C:\\Program Files\\MySQL\\MySQL Workbench*\\MySQLWorkbench.exe',
+        'C:\\Program Files\\MySQL\\MySQL Workbench*\\wb.exe',
+        'C:\\Program Files (x86)\\MySQL Workbench*\\MySQLWorkbench.exe',
+        'C:\\Program Files (x86)\\MySQL\\MySQL Workbench*\\MySQLWorkbench.exe',
+        'C:\\Program Files\\MySQL\\MySQLWorkbench.exe',
+        'C:\\Program Files (x86)\\MySQL\\MySQLWorkbench.exe',
+        'C:\\ProgramData\\chocolatey\\bin\\MySQLWorkbench.exe',
+    ];
+
+    foreach ($patterns as $pat) {
+        foreach (glob($pat) as $match) {
+            if (file_exists($match)) {
+                $found = $match;
+                break 2;
+            }
+        }
+    }
+
+    // As a final fallback, try `where` to discover it on PATH
+    if (!$found) {
+        $out = [];
+        exec('where MySQLWorkbench.exe 2>NUL', $out, $rc);
+        if ($rc === 0 && !empty($out)) {
+            $found = $out[0];
+        }
     }
 }
 
