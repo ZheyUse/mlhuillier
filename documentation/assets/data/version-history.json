@@ -1,22 +1,22 @@
 {
-  "generatedAt": "2026-04-15T08:27:05.685Z",
+  "generatedAt": "2026-04-15T08:29:47.709Z",
   "latestVersion": "1.1.7",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 160
+    "commitCount": 161
   },
   "releases": [
     {
       "version": "1.1.7",
       "isLatest": true,
-      "commitCount": 1,
+      "commitCount": 2,
       "dateRange": {
         "from": "2026-04-15",
         "to": "2026-04-15"
       },
       "stats": {
-        "release": 1,
+        "release": 2,
         "feature": 0,
         "fix": 0,
         "docs": 0,
@@ -28,9 +28,17 @@
         "other": 0
       },
       "highlights": [
+        "chore(version): update version to 1.1.7 and adjust related files",
         "chore(version): update version to 1.1.7 and adjust related files"
       ],
       "commits": [
+        {
+          "hash": "8cf92471862a21c538ebc8a9a88080545cb5be68",
+          "shortHash": "8cf9247",
+          "date": "2026-04-15",
+          "title": "chore(version): update version to 1.1.7 and adjust related files",
+          "type": "release"
+        },
         {
           "hash": "3f86b041fbcf74225b18c8dc015d51ea99e01e8a",
           "shortHash": "3f86b04",
