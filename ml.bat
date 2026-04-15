@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.1.5"
+set "ML_VERSION=1.1.6"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -671,16 +671,19 @@ if "%TARGET_VER%"=="" set "TARGET_VER=%ML_VERSION%"
 set "CHANGELOG_URL=https://zheyuse.github.io/mlhuillier/documentation/assets/data/version-history.json"
 set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
 set "FETCH_URL=%CHANGELOG_URL%?t=%CACHE_BUST%"
+set "RAW_CHG_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/documentation/assets/data/version-history.json?t=%CACHE_BUST%"
+set "LOCAL_JSON=%~dp0documentation\assets\data\version-history.json"
+set "SUMMARY_SCRIPT=%~dp0version-history\print-changelog-summary.ps1"
 
 echo.
 echo Latest release summary:
-set "LOCAL_JSON=%~dp0documentation\assets\data\version-history.json"
-if exist "%LOCAL_JSON%" (
-        powershell -NoProfile -Command "Try { $j = Get-Content -Raw -Path '%LOCAL_JSON%' | ConvertFrom-Json; $r = $j.releases | Where-Object { $_.version -eq '%TARGET_VER%' } | Select-Object -First 1; if(-not $r) { $r = $j.releases | Where-Object { $_.isLatest -eq $true } | Select-Object -First 1 }; if(-not $r) { $r = $j.releases[0] }; $h = @($r.highlights); Write-Output ('What''s New in v' + $r.version); if($r.dateRange) { Write-Output ('Period: ' + $r.dateRange.from + ' to ' + $r.dateRange.to) }; Write-Output ''; Write-Output 'Top highlights:'; if($h.Count -gt 0) { $h | Select-Object -First 3 | ForEach-Object { Write-Output ('  - ' + $_) } } else { Write-Output '  - No highlight summary available yet.' }; Write-Output ''; Write-Output 'Full changelog: https://zheyuse.github.io/mlhuillier/documentation/'; exit 0 } Catch { Write-Output 'Unable to load changelog summary right now.'; exit 2 }"
-) else (
-        set "RAW_CHG_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/documentation/assets/data/version-history.json?t=%CACHE_BUST%"
-        powershell -NoProfile -Command "Try { $u = '%FETCH_URL%'; $j = Invoke-RestMethod -Uri $u -ErrorAction Stop } Catch { Try { $j = Invoke-RestMethod -Uri '%RAW_CHG_URL%' -ErrorAction Stop } Catch { Write-Output 'Unable to load changelog summary right now.'; exit 2 } }; $r = $j.releases | Where-Object { $_.version -eq '%TARGET_VER%' } | Select-Object -First 1; if(-not $r) { $r = $j.releases | Where-Object { $_.isLatest -eq $true } | Select-Object -First 1 }; if(-not $r) { $r = $j.releases[0] }; $h = @($r.highlights); Write-Output ('What''s New in v' + $r.version); if($r.dateRange) { Write-Output ('Period: ' + $r.dateRange.from + ' to ' + $r.dateRange.to) }; Write-Output ''; Write-Output 'Top highlights:'; if($h.Count -gt 0) { $h | Select-Object -First 3 | ForEach-Object { Write-Output ('  - ' + $_) } } else { Write-Output '  - No highlight summary available yet.' }; Write-Output ''; Write-Output 'Full changelog: https://zheyuse.github.io/mlhuillier/documentation/'; exit 0 } Catch { Write-Output 'Unable to load changelog summary right now.'; exit 2 }"
+if exist "%SUMMARY_SCRIPT%" (
+        powershell -NoProfile -ExecutionPolicy Bypass -File "%SUMMARY_SCRIPT%" -TargetVersion "%TARGET_VER%" -LocalJsonPath "%LOCAL_JSON%" -PrimaryUrl "%FETCH_URL%" -FallbackUrl "%RAW_CHG_URL%"
+        exit /b %ERRORLEVEL%
 )
+
+echo Unable to load changelog summary right now.
+echo Full changelog: https://zheyuse.github.io/mlhuillier/documentation/
 exit /b 0
 
  
