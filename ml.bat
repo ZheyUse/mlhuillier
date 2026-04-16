@@ -1049,10 +1049,12 @@ if %ERRORLEVEL% neq 0 (
 )
 
 set "ARGS="
-rem Determine project name (accept --project_name or direct name/path, otherwise use current directory)
+rem Determine project name (accept --project, --projectname, --project=NAME, or direct name/path; otherwise use current directory)
 set "PROJECT="
-if not "%~2"=="" (
-        set "ARG2=%~2"
+set "ARG2=%~2"
+set "ARG3=%~3"
+
+if not "%ARG2%"=="" (
         rem If user provided a single-dash flag (likely a typo), show top-level help
         if "%ARG2:~0,1%"=="-" if not "%ARG2:~0,2%"=="--" (
                 echo Invalid flag: %ARG2%
@@ -1061,10 +1063,23 @@ if not "%~2"=="" (
                 del /f /q "!TMP_FILE!" >nul 2>&1
                 exit /b 2
         )
+
         if "%ARG2:~0,2%"=="--" (
-                set "PROJECT=%ARG2:~2%"
+                set "ARG_BODY=%ARG2:~2%"
+                rem Split on '=' if present (e.g. --project=del)
+                for /f "tokens=1* delims==" %%K in ("!ARG_BODY!") do (
+                        set "KEY=%%K" & set "VAL=%%L"
+                )
+                if defined VAL (
+                        set "PROJECT=!VAL!"
+                ) else if not "%ARG3%"=="" (
+                        set "PROJECT=%~3"
+                ) else (
+                        rem Treat --foo as project name itself (e.g., --del)
+                        set "PROJECT=!ARG_BODY!"
+                )
         ) else (
-                set "PROJECT=%ARG2%"
+                set "PROJECT=%~2"
         )
 ) else (
         for %%D in ("%CD%") do set "PROJECT=%%~nxD"
@@ -1123,9 +1138,10 @@ for /f "tokens=1 delims=/" %%P in ("!SERVE_PROJECT!") do set "SERVE_PROJECT=%%P"
 rem -- Check whether the project folder exists under C:\xampp\htdocs
 set "LOCAL_PROJECT_PATH=C:\xampp\htdocs\!SERVE_PROJECT!"
 if exist "!LOCAL_PROJECT_PATH!" (
-        echo [OK] Project folder found: !LOCAL_PROJECT_PATH!
+        echo [OK] Project folder found:  !LOCAL_PROJECT_PATH!
 ) else (
-        echo [!] Project folder doesn't exist: !LOCAL_PROJECT_PATH!
+        echo [ERROR] Project folder does not exist:  !LOCAL_PROJECT_PATH!
+        echo Unable to determine project name. Use: ml serve ^<project_name^> or run inside project folder.
         del /f /q "!TMP_FILE!" >nul 2>&1
         exit /b 2
 )
