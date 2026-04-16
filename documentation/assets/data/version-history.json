@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-04-16T00:51:41.312Z",
+  "generatedAt": "2026-04-16T00:59:53.011Z",
   "latestVersion": "1.1.8",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 169
+    "commitCount": 170
   },
   "releases": [
     {
       "version": "1.1.8",
       "isLatest": true,
-      "commitCount": 8,
+      "commitCount": 9,
       "dateRange": {
         "from": "2026-04-15",
         "to": "2026-04-16"
       },
       "stats": {
         "release": 2,
-        "feature": 2,
+        "feature": 3,
         "fix": 0,
         "docs": 0,
         "refactor": 0,
@@ -28,12 +28,20 @@
         "other": 0
       },
       "highlights": [
+        "feat(updater): add changelog generation from recent commits in ml-update.php",
         "chore(version): update generatedAt timestamps and increment commit counts in version history; add debug output to ml.bat",
         "chore(version): update generatedAt timestamps and increment commit counts in version history; add debug output to ml.bat",
         "chore(version): update version to 1.1.8 and adjust related files; update generatedAt timestamp and increment commit counts in version history",
         "chore(version): update version to 1.1.8 and adjust related files; add npm global install instructions"
       ],
       "commits": [
+        {
+          "hash": "8c911bfff4fbcbedc082ce1c1b8c8a20097fb157",
+          "shortHash": "8c911bf",
+          "date": "2026-04-16",
+          "title": "feat(updater): add changelog generation from recent commits in ml-update.php",
+          "type": "feature"
+        },
         {
           "hash": "68c13a8c1fc0a4df3d10bfe0a92160595ad1ddb6",
           "shortHash": "68c13a8",
