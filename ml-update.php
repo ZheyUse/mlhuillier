@@ -140,5 +140,53 @@ if (file_put_contents($versionTxtDest, $versionTxtData) === false) {
     exit(2);
 }
 
+// Generate a simple changelog from recent commit messages (not docs)
+safeEcho('ML Updater: Generating changelog from recent commits...');
+$commitsApi = 'https://api.github.com/repos/ZheyUse/mlhuillier/commits?per_page=50';
+try {
+    $commitsJson = fetchUrl($commitsApi);
+    $commits = json_decode($commitsJson, true);
+    if (!is_array($commits)) {
+        throw new RuntimeException('Unexpected commits response');
+    }
+
+    $lines = [];
+    $lines[] = "ML CLI Changelog";
+    $lines[] = "GeneratedAt: " . date('c');
+    $lines[] = "Version: " . ($installedVersion ? $installedVersion : 'unknown');
+    $lines[] = "";
+
+    $max = 30;
+    $count = 0;
+    foreach ($commits as $c) {
+        if ($count >= $max) break;
+        $sha = isset($c['sha']) ? $c['sha'] : '';
+        $short = $sha ? substr($sha, 0, 7) : '';
+        $date = isset($c['commit']['author']['date']) ? $c['commit']['author']['date'] : '';
+        $author = isset($c['commit']['author']['name']) ? $c['commit']['author']['name'] : '';
+        $message = isset($c['commit']['message']) ? trim($c['commit']['message']) : '';
+        $summary = preg_split("/\r?\n/", $message)[0];
+        $commitUrl = isset($c['html_url']) ? $c['html_url'] : ($baseRaw . '/commit/' . $sha);
+
+        $lines[] = "- [{$short}] {$summary} ({$author} @ {$date})";
+        $lines[] = "  {$commitUrl}";
+        $lines[] = "";
+
+        $count++;
+    }
+
+    $changelog = implode("\r\n", $lines);
+    $changelogDest = $targetDir . DIRECTORY_SEPARATOR . 'changelog.txt';
+    safeEcho('ML Updater: Writing changelog to ' . $changelogDest . ' ...');
+    if (file_put_contents($changelogDest, $changelog) === false) {
+        safeEcho('ML Updater: Failed to write changelog to ' . $changelogDest);
+    } else {
+        safeEcho('ML Updater: Wrote changelog to ' . $changelogDest);
+    }
+
+} catch (RuntimeException $e) {
+    safeEcho('ML Updater: Skipped changelog generation: ' . $e->getMessage());
+}
+
 safeEcho('ML Updater: Update completed successfully.');
 exit(0);
