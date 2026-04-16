@@ -1050,10 +1050,23 @@ if %ERRORLEVEL% neq 0 (
 )
 
 set "ARGS="
-rem Determine project name (prefer explicit arg, otherwise use current directory)
+rem Determine project name (accept --project_name or direct name/path, otherwise use current directory)
 set "PROJECT="
 if not "%~2"=="" (
-        set "PROJECT=%~2"
+        set "ARG2=%~2"
+        rem If user provided a single-dash flag (likely a typo), show top-level help
+        if "%ARG2:~0,1%"=="-" if not "%ARG2:~0,2%"=="--" (
+                echo Invalid flag: %ARG2%
+                echo.
+                call :show_help
+                del /f /q "!TMP_FILE!" >nul 2>&1
+                exit /b 2
+        )
+        if "%ARG2:~0,2%"=="--" (
+                set "PROJECT=%ARG2:~2%"
+        ) else (
+                set "PROJECT=%ARG2%"
+        )
 ) else (
         for %%D in ("%CD%") do set "PROJECT=%%~nxD"
 )
