@@ -85,6 +85,27 @@ if ($command === 'create') {
 
 if ($command !== null && $command !== '') {
   fwrite(STDERR, "Unknown command: {$command}\n");
+
+  // Prefer to show the full `ml` help when available instead of the
+  // local scaffolder's short usage. Attempt the local `ml.bat` first on
+  // Windows, otherwise fall back to `ml --h` on PATH. If neither runs,
+  // show the script's local usage as a fallback.
+  $rc = 1;
+  if (stripos(PHP_OS, 'WIN') === 0) {
+      $localMl = __DIR__ . DIRECTORY_SEPARATOR . 'ml.bat';
+      if (is_file($localMl)) {
+          $cmd = 'cmd /c "' . $localMl . '" --h';
+          @passthru($cmd, $rc);
+          exit((int)$rc);
+      }
+      @passthru('ml --h', $rc);
+      if ($rc === 0) exit(0);
+  } else {
+      @passthru('ml --h', $rc);
+      if ($rc === 0) exit(0);
+  }
+
+  // Fallback: show the scaffolder's usage if the global help couldn't be invoked
   printUsage($scriptName);
   exit(2);
 }

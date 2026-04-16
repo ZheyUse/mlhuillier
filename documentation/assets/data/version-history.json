@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-04-16T01:06:25.083Z",
+  "generatedAt": "2026-04-16T01:17:59.657Z",
   "latestVersion": "1.1.9",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 172
+    "commitCount": 173
   },
   "releases": [
     {
       "version": "1.1.9",
       "isLatest": true,
-      "commitCount": 8,
+      "commitCount": 9,
       "dateRange": {
         "from": "2026-04-15",
         "to": "2026-04-16"
       },
       "stats": {
         "release": 2,
-        "feature": 3,
+        "feature": 4,
         "fix": 0,
         "docs": 0,
         "refactor": 0,
@@ -28,6 +28,7 @@
         "other": 0
       },
       "highlights": [
+        "chore(version): update generatedAt timestamps and increment commit counts in version history; enhance project name detection in ml.bat",
         "chore(version): update generatedAt timestamps and increment commit counts in version history; update latest version to 1.1.9",
         "chore(version): update version to 1.1.9 and adjust related files; update generatedAt timestamps and increment commit counts in version history",
         "feat(updater): add changelog generation from recent commits in ml-update.php",
@@ -35,6 +36,13 @@
         "chore(version): update generatedAt timestamps and increment commit counts in version history; add debug output to ml.bat"
       ],
       "commits": [
+        {
+          "hash": "ea5541191d94a94da8d52c55f814e3ce2609f627",
+          "shortHash": "ea55411",
+          "date": "2026-04-16",
+          "title": "chore(version): update generatedAt timestamps and increment commit counts in version history; enhance project name detection in ml.bat",
+          "type": "feature"
+        },
         {
           "hash": "f2abbcfb2ec60ac726b160f5ddcd14cd1d27cbb1",
           "shortHash": "f2abbcf",
