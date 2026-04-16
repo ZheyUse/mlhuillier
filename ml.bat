@@ -717,21 +717,30 @@ set "TMP_FILE=%TEMP%\ml-update.php"
 set "LOCAL_UPDATER=%~dp0ml-update.php"
 
 echo Checking remote ML CLI version from GitHub API...
-
 call :fetch_remote_version "!TMP_VER!"
-if %ERRORLEVEL% neq 0 (
-        echo Failed to fetch remote VERSION, proceeding with update...
-) else (
-        set /p REMOTE_VER=<"!TMP_VER!"
-        if "%REMOTE_VER%"=="%ML_VERSION%" (
-                del /f /q "!TMP_VER!" >nul 2>&1
-                echo.
-                echo Remote VERSION matches installed version (%ML_VERSION%).
-                echo Continuing with update because you invoked "ml update".
-        ) else (
-                del /f /q "!TMP_VER!" >nul 2>&1
-        )
-)
+
+rem If fetch failed, continue with update but skip version comparison
+if %ERRORLEVEL% NEQ 0 goto _skip_version_check
+
+if not exist "!TMP_VER!" goto _skip_version_check
+
+rem Read remote VERSION via subroutine to handle files with spaces
+call :read_remote_version "!TMP_VER!"
+
+if "%REMOTE_VER%"=="%ML_VERSION%" goto _version_match
+
+rem Not matching: remove temp and continue
+del /f /q "!TMP_VER!" >nul 2>&1
+goto _after_version_check
+
+:_version_match
+del /f /q "!TMP_VER!" >nul 2>&1
+echo.
+echo Remote VERSION matches installed version (%ML_VERSION%).
+echo Continuing with update because you invoked "ml update".
+
+:_after_version_check
+:_skip_version_check
 
 call :strip_query "!UPDATER_URL!"
 rem URL hidden from output
@@ -851,6 +860,15 @@ exit /b 0
 :strip_query
 set "IN=%~1"
 for /f "delims=?" %%A in ("%IN%") do set "DISPLAY_URL=%%A"
+exit /b 0
+
+:: Read a single-line file into REMOTE_VER (safe outside parenthesized blocks)
+:read_remote_version
+set "REMOTE_VER="
+set "IN=%~1"
+for /f "usebackq delims=" %%R in ("%IN%") do set "REMOTE_VER=%%R" & goto :read_remote_version_done
+set "REMOTE_VER="
+:read_remote_version_done
 exit /b 0
 
 :: Check remote VERSION and print a short update notice if newer

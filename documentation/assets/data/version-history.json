@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-04-16T01:38:21.180Z",
+  "generatedAt": "2026-04-16T01:52:45.573Z",
   "latestVersion": "1.1.9",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 174
+    "commitCount": 175
   },
   "releases": [
     {
       "version": "1.1.9",
       "isLatest": true,
-      "commitCount": 10,
+      "commitCount": 11,
       "dateRange": {
         "from": "2026-04-15",
         "to": "2026-04-16"
       },
       "stats": {
         "release": 2,
-        "feature": 5,
+        "feature": 6,
         "fix": 0,
         "docs": 0,
         "refactor": 0,
@@ -28,6 +28,7 @@
         "other": 0
       },
       "highlights": [
+        "feat(help): add support for '-h' flag to show help; enhance command handling in ml.bat",
         "feat(help): enhance command error handling to show full `ml` help when available; fallback to local usage if necessary",
         "chore(version): update generatedAt timestamps and increment commit counts in version history; enhance project name detection in ml.bat",
         "chore(version): update generatedAt timestamps and increment commit counts in version history; update latest version to 1.1.9",
@@ -37,6 +38,13 @@
         "chore(version): update generatedAt timestamps and increment commit counts in version history; add debug output to ml.bat"
       ],
       "commits": [
+        {
+          "hash": "bc6b48cfc69cce0b3ce7cce7b884e121a267cf9e",
+          "shortHash": "bc6b48c",
+          "date": "2026-04-16",
+          "title": "feat(help): add support for '-h' flag to show help; enhance command handling in ml.bat",
+          "type": "feature"
+        },
         {
           "hash": "6525c7e1dd1f0caa36d61cb1868d2de31fcdd531",
           "shortHash": "6525c7e",
