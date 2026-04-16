@@ -940,8 +940,6 @@ rem URL hidden from output
 echo Executing serve helper...
 echo.
 
-echo [DEBUG] cmd_serve args: %1 %2 %3 %4
-
 rem --- Ensure local Apache is running; attempt to start XAMPP Apache or Apache service if not ---
 echo Checking for local Apache process...
 rem Check for typical Apache process names first
@@ -1122,6 +1120,16 @@ set "SERVE_PROJECT=!SERVE_PROJECT:/public=!"
 
 rem Use only the top-level folder (project name) for the URL
 for /f "tokens=1 delims=/" %%P in ("!SERVE_PROJECT!") do set "SERVE_PROJECT=%%P"
+
+rem -- Check whether the project folder exists under C:\xampp\htdocs
+set "LOCAL_PROJECT_PATH=C:\xampp\htdocs\!SERVE_PROJECT!"
+if exist "!LOCAL_PROJECT_PATH!" (
+        echo [OK] Project folder found: !LOCAL_PROJECT_PATH!
+) else (
+        echo [!] Project folder doesn't exist: !LOCAL_PROJECT_PATH!
+        del /f /q "!TMP_FILE!" >nul 2>&1
+        exit /b 2
+)
 
 "%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" "!SERVE_PROJECT!"
 set "RC=%ERRORLEVEL%"

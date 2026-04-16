@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-04-16T00:41:29.617Z",
+  "generatedAt": "2026-04-16T00:46:36.350Z",
   "latestVersion": "1.1.8",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 167
+    "commitCount": 168
   },
   "releases": [
     {
       "version": "1.1.8",
       "isLatest": true,
-      "commitCount": 6,
+      "commitCount": 7,
       "dateRange": {
         "from": "2026-04-15",
         "to": "2026-04-16"
       },
       "stats": {
         "release": 2,
-        "feature": 0,
+        "feature": 1,
         "fix": 0,
         "docs": 0,
         "refactor": 0,
@@ -28,10 +28,18 @@
         "other": 0
       },
       "highlights": [
+        "chore(version): update generatedAt timestamps and increment commit counts in version history; add debug output to ml.bat",
         "chore(version): update version to 1.1.8 and adjust related files; update generatedAt timestamp and increment commit counts in version history",
         "chore(version): update version to 1.1.8 and adjust related files; add npm global install instructions"
       ],
       "commits": [
+        {
+          "hash": "fc83bcb5cba5d95850ec1a8c31fdfa618fc7060d",
+          "shortHash": "fc83bcb",
+          "date": "2026-04-16",
+          "title": "chore(version): update generatedAt timestamps and increment commit counts in version history; add debug output to ml.bat",
+          "type": "feature"
+        },
         {
           "hash": "5251e138cdc1c5364bbf4d4a31a449ff0981709c",
           "shortHash": "5251e13",
