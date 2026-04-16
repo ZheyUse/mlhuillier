@@ -724,9 +724,8 @@ if %ERRORLEVEL% neq 0 (
         if "%REMOTE_VER%"=="%ML_VERSION%" (
                 del /f /q "!TMP_VER!" >nul 2>&1
                 echo.
-                echo Your ML CLI is up to date.
-                echo Current Version: %ML_VERSION%
-                exit /b 0
+                echo Remote VERSION matches installed version (%ML_VERSION%).
+                echo Continuing with update because you invoked "ml update".
         ) else (
                 del /f /q "!TMP_VER!" >nul 2>&1
         )

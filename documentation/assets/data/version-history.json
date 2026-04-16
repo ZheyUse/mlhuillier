@@ -1,22 +1,22 @@
 {
-  "generatedAt": "2026-04-16T00:59:53.011Z",
-  "latestVersion": "1.1.8",
+  "generatedAt": "2026-04-16T01:03:41.052Z",
+  "latestVersion": "1.1.9",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 170
+    "commitCount": 171
   },
   "releases": [
     {
-      "version": "1.1.8",
+      "version": "1.1.9",
       "isLatest": true,
-      "commitCount": 9,
+      "commitCount": 7,
       "dateRange": {
         "from": "2026-04-15",
         "to": "2026-04-16"
       },
       "stats": {
-        "release": 2,
+        "release": 1,
         "feature": 3,
         "fix": 0,
         "docs": 0,
@@ -24,17 +24,23 @@
         "performance": 0,
         "security": 0,
         "test": 0,
-        "chore": 4,
+        "chore": 3,
         "other": 0
       },
       "highlights": [
+        "chore(version): update version to 1.1.9 and adjust related files; update generatedAt timestamps and increment commit counts in version history",
         "feat(updater): add changelog generation from recent commits in ml-update.php",
         "chore(version): update generatedAt timestamps and increment commit counts in version history; add debug output to ml.bat",
-        "chore(version): update generatedAt timestamps and increment commit counts in version history; add debug output to ml.bat",
-        "chore(version): update version to 1.1.8 and adjust related files; update generatedAt timestamp and increment commit counts in version history",
-        "chore(version): update version to 1.1.8 and adjust related files; add npm global install instructions"
+        "chore(version): update generatedAt timestamps and increment commit counts in version history; add debug output to ml.bat"
       ],
       "commits": [
+        {
+          "hash": "2035e9c437cda38f6cf4927f0eb7e5fcab62ce83",
+          "shortHash": "2035e9c",
+          "date": "2026-04-16",
+          "title": "chore(version): update version to 1.1.9 and adjust related files; update generatedAt timestamps and increment commit counts in version history",
+          "type": "release"
+        },
         {
           "hash": "8c911bfff4fbcbedc082ce1c1b8c8a20097fb157",
           "shortHash": "8c911bf",
@@ -76,7 +82,34 @@
           "date": "2026-04-15",
           "title": "chore(version): update generatedAt timestamp and increment commit counts in version history",
           "type": "chore"
-        },
+        }
+      ]
+    },
+    {
+      "version": "1.1.8",
+      "isLatest": false,
+      "commitCount": 3,
+      "dateRange": {
+        "from": "2026-04-15",
+        "to": "2026-04-15"
+      },
+      "stats": {
+        "release": 2,
+        "feature": 0,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 1,
+        "other": 0
+      },
+      "highlights": [
+        "chore(version): update version to 1.1.8 and adjust related files; update generatedAt timestamp and increment commit counts in version history",
+        "chore(version): update version to 1.1.8 and adjust related files; add npm global install instructions"
+      ],
+      "commits": [
         {
           "hash": "6ed9dac371934403124f9958895a1bbaff8264df",
           "shortHash": "6ed9dac",
