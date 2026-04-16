@@ -17,6 +17,8 @@ if /I "%~1"=="nav" if not defined ML_NAV_BRIDGE if exist "%~dp0ml.cmd" (
 if /I "%~1"=="--v" goto :show_version
 if /I "%~1"=="--h" if "%~2"=="" goto :show_help
 if /I "%~1"=="--h" goto :prepare_help_args
+if /I "%~1"=="-h" if "%~2"=="" goto :show_help
+if /I "%~1"=="-h" goto :prepare_help_args
 if /I "%~1"=="--d" goto :cmd_download_installer
 if /I "%~1"=="doc" goto :cmd_docs
 if /I "%~1"=="docs" goto :cmd_docs

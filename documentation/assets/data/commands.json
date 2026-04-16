@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-16T01:17:48.404Z",
+  "generatedAt": "2026-04-16T01:49:53.977Z",
   "source": "ml.bat",
   "cliVersion": "1.1.9",
   "commands": [
@@ -91,6 +91,24 @@
         "steps": [
           "Run: ml --v",
           "Review output and confirm expected result: Prints current CLI version number.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml -h",
+      "description": "Run this CLI command to execute its linked workflow.",
+      "syntax": "ml -h",
+      "params": [],
+      "example": "ml -h",
+      "category": "general",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml -h.",
+        "steps": [
+          "Run: ml -h",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
       }
@@ -674,6 +692,16 @@
         "steps": [
           "Run: ml --v",
           "Review output and confirm expected result: Prints current CLI version number.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml -h",
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml -h.",
+        "steps": [
+          "Run: ml -h",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
       },
