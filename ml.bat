@@ -940,6 +940,8 @@ rem URL hidden from output
 echo Executing serve helper...
 echo.
 
+echo [DEBUG] cmd_serve args: %1 %2 %3 %4
+
 rem --- Ensure local Apache is running; attempt to start XAMPP Apache or Apache service if not ---
 echo Checking for local Apache process...
 rem Check for typical Apache process names first
