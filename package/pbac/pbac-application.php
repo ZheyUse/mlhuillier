@@ -512,7 +512,7 @@ if (!function_exists('has_menu_access')) {
     {
         auth_start();
         pbac_refresh_current_session_permissions();
-
+        // Ensure access map is available
         if (!pbac_access_map_ready()) {
             return false;
         }
@@ -522,7 +522,32 @@ if (!function_exists('has_menu_access')) {
             return false;
         }
 
+        $details = pbac_access_map_details();
+        $decoded = $details['decoded'] ?? null;
+        if (!is_array($decoded)) {
+            return false;
+        }
+
+        $catalog = isset($decoded['permission_catalog']) && is_array($decoded['permission_catalog']) ? $decoded['permission_catalog'] : [];
+
+        // Find the menu in the permission catalog. If the menu is not mapped, hide it.
+        $foundMenu = null;
+        foreach ($catalog as $menu) {
+            $label = trim((string) ($menu['label'] ?? ''));
+            $id = trim((string) ($menu['id'] ?? ($menu['key'] ?? '')));
+            if (strcasecmp($label, $menuKey) === 0 || strcasecmp($id, $menuKey) === 0) {
+                $foundMenu = $menu;
+                break;
+            }
+        }
+
+        if ($foundMenu === null) {
+            // Menu not present in the access map -> hide it regardless of access level
+            return false;
+        }
+
         $level = isset($_SESSION['user_access_level']) ? (int) $_SESSION['user_access_level'] : 0;
+        // Admin-like level: allow access to mapped menus
         if ($level === -1) {
             return true;
         }
@@ -532,24 +557,11 @@ if (!function_exists('has_menu_access')) {
             return false;
         }
 
-        $details = pbac_access_map_details();
-        $decoded = $details['decoded'] ?? null;
-        if (is_array($decoded)) {
-            $catalog = isset($decoded['permission_catalog']) && is_array($decoded['permission_catalog']) ? $decoded['permission_catalog'] : [];
-            foreach ($catalog as $menu) {
-                $label = trim((string) ($menu['label'] ?? ''));
-                $id = trim((string) ($menu['id'] ?? ($menu['key'] ?? '')));
-                if (strcasecmp($label, $menuKey) !== 0 && strcasecmp($id, $menuKey) !== 0) {
-                    continue;
-                }
-                $children = isset($menu['children']) && is_array($menu['children']) ? $menu['children'] : [];
-                foreach ($children as $child) {
-                    $childId = trim((string) ($child['id'] ?? ($child['key'] ?? '')));
-                    if ($childId !== '' && in_array($childId, $userPerms, true)) {
-                        return true;
-                    }
-                }
-                return false;
+        $children = isset($foundMenu['children']) && is_array($foundMenu['children']) ? $foundMenu['children'] : [];
+        foreach ($children as $child) {
+            $childId = trim((string) ($child['id'] ?? ($child['key'] ?? '')));
+            if ($childId !== '' && in_array($childId, $userPerms, true)) {
+                return true;
             }
         }
 
