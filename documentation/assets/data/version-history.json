@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-04-17T02:35:40.713Z",
+  "generatedAt": "2026-04-17T02:37:54.005Z",
   "latestVersion": "1.1.10",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 186
+    "commitCount": 187
   },
   "releases": [
     {
       "version": "1.1.10",
       "isLatest": true,
-      "commitCount": 14,
+      "commitCount": 15,
       "dateRange": {
         "from": "2026-04-16",
         "to": "2026-04-17"
       },
       "stats": {
         "release": 2,
-        "feature": 12,
+        "feature": 13,
         "fix": 0,
         "docs": 0,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "fix(open-workbench): improve CSV splitting; support whitespace and comma separation in input values",
         "fix(workbench): improve error handling for fetching open-workbench script; add fallback to local script if remote fetch fails",
         "feat(export): enhance selection handling; add support for wildcard expansion in database and table arguments",
         "feat(export): improve argument handling; add consumeFlagValue function for better flag value parsing in direct export",
         "feat(help): add support for help flags; implement showWorkbenchHelp function with usage instructions",
         "feat(export): extend export options; add new methods for data and schema exports, and improve export directory handling",
         "feat(export): enhance export functionality; support multiple database selections and improve error handling",
-        "feat(export): update output file naming to use database name; enhance export success message",
-        "feat(export): enhance export directory handling; create named export folder and update output path"
+        "feat(export): update output file naming to use database name; enhance export success message"
       ],
       "commits": [
+        {
+          "hash": "90431cec1d078455e73f81d558a3cf06ccbdbe2a",
+          "shortHash": "90431ce",
+          "date": "2026-04-17",
+          "title": "fix(open-workbench): improve CSV splitting; support whitespace and comma separation in input values",
+          "type": "feature"
+        },
         {
           "hash": "b582fd19d39f09752fbab16be657b47987cf75f8",
           "shortHash": "b582fd1",

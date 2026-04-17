@@ -146,6 +146,7 @@ if /I "%CMD%"=="update" goto :help_update
 if /I "%CMD%"=="--d" goto :help_download_installer
 if /I "%CMD%"=="doc" goto :help_docs
 if /I "%CMD%"=="docs" goto :help_docs
+if /I "%CMD%"=="wb" goto :help_wb
 if /I "%CMD%"=="nav" goto :help_nav
 if /I "%CMD%"=="serve" goto :help_serve
 if /I "%CMD%"=="dev" goto :help_dev
@@ -195,6 +196,34 @@ echo   By default this opens the hosted docs at:
 echo   https://zheyuse.github.io/mlhuillier/documentation/
 echo   If you have installed the CLI locally the installer also places a
 echo   copy of the documentation under C:\ML CLI\Tools\documentation\
+exit /b 0
+
+:help_wb
+echo.
+echo HELP: Workbench
+echo Usage: ml wb [--export] [options]
+echo Description: Opens MySQL Workbench or runs the export helper.
+echo.
+echo Flags:
+echo   --export        Run export mode (direct or interactive)
+echo   --help, --h, -h  Show this help
+echo.
+echo Direct export example:
+echo   ml wb --export -db userdb,gledb -tb * -tb users -m 6 -fn backup1
+echo.
+echo Notes:
+echo   -db   Comma-separated list of databases (or 'all' / '*')
+echo   -tb   Repeatable; each -tb maps by position to a -db entry (or use 'all' / '*')
+echo   -m    Method 1..6 (see below)
+echo   -fn   Optional export folder name (created under C:\ML CLI\Exports)
+echo.
+echo Methods:
+echo   1 Structure Only
+echo   2 Data Only
+echo   3 Data + Structure
+echo   4 Structure + Schema
+echo   5 Data + Schema
+echo   6 Full Export (Data + Structure + Schema)
 exit /b 0
 
 :help_create
