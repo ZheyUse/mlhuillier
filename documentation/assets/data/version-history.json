@@ -1,16 +1,16 @@
 {
-  "generatedAt": "2026-04-17T03:04:03.226Z",
+  "generatedAt": "2026-04-17T03:05:47.396Z",
   "latestVersion": "1.1.10",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 191
+    "commitCount": 192
   },
   "releases": [
     {
       "version": "1.1.10",
       "isLatest": true,
-      "commitCount": 19,
+      "commitCount": 20,
       "dateRange": {
         "from": "2026-04-16",
         "to": "2026-04-17"
@@ -18,7 +18,7 @@
       "stats": {
         "release": 2,
         "feature": 16,
-        "fix": 1,
+        "fix": 2,
         "docs": 0,
         "refactor": 0,
         "performance": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "fix(version): update generatedAt timestamp and increment commit counts in version history",
         "fix(help): update commands and version history; add export command details and increment commit counts",
         "fix(help): update workbench help command; refine usage instructions and examples for clarity",
         "fix(help): enhance workbench export help command; add usage instructions and flags for export functionality",
         "feat(help): add workbench help command; provide usage instructions and flags for export functionality",
         "fix(open-workbench): improve CSV splitting; support whitespace and comma separation in input values",
         "fix(workbench): improve error handling for fetching open-workbench script; add fallback to local script if remote fetch fails",
-        "feat(export): enhance selection handling; add support for wildcard expansion in database and table arguments",
-        "feat(export): improve argument handling; add consumeFlagValue function for better flag value parsing in direct export"
+        "feat(export): enhance selection handling; add support for wildcard expansion in database and table arguments"
       ],
       "commits": [
+        {
+          "hash": "9d3b7b8f800b30772f78effe73ac9ad8ef6bac51",
+          "shortHash": "9d3b7b8",
+          "date": "2026-04-17",
+          "title": "fix(version): update generatedAt timestamp and increment commit counts in version history",
+          "type": "fix"
+        },
         {
           "hash": "9cd9c675ee807f9b28b282f2b2d77ba58d975ae2",
           "shortHash": "9cd9c67",

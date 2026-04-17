@@ -515,6 +515,28 @@ function buildTutorials(commands) {
         steps: ['ml --v', 'ml nav', 'ml create my-app', 'ml nav --my-app', 'ml serve'],
       },
       {
+        title: 'Workbench Export (Interactive)',
+        steps: [
+          'ml wb --export',
+          'Enter database names (comma-separated) or type all',
+          'For each selected database, enter table names or type all',
+          'Choose export method (1..6)',
+          'Enter folder name or press Enter for default',
+          'Confirm export',
+          'Check output in C:\\ML CLI\\Exports\\<MM-DD-YYYY>\\<FOLDER_NAME>\\',
+        ],
+      },
+      {
+        title: 'Apply PBAC Scaffold',
+        steps: [
+          'ml nav --<project_name>',
+          'ml create --pbac <project_name>',
+          'Confirm PBAC conversion prompt',
+          'ml gen',
+          'ml serve',
+        ],
+      },
+      {
         title: 'Configuring and running schema backups',
         steps: ['ml create --config', 'ml --b', 'ml --b userdb', 'ml --b all'],
       },

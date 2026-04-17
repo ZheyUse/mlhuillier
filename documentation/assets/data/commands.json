@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-17T03:05:37.558Z",
+  "generatedAt": "2026-04-17T03:59:36.243Z",
   "source": "ml.bat",
   "cliVersion": "1.1.10",
   "commands": [
@@ -932,6 +932,28 @@
           "ml nav",
           "ml create my-app",
           "ml nav --my-app",
+          "ml serve"
+        ]
+      },
+      {
+        "title": "Workbench Export (Interactive)",
+        "steps": [
+          "ml wb --export",
+          "Enter database names (comma-separated) or type all",
+          "For each selected database, enter table names or type all",
+          "Choose export method (1..6)",
+          "Enter folder name or press Enter for default",
+          "Confirm export",
+          "Check output in C:\\ML CLI\\Exports\\<MM-DD-YYYY>\\<FOLDER_NAME>\\"
+        ]
+      },
+      {
+        "title": "Apply PBAC Scaffold",
+        "steps": [
+          "ml nav --<project_name>",
+          "ml create --pbac <project_name>",
+          "Confirm PBAC conversion prompt",
+          "ml gen",
           "ml serve"
         ]
       },
