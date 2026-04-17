@@ -453,7 +453,10 @@ function normalizeSelections(array $databases, array $tableArgs, array $allDatab
 
 function splitCsv(string $value): array
 {
-    return array_values(array_filter(array_map('trim', explode(',', $value)), 'strlen'));
+    return array_values(array_filter(
+        array_map('trim', preg_split('/[\s,]+/', $value) ?: []),
+        'strlen'
+    ));
 }
 
 function looksLikeExpandedWildcard(string $value): bool
