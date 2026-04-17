@@ -106,7 +106,7 @@ if (!is_dir($namedExportDir) && !@mkdir($namedExportDir, 0777, true) && !is_dir(
     exit(2);
 }
 
-$outputPath = $namedExportDir . '\\defaultname.sql';
+$outputPath = $namedExportDir . '\\' . $database . '.sql';
 $mysqldump = findMysqldump($connCfg);
 if ($mysqldump === null) {
     fwrite(STDOUT, "Could not find mysqldump.exe.\n");
@@ -130,7 +130,7 @@ if (!$dumpResult['ok']) {
     exit(2);
 }
 
-fwrite(STDOUT, "{$fileName} has been exported successfully\n");
+fwrite(STDOUT, "{$database} has been exported successfully\n");
 fwrite(STDOUT, "Location: {$outputPath}\n");
 
 @pclose(@popen('cmd /c start "" explorer "' . str_replace('"', '', $namedExportDir) . '"', 'r'));
