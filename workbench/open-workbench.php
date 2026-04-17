@@ -401,6 +401,12 @@ function normalizeSelections(array $databases, array $tableArgs, array $allDatab
         return [false, [], [], "Error: Invalid option, please try again"];
     }
 
+    // PowerShell can expand unquoted '*' into a space-separated file list.
+    // If detected on -db value, treat it as universal selector.
+    if (count($databases) === 1 && looksLikeExpandedWildcard((string) $databases[0])) {
+        $databases = ['*'];
+    }
+
     if (count($databases) === 1 && isUniversalToken($databases[0])) {
         $databases = $allDatabases;
     } else {
@@ -426,6 +432,10 @@ function normalizeSelections(array $databases, array $tableArgs, array $allDatab
     $normalizedTables = [];
     foreach ($tableArgs as $tbArg) {
         $tbArg = trim((string) $tbArg);
+        // Same wildcard-expansion guard for -tb values in PowerShell.
+        if (looksLikeExpandedWildcard($tbArg)) {
+            $tbArg = '*';
+        }
         if (isUniversalToken($tbArg)) {
             $normalizedTables[] = ['*'];
             continue;
@@ -444,6 +454,45 @@ function normalizeSelections(array $databases, array $tableArgs, array $allDatab
 function splitCsv(string $value): array
 {
     return array_values(array_filter(array_map('trim', explode(',', $value)), 'strlen'));
+}
+
+function looksLikeExpandedWildcard(string $value): bool
+{
+    $value = trim($value);
+    if ($value === '') {
+        return false;
+    }
+
+    // Already explicit wildcard selector.
+    if ($value === '*') {
+        return true;
+    }
+
+    // Heuristic: wildcard expansion usually becomes many space-separated names
+    // that exist as files/folders in current working directory.
+    $parts = preg_split('/\s+/', $value) ?: [];
+    if (count($parts) < 2) {
+        return false;
+    }
+
+    $cwd = getcwd();
+    if (!is_string($cwd) || $cwd === '') {
+        return false;
+    }
+
+    $matches = 0;
+    foreach ($parts as $part) {
+        $part = trim((string) $part);
+        if ($part === '') {
+            continue;
+        }
+        $candidate = $cwd . DIRECTORY_SEPARATOR . $part;
+        if (file_exists($candidate)) {
+            $matches++;
+        }
+    }
+
+    return $matches >= 2;
 }
 
 function isUniversalToken(string $value): bool
