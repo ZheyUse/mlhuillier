@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-04-17T01:26:58.135Z",
+  "generatedAt": "2026-04-17T01:38:21.459Z",
   "latestVersion": "1.1.10",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 179
+    "commitCount": 180
   },
   "releases": [
     {
       "version": "1.1.10",
       "isLatest": true,
-      "commitCount": 7,
+      "commitCount": 8,
       "dateRange": {
         "from": "2026-04-16",
         "to": "2026-04-17"
       },
       "stats": {
         "release": 2,
-        "feature": 5,
+        "feature": 6,
         "fix": 0,
         "docs": 0,
         "refactor": 0,
@@ -28,6 +28,7 @@
         "other": 0
       },
       "highlights": [
+        "feat(export): update output file naming to use database name; enhance export success message",
         "feat(export): enhance export directory handling; create named export folder and update output path",
         "chore(version): update version to 1.1.10; refresh generatedAt timestamps and increment commit counts in version history; enhance export functionality in open-workbench.php",
         "chore(version): update version to 1.1.10; refresh generatedAt timestamps and increment commit counts in version history",
@@ -37,6 +38,13 @@
         "chore(version): update generatedAt timestamps and increment commit counts in version history; enhance project name detection in ml.bat"
       ],
       "commits": [
+        {
+          "hash": "9095be8be4db8be9679c9389e5d82a8cff9bd230",
+          "shortHash": "9095be8",
+          "date": "2026-04-17",
+          "title": "feat(export): update output file naming to use database name; enhance export success message",
+          "type": "feature"
+        },
         {
           "hash": "64dbd2868fcff658aadcd0e0cc1cd2fb959ee1b7",
           "shortHash": "64dbd28",

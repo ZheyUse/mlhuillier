@@ -24,13 +24,12 @@ if (!empty($args) && strtolower((string) $args[0]) === 'wb') {
 }
 
 $isExport = false;
-$exportExpr = '';
+$exportTail = [];
 for ($i = 0; $i < count($args); $i++) {
     $a = (string) $args[$i];
     if (strtolower($a) === '--export') {
         $isExport = true;
-        $tail = array_slice($args, $i + 1);
-        $exportExpr = trim(implode(' ', $tail));
+        $exportTail = array_slice($args, $i + 1);
         break;
     }
 }
@@ -40,22 +39,11 @@ if (!$isExport) {
     exit(0);
 }
 
-$database = '';
-$tables = [];
+$databaseSelections = [];
+$tableSelections = [];
 $method = '';
-
-if ($exportExpr !== '') {
-    [$ok, $database, $tables, $method] = parseDirectExport($exportExpr);
-    if (!$ok) {
-        fwrite(STDOUT, "Error: Invalid option, please try again\n");
-        exit(2);
-    }
-
-    if (!in_array($method, ['1', '2', '3', '4'], true)) {
-        fwrite(STDOUT, "Error: Invalid option, please try again\n");
-        exit(2);
-    }
-}
+$fileName = '';
+$isDirectMode = count($exportTail) > 0;
 
 $connCfg = getConnectionConfig();
 $mysqli = @new mysqli(
@@ -73,25 +61,63 @@ if ($mysqli->connect_errno) {
     exit(2);
 }
 
-if ($exportExpr !== '') {
-
-    if (!databaseExists($mysqli, $database)) {
-        fwrite(STDOUT, "{$database} cannot be found, please try again\n");
+if ($isDirectMode) {
+    [$ok, $databaseSelections, $tableSelections, $method, $fileName, $error] = parseDirectExportArgs($exportTail);
+    if (!$ok) {
+        fwrite(STDOUT, $error . "\n");
         exit(2);
     }
 
-    $missing = firstMissingTable($mysqli, $database, $tables);
-    if ($missing !== null) {
-        fwrite(STDOUT, "{$missing} cannot be found, please select again\n");
+    $allDatabases = listUserDatabases($mysqli);
+    [$ok, $databaseSelections, $tableSelections, $error] = normalizeSelections(
+        $databaseSelections,
+        $tableSelections,
+        $allDatabases
+    );
+    if (!$ok) {
+        fwrite(STDOUT, $error . "\n");
+        exit(2);
+    }
+
+    if (!in_array($method, ['1', '2', '3', '4'], true)) {
+        fwrite(STDOUT, "Error: Invalid option, please try again\n");
+        exit(2);
+    }
+
+    $missingDb = firstMissingDatabase($mysqli, $databaseSelections);
+    if ($missingDb !== null) {
+        fwrite(STDOUT, "{$missingDb} cannot be found, please try again\n");
+        exit(2);
+    }
+
+    for ($i = 0; $i < count($databaseSelections); $i++) {
+        $db = $databaseSelections[$i];
+        $tables = $tableSelections[$i];
+        if (isAllSelector($tables)) {
+            continue;
+        }
+        $missing = firstMissingTable($mysqli, $db, $tables);
+        if ($missing !== null) {
+            fwrite(STDOUT, "{$missing} cannot be found, please select again\n");
+            exit(2);
+        }
+    }
+
+    if ($fileName === '') {
+        $fileName = promptUntilValidFileName();
+    } elseif (!isValidFileName($fileName)) {
+        fwrite(STDOUT, "Error: Invalid filename, please try again\n");
         exit(2);
     }
 } else {
-    $database = promptUntilValidDatabase($mysqli);
-    $tables = promptUntilValidTables($mysqli, $database);
+    $databaseSelections = promptUntilValidDatabases($mysqli);
+    for ($i = 0; $i < count($databaseSelections); $i++) {
+        $db = $databaseSelections[$i];
+        $tableSelections[] = promptUntilValidTables($mysqli, $db);
+    }
     $method = promptUntilValidMethod();
+    $fileName = promptUntilValidFileName();
 }
-
-$fileName = promptUntilValidFileName();
 
 $dateFolder = date('m-d-Y');
 $exportDir = 'C:\\ML CLI\\Exports\\' . $dateFolder;
@@ -106,32 +132,43 @@ if (!is_dir($namedExportDir) && !@mkdir($namedExportDir, 0777, true) && !is_dir(
     exit(2);
 }
 
-$outputPath = $namedExportDir . '\\' . $database . '.sql';
 $mysqldump = findMysqldump($connCfg);
 if ($mysqldump === null) {
     fwrite(STDOUT, "Could not find mysqldump.exe.\n");
     exit(2);
 }
 
-$dumpResult = runExport(
-    $mysqldump,
-    $connCfg,
-    $database,
-    $tables,
-    $method,
-    $outputPath
-);
+$outputPaths = [];
+for ($i = 0; $i < count($databaseSelections); $i++) {
+    $db = $databaseSelections[$i];
+    $tables = $tableSelections[$i];
+    $tablesForExport = isAllSelector($tables) ? [] : $tables;
+    $outputPath = $namedExportDir . '\\' . $db . '.sql';
 
-if (!$dumpResult['ok']) {
-    fwrite(STDOUT, "Export failed.\n");
-    if ($dumpResult['stderr'] !== '') {
-        fwrite(STDOUT, $dumpResult['stderr'] . "\n");
+    $dumpResult = runExport(
+        $mysqldump,
+        $connCfg,
+        $db,
+        $tablesForExport,
+        $method,
+        $outputPath
+    );
+
+    if (!$dumpResult['ok']) {
+        fwrite(STDOUT, "Export failed.\n");
+        if ($dumpResult['stderr'] !== '') {
+            fwrite(STDOUT, $dumpResult['stderr'] . "\n");
+        }
+        exit(2);
     }
-    exit(2);
+
+    $outputPaths[] = $outputPath;
 }
 
-fwrite(STDOUT, "{$database} has been exported successfully\n");
-fwrite(STDOUT, "Location: {$outputPath}\n");
+fwrite(STDOUT, "{$fileName} has been exported successfully\n");
+foreach ($outputPaths as $path) {
+    fwrite(STDOUT, "Location: {$path}\n");
+}
 
 @pclose(@popen('cmd /c start "" explorer "' . str_replace('"', '', $namedExportDir) . '"', 'r'));
 exit(0);
@@ -143,20 +180,45 @@ function prompt(string $label): string
     return trim($line === false ? '' : $line);
 }
 
-function promptUntilValidDatabase(mysqli $mysqli): string
+function promptUntilValidDatabases(mysqli $mysqli): array
 {
     while (true) {
-        $db = prompt("Database: ");
-        if ($db === '') continue;
-        if (databaseExists($mysqli, $db)) {
-            return $db;
+        $allDatabases = listUserDatabases($mysqli);
+        fwrite(STDOUT, "Database List:\n");
+        for ($i = 0; $i < count($allDatabases); $i++) {
+            fwrite(STDOUT, ($i + 1) . '. ' . $allDatabases[$i] . "\n");
         }
-        fwrite(STDOUT, "{$db} cannot be found, please try again\n");
+        fwrite(STDOUT, "all\n");
+        fwrite(STDOUT, "*\n\n");
+
+        $input = prompt("Select database(s): ");
+        $tokens = splitCsv($input);
+        if (count($tokens) === 0) {
+            fwrite(STDOUT, "Please select at least one database\n");
+            continue;
+        }
+
+        if (count($tokens) === 1 && isUniversalToken($tokens[0])) {
+            if (count($allDatabases) === 0) {
+                fwrite(STDOUT, "No databases found\n");
+                continue;
+            }
+            return $allDatabases;
+        }
+
+        $missing = firstMissingFromSet($tokens, $allDatabases);
+        if ($missing !== null) {
+            fwrite(STDOUT, "{$missing} cannot be found, please try again\n");
+            continue;
+        }
+
+        return dedupePreserveOrder($tokens);
     }
 }
 
 function promptUntilValidTables(mysqli $mysqli, string $database): array
 {
+    fwrite(STDOUT, "Select Tables to be exported from {$database}\n\n");
     $allTables = listTables($mysqli, $database);
     fwrite(STDOUT, "{$database} List of Tables:\n");
     $i = 1;
@@ -164,17 +226,22 @@ function promptUntilValidTables(mysqli $mysqli, string $database): array
         fwrite(STDOUT, $i . '. ' . $t . "\n");
         $i++;
     }
+    fwrite(STDOUT, "all\n");
+    fwrite(STDOUT, "*\n\n");
 
     while (true) {
         $input = prompt("Tables (comma-separated): ");
-        $tables = array_values(array_filter(array_map('trim', explode(',', $input)), 'strlen'));
+        $tables = splitCsv($input);
         if (count($tables) === 0) {
-            fwrite(STDOUT, " cannot be found, please select again\n");
+            fwrite(STDOUT, "Please select at least one table\n");
             continue;
+        }
+        if (count($tables) === 1 && isUniversalToken($tables[0])) {
+            return ['*'];
         }
         $missing = firstMissingTable($mysqli, $database, $tables);
         if ($missing === null) {
-            return $tables;
+            return dedupePreserveOrder($tables);
         }
         fwrite(STDOUT, "{$missing} cannot be found, please select again\n");
     }
@@ -211,12 +278,173 @@ function promptUntilValidFileName(): string
 function isValidFileName(string $name): bool
 {
     if ($name === '') return false;
-    if (preg_match('/[<>:"\\\/|?*]/', $name)) return false;
+    if (preg_match('~[<>:"/\\|?*]~', $name)) return false;
     if (preg_match('/[\.\s]$/', $name)) return false;
     return true;
 }
 
-function parseDirectExport(string $expr): array
+function parseDirectExportArgs(array $args): array
+{
+    $dbArg = '';
+    $tbArgs = [];
+    $method = '';
+    $fileName = '';
+
+    if (count($args) === 0) {
+        return [false, [], [], '', '', "Error: Invalid option, please try again"];
+    }
+
+    $hasFlag = false;
+    foreach ($args as $token) {
+        if (strlen((string) $token) > 0 && (string) $token[0] === '-') {
+            $hasFlag = true;
+            break;
+        }
+    }
+
+    if (!$hasFlag) {
+        $expr = trim(implode(' ', $args));
+        [$ok, $db, $tables, $legacyMethod] = parseLegacyExportExpression($expr);
+        if (!$ok) {
+            return [false, [], [], '', '', "Error: Invalid option, please try again"];
+        }
+        return [true, [$db], [implode(',', $tables)], $legacyMethod, '', ''];
+    }
+
+    for ($i = 0; $i < count($args); $i++) {
+        $token = strtolower((string) $args[$i]);
+        if ($token === '-db') {
+            if (!isset($args[$i + 1])) {
+                return [false, [], [], '', '', "Error: Invalid option, please try again"];
+            }
+            $dbArg = trim((string) $args[++$i]);
+            continue;
+        }
+        if ($token === '-tb') {
+            if (!isset($args[$i + 1])) {
+                return [false, [], [], '', '', "Error: Invalid option, please try again"];
+            }
+            $tbArgs[] = trim((string) $args[++$i]);
+            continue;
+        }
+        if ($token === '-m') {
+            if (!isset($args[$i + 1])) {
+                return [false, [], [], '', '', "Error: Invalid option, please try again"];
+            }
+            $method = trim((string) $args[++$i]);
+            continue;
+        }
+        if ($token === '-fn') {
+            if (!isset($args[$i + 1])) {
+                return [false, [], [], '', '', "Error: Invalid option, please try again"];
+            }
+            $fileName = trim((string) $args[++$i]);
+            continue;
+        }
+
+        return [false, [], [], '', '', "Error: Invalid option, please try again"];
+    }
+
+    if ($dbArg === '' || count($tbArgs) === 0 || $method === '') {
+        return [false, [], [], '', '', "Error: Invalid option, please try again"];
+    }
+
+    return [true, splitCsv($dbArg), $tbArgs, $method, $fileName, ''];
+}
+
+function normalizeSelections(array $databases, array $tableArgs, array $allDatabases): array
+{
+    if (count($databases) === 0) {
+        return [false, [], [], "Error: Invalid option, please try again"];
+    }
+
+    if (count($databases) === 1 && isUniversalToken($databases[0])) {
+        $databases = $allDatabases;
+    } else {
+        $databases = dedupePreserveOrder($databases);
+    }
+
+    if (count($databases) === 0) {
+        return [false, [], [], "No databases found"];
+    }
+
+    if (count($tableArgs) === 1 && isUniversalToken((string) $tableArgs[0]) && count($databases) > 1) {
+        $expanded = [];
+        for ($i = 0; $i < count($databases); $i++) {
+            $expanded[] = '*';
+        }
+        $tableArgs = $expanded;
+    }
+
+    if (count($tableArgs) !== count($databases)) {
+        return [false, [], [], "Error: Number of -tb arguments must match number of databases"];
+    }
+
+    $normalizedTables = [];
+    foreach ($tableArgs as $tbArg) {
+        $tbArg = trim((string) $tbArg);
+        if (isUniversalToken($tbArg)) {
+            $normalizedTables[] = ['*'];
+            continue;
+        }
+
+        $tables = splitCsv($tbArg);
+        if (count($tables) === 0) {
+            return [false, [], [], "Error: Invalid option, please try again"];
+        }
+        $normalizedTables[] = dedupePreserveOrder($tables);
+    }
+
+    return [true, $databases, $normalizedTables, ''];
+}
+
+function splitCsv(string $value): array
+{
+    return array_values(array_filter(array_map('trim', explode(',', $value)), 'strlen'));
+}
+
+function isUniversalToken(string $value): bool
+{
+    $value = strtolower(trim($value));
+    return $value === 'all' || $value === '*';
+}
+
+function isAllSelector(array $tables): bool
+{
+    return count($tables) === 1 && isUniversalToken((string) $tables[0]);
+}
+
+function dedupePreserveOrder(array $values): array
+{
+    $seen = [];
+    $result = [];
+    foreach ($values as $value) {
+        $key = strtolower((string) $value);
+        if (isset($seen[$key])) {
+            continue;
+        }
+        $seen[$key] = true;
+        $result[] = (string) $value;
+    }
+    return $result;
+}
+
+function firstMissingFromSet(array $selected, array $available): ?string
+{
+    $set = [];
+    foreach ($available as $item) {
+        $set[strtolower((string) $item)] = true;
+    }
+
+    foreach ($selected as $item) {
+        if (!isset($set[strtolower((string) $item)])) {
+            return (string) $item;
+        }
+    }
+    return null;
+}
+
+function parseLegacyExportExpression(string $expr): array
 {
     $expr = trim($expr);
     if ($expr === '') return [false, '', [], ''];
@@ -231,7 +459,7 @@ function parseDirectExport(string $expr): array
 
     $left = trim($m[1]);
     $method = trim($m[2]);
-    $parts = array_values(array_filter(array_map('trim', explode(',', $left)), 'strlen'));
+    $parts = splitCsv($left);
     if (count($parts) < 2) {
         return [false, '', [], ''];
     }
@@ -251,6 +479,43 @@ function databaseExists(mysqli $mysqli, string $database): bool
     return $ok;
 }
 
+function listUserDatabases(mysqli $mysqli): array
+{
+    $res = $mysqli->query('SHOW DATABASES');
+    if (!$res) {
+        return [];
+    }
+
+    $system = [
+        'information_schema' => true,
+        'mysql' => true,
+        'performance_schema' => true,
+        'sys' => true,
+    ];
+
+    $out = [];
+    while ($row = $res->fetch_row()) {
+        $db = (string) $row[0];
+        if (isset($system[strtolower($db)])) {
+            continue;
+        }
+        $out[] = $db;
+    }
+    $res->free();
+
+    return $out;
+}
+
+function firstMissingDatabase(mysqli $mysqli, array $databases): ?string
+{
+    foreach ($databases as $db) {
+        if (!databaseExists($mysqli, $db)) {
+            return $db;
+        }
+    }
+    return null;
+}
+
 function listTables(mysqli $mysqli, string $database): array
 {
     $safeDb = str_replace('`', '``', $database);
@@ -266,7 +531,7 @@ function listTables(mysqli $mysqli, string $database): array
 
 function firstMissingTable(mysqli $mysqli, string $database, array $tables): ?string
 {
-    if (count($tables) === 0) return '';
+    if (count($tables) === 0) return null;
 
     $existing = listTables($mysqli, $database);
     $set = array_fill_keys($existing, true);
