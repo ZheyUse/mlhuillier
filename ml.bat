@@ -204,29 +204,16 @@ exit /b 0
 :help_wb
 echo.
 echo HELP: Workbench
-echo Usage: ml wb [--export] [options]
-echo Description: Opens MySQL Workbench or runs the export helper.
+echo Usage: ml wb [options]
+echo Description: Launches the installed MySQL Workbench application (Workbench.exe).
 echo.
-echo Flags:
-echo   --export        Run export mode (direct or interactive)
-echo   --help, --h, -h  Show this help
+echo Examples:
+echo   ml wb
+echo       Opens the MySQL Workbench GUI to manage or inspect databases.
 echo.
-echo Direct export example:
-echo   ml wb --export -db userdb,gledb -tb * -tb users -m 6 -fn backup1
-echo.
-echo Notes:
-echo   -db   Comma-separated list of databases (or 'all' / '*')
-echo   -tb   Repeatable; each -tb maps by position to a -db entry (or use 'all' / '*')
-echo   -m    Method 1..6 (see below)
-echo   -fn   Optional export folder name (created under C:\ML CLI\Exports)
-echo.
-echo Methods:
-echo   1 Structure Only
-echo   2 Data Only
-echo   3 Data + Structure
-echo   4 Structure + Schema
-echo   5 Data + Schema
-echo   6 Full Export (Data + Structure + Schema)
+echo Note: To run the Workbench export helper, use:
+echo   ml --h wb --export
+echo which shows detailed export options and examples.
 exit /b 0
 
 :help_wb_export
