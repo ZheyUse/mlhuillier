@@ -146,7 +146,10 @@ if /I "%CMD%"=="update" goto :help_update
 if /I "%CMD%"=="--d" goto :help_download_installer
 if /I "%CMD%"=="doc" goto :help_docs
 if /I "%CMD%"=="docs" goto :help_docs
-if /I "%CMD%"=="wb" goto :help_wb
+if /I "%CMD%"=="wb" (
+        if /I "%SUB%"=="--export" goto :help_wb_export
+        goto :help_wb
+)
 if /I "%CMD%"=="nav" goto :help_nav
 if /I "%CMD%"=="serve" goto :help_serve
 if /I "%CMD%"=="dev" goto :help_dev
@@ -216,6 +219,35 @@ echo   -db   Comma-separated list of databases (or 'all' / '*')
 echo   -tb   Repeatable; each -tb maps by position to a -db entry (or use 'all' / '*')
 echo   -m    Method 1..6 (see below)
 echo   -fn   Optional export folder name (created under C:\ML CLI\Exports)
+echo.
+echo Methods:
+echo   1 Structure Only
+echo   2 Data Only
+echo   3 Data + Structure
+echo   4 Structure + Schema
+echo   5 Data + Schema
+echo   6 Full Export (Data + Structure + Schema)
+exit /b 0
+
+:help_wb_export
+echo.
+echo HELP: Workbench Export
+echo Usage: ml wb --export [options]
+echo Description: Dumps one or more databases to SQL files (one file per database).
+echo.
+echo Flags:
+echo   -db   Comma-separated list of databases (or 'all' / '*')
+echo   -tb   Repeatable; each -tb maps by position to a -db entry (or use 'all' / '*')
+echo   -m    Method 1..6 (see below)
+echo   -fn   Optional export folder name (created under C:\ML CLI\Exports\<MM-DD-YYYY>\<name>\)
+echo   --help, --h, -h  Show this help
+echo.
+echo Output layout:
+echo   C:\ML CLI\Exports\<MM-DD-YYYY>\<FOLDER_NAME>\<database>.sql
+echo.
+echo Examples:
+echo   ml wb --export -db userdb -tb users -m 6 -fn backup1
+echo   ml wb --export -db userdb,gledb -tb * -tb users -m 6 -fn mydump
 echo.
 echo Methods:
 echo   1 Structure Only
