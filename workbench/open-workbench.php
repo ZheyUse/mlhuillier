@@ -23,6 +23,15 @@ if (!empty($args) && strtolower((string) $args[0]) === 'wb') {
     array_shift($args);
 }
 
+// Support `--help`, `--h`, `-h` for `ml wb --help`
+foreach ($args as $arg) {
+    $la = strtolower((string) $arg);
+    if ($la === '--help' || $la === '--h' || $la === '-h' || $la === 'help') {
+        showWorkbenchHelp();
+        exit(0);
+    }
+}
+
 $isExport = false;
 $exportTail = [];
 for ($i = 0; $i < count($args); $i++) {
@@ -670,6 +679,33 @@ function runExport(string $mysqldump, array $cfg, string $db, array $tables, str
 function quoteCmd(string $value): string
 {
     return '"' . str_replace('"', '\\"', $value) . '"';
+}
+
+function showWorkbenchHelp(): void
+{
+    fwrite(STDOUT, "Usage: ml wb [--export] [options]\n");
+    fwrite(STDOUT, "\n");
+    fwrite(STDOUT, "Flags:\n");
+    fwrite(STDOUT, "  --export    Run export mode (direct or interactive)\n");
+    fwrite(STDOUT, "  --help, --h, -h   Show this help\n");
+    fwrite(STDOUT, "\n");
+    fwrite(STDOUT, "Direct export example:\n");
+    fwrite(STDOUT, "  ml wb --export -db userdb,gledb -tb * -tb users -m 6 -fn backup1\n");
+    fwrite(STDOUT, "\n");
+    fwrite(STDOUT, "Notes:\n");
+    fwrite(STDOUT, "  -db    Comma-separated list of databases (or 'all' / '*')\n");
+    fwrite(STDOUT, "  -tb    Repeatable; each -tb maps by position to a -db entry (or use 'all' / '*')\n");
+    fwrite(STDOUT, "  -m     Method 1..6 (see below)\n");
+    fwrite(STDOUT, "  -fn    Optional export folder name (created under C:\\ML CLI\\Exports)\n");
+    fwrite(STDOUT, "\n");
+    fwrite(STDOUT, "Methods:\n");
+    fwrite(STDOUT, "  1 Structure Only\n");
+    fwrite(STDOUT, "  2 Data Only\n");
+    fwrite(STDOUT, "  3 Data + Structure\n");
+    fwrite(STDOUT, "  4 Structure + Schema\n");
+    fwrite(STDOUT, "  5 Data + Schema\n");
+    fwrite(STDOUT, "  6 Full Export (Data + Structure + Schema)\n");
+    fwrite(STDOUT, "\n");
 }
 
 function launchWorkbench(): void
