@@ -100,7 +100,13 @@ if (!is_dir($exportDir) && !@mkdir($exportDir, 0777, true) && !is_dir($exportDir
     exit(2);
 }
 
-$outputPath = $exportDir . '\\' . $fileName . '.sql';
+$namedExportDir = $exportDir . '\\' . $fileName;
+if (!is_dir($namedExportDir) && !@mkdir($namedExportDir, 0777, true) && !is_dir($namedExportDir)) {
+    fwrite(STDOUT, "Failed to create export folder: {$namedExportDir}\n");
+    exit(2);
+}
+
+$outputPath = $namedExportDir . '\\defaultname.sql';
 $mysqldump = findMysqldump($connCfg);
 if ($mysqldump === null) {
     fwrite(STDOUT, "Could not find mysqldump.exe.\n");
@@ -127,7 +133,7 @@ if (!$dumpResult['ok']) {
 fwrite(STDOUT, "{$fileName} has been exported successfully\n");
 fwrite(STDOUT, "Location: {$outputPath}\n");
 
-@pclose(@popen('cmd /c start "" explorer "' . str_replace('"', '', $exportDir) . '"', 'r'));
+@pclose(@popen('cmd /c start "" explorer "' . str_replace('"', '', $namedExportDir) . '"', 'r'));
 exit(0);
 
 function prompt(string $label): string

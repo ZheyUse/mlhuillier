@@ -1,22 +1,22 @@
 {
-  "generatedAt": "2026-04-17T01:11:42.773Z",
+  "generatedAt": "2026-04-17T01:20:11.656Z",
   "latestVersion": "1.1.10",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 177
+    "commitCount": 178
   },
   "releases": [
     {
       "version": "1.1.10",
       "isLatest": true,
-      "commitCount": 5,
+      "commitCount": 6,
       "dateRange": {
         "from": "2026-04-16",
         "to": "2026-04-17"
       },
       "stats": {
-        "release": 1,
+        "release": 2,
         "feature": 4,
         "fix": 0,
         "docs": 0,
@@ -28,6 +28,7 @@
         "other": 0
       },
       "highlights": [
+        "chore(version): update version to 1.1.10; refresh generatedAt timestamps and increment commit counts in version history; enhance export functionality in open-workbench.php",
         "chore(version): update version to 1.1.10; refresh generatedAt timestamps and increment commit counts in version history",
         "chore(version): update generatedAt timestamps and increment commit counts in version history; enhance version checking logic in ml.bat",
         "feat(help): add support for '-h' flag to show help; enhance command handling in ml.bat",
@@ -35,6 +36,13 @@
         "chore(version): update generatedAt timestamps and increment commit counts in version history; enhance project name detection in ml.bat"
       ],
       "commits": [
+        {
+          "hash": "bf1dcb93da599d3adf0b968cf3fd89d8edc546c0",
+          "shortHash": "bf1dcb9",
+          "date": "2026-04-17",
+          "title": "chore(version): update version to 1.1.10; refresh generatedAt timestamps and increment commit counts in version history; enhance export functionality in open-workbench.php",
+          "type": "release"
+        },
         {
           "hash": "65153ad00c7a2f8d7005496a89aec9f0088901e0",
           "shortHash": "65153ad",
