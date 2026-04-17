@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-17T02:53:34.005Z",
+  "generatedAt": "2026-04-17T03:03:51.514Z",
   "source": "ml.bat",
   "cliVersion": "1.1.10",
   "commands": [
@@ -467,6 +467,24 @@
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
       }
+    },
+    {
+      "name": "ml wb --export",
+      "description": "Run Workbench export helper (ml wb --export)",
+      "syntax": "ml wb --export",
+      "params": [],
+      "example": "ml wb --export",
+      "category": "general",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml wb --export.",
+        "steps": [
+          "Run: ml wb --export",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
     }
   ],
   "tutorials": {
@@ -891,6 +909,16 @@
         "scenario": "Typical general workflow using ml wb.",
         "steps": [
           "Run: ml wb",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml wb --export",
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml wb --export.",
+        "steps": [
+          "Run: ml wb --export",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]

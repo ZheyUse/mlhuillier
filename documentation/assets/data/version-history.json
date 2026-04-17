@@ -1,16 +1,16 @@
 {
-  "generatedAt": "2026-04-17T02:46:20.373Z",
+  "generatedAt": "2026-04-17T02:53:44.529Z",
   "latestVersion": "1.1.10",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 189
+    "commitCount": 190
   },
   "releases": [
     {
       "version": "1.1.10",
       "isLatest": true,
-      "commitCount": 17,
+      "commitCount": 18,
       "dateRange": {
         "from": "2026-04-16",
         "to": "2026-04-17"
@@ -18,7 +18,7 @@
       "stats": {
         "release": 2,
         "feature": 15,
-        "fix": 0,
+        "fix": 1,
         "docs": 0,
         "refactor": 0,
         "performance": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "fix(help): update workbench help command; refine usage instructions and examples for clarity",
         "fix(help): enhance workbench export help command; add usage instructions and flags for export functionality",
         "feat(help): add workbench help command; provide usage instructions and flags for export functionality",
         "fix(open-workbench): improve CSV splitting; support whitespace and comma separation in input values",
         "fix(workbench): improve error handling for fetching open-workbench script; add fallback to local script if remote fetch fails",
         "feat(export): enhance selection handling; add support for wildcard expansion in database and table arguments",
         "feat(export): improve argument handling; add consumeFlagValue function for better flag value parsing in direct export",
-        "feat(help): add support for help flags; implement showWorkbenchHelp function with usage instructions",
-        "feat(export): extend export options; add new methods for data and schema exports, and improve export directory handling"
+        "feat(help): add support for help flags; implement showWorkbenchHelp function with usage instructions"
       ],
       "commits": [
+        {
+          "hash": "df20bb4ab41ce5abee5c870bbb276e0e2aa38a49",
+          "shortHash": "df20bb4",
+          "date": "2026-04-17",
+          "title": "fix(help): update workbench help command; refine usage instructions and examples for clarity",
+          "type": "fix"
+        },
         {
           "hash": "5d0732f547884d3b2006e05ba8338bf44cb1a29a",
           "shortHash": "5d0732f",

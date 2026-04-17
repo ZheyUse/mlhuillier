@@ -83,6 +83,10 @@ echo   --c    Check for newer version
 echo   --d    Download remote installer
 echo   --b    Backup schemas (use ml --b [schema])
 echo   --a    Account creation (use with `ml create --a`)
+echo   --export    Workbench export helper (use with `ml wb --export`)
+echo   --pbac      PBAC scaffold Converter (use with `ml create --pbac`)
+echo   --rbac      RBAC Scaffold for Manual integration (use with `ml create --rbac`)
+echo   --config    Create DB config (use with `ml create --config`)
 echo.
 echo Commands:
 echo   test ^<database^>     Run DB connection test for a specified database (e.g., userdb, gledb)
@@ -90,6 +94,7 @@ echo   add userdb         Import userdb SQL (migration/userdb)
 echo   nav                Navigate or open a project (ml nav)
 echo   serve              Open current project in browser (ml serve)
 echo   wb                 Open MySQL Workbench (ml wb)
+echo   wb --export        Run Workbench export helper (ml wb --export)
 echo   doc                Open online documentation (GitHub Pages)
 echo   create --a         Create interactive account (add user)
 echo   create --config    Create DB config for backups
@@ -119,6 +124,8 @@ echo   ml --h add userdb
 echo   ml --h rev
 echo   ml --h reveal
 echo   ml --h gen
+echo   ml --h wb
+echo   ml --h wb --export
 exit /b 0
 
 :prepare_help_args
