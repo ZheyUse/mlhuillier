@@ -79,7 +79,7 @@ if ($isDirectMode) {
         exit(2);
     }
 
-    if (!in_array($method, ['1', '2', '3', '4'], true)) {
+    if (!in_array($method, ['1', '2', '3', '4', '5', '6'], true)) {
         fwrite(STDOUT, "Error: Invalid option, please try again\n");
         exit(2);
     }
@@ -127,6 +127,12 @@ if (!is_dir($exportDir) && !@mkdir($exportDir, 0777, true) && !is_dir($exportDir
 }
 
 $namedExportDir = $exportDir . '\\' . $fileName;
+$origNamedExportDir = $namedExportDir;
+$counter = 1;
+while (file_exists($namedExportDir)) {
+    $counter++;
+    $namedExportDir = $origNamedExportDir . '(' . $counter . ')';
+}
 if (!is_dir($namedExportDir) && !@mkdir($namedExportDir, 0777, true) && !is_dir($namedExportDir)) {
     fwrite(STDOUT, "Failed to create export folder: {$namedExportDir}\n");
     exit(2);
@@ -250,14 +256,16 @@ function promptUntilValidTables(mysqli $mysqli, string $database): array
 function promptUntilValidMethod(): string
 {
     fwrite(STDOUT, "Select export method:\n");
-    fwrite(STDOUT, "1. Dump Structure Only\n");
-    fwrite(STDOUT, "2. Dump Data Only\n");
-    fwrite(STDOUT, "3. Dump Data and Structure\n");
-    fwrite(STDOUT, "4. Full Export (Data + Structure + Schema)\n\n");
+    fwrite(STDOUT, "1. Structure Only\n");
+    fwrite(STDOUT, "2. Data Only\n");
+    fwrite(STDOUT, "3. Data + Structure\n");
+    fwrite(STDOUT, "4. Structure + Schema\n");
+    fwrite(STDOUT, "5. Data + Schema\n");
+    fwrite(STDOUT, "6. Full Export (Data + Structure + Schema)\n\n");
 
     while (true) {
         $m = prompt("Method: ");
-        if (in_array($m, ['1', '2', '3', '4'], true)) {
+        if (in_array($m, ['1', '2', '3', '4', '5', '6'], true)) {
             return $m;
         }
         fwrite(STDOUT, "Error: Invalid option, please try again\n");
@@ -453,12 +461,16 @@ function parseLegacyExportExpression(string $expr): array
         $expr = trim(substr($expr, 1));
     }
 
-    if (!preg_match('/^(.+?)\s*=\s*([1-4])\s*$/', $expr, $m)) {
+    if (!preg_match('/^(.+?)\s*=\s*([1-6])\s*$/', $expr, $m)) {
         return [false, '', [], ''];
     }
 
     $left = trim($m[1]);
     $method = trim($m[2]);
+    if ($method === '4') {
+        // legacy '4' used to mean full export; map to new '6'
+        $method = '6';
+    }
     $parts = splitCsv($left);
     if (count($parts) < 2) {
         return [false, '', [], ''];
@@ -615,10 +627,25 @@ function runExport(string $mysqldump, array $cfg, string $db, array $tables, str
     $parts[] = '--defaults-extra-file=' . quoteCmd($tmpCnf);
 
     if ($method === '1') {
+        // Structure only
         $parts[] = '--no-data';
     } elseif ($method === '2') {
+        // Data only
         $parts[] = '--no-create-info';
     } elseif ($method === '4') {
+        // Structure + Schema (structure plus routines/triggers/events)
+        $parts[] = '--no-data';
+        $parts[] = '--routines';
+        $parts[] = '--triggers';
+        $parts[] = '--events';
+    } elseif ($method === '5') {
+        // Data + Schema (data plus routines/triggers/events)
+        $parts[] = '--no-create-info';
+        $parts[] = '--routines';
+        $parts[] = '--triggers';
+        $parts[] = '--events';
+    } elseif ($method === '6') {
+        // Full export (data + structure + schema)
         $parts[] = '--routines';
         $parts[] = '--triggers';
         $parts[] = '--events';

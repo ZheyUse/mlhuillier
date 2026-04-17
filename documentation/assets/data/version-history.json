@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-04-17T01:38:21.459Z",
+  "generatedAt": "2026-04-17T01:57:59.771Z",
   "latestVersion": "1.1.10",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 180
+    "commitCount": 181
   },
   "releases": [
     {
       "version": "1.1.10",
       "isLatest": true,
-      "commitCount": 8,
+      "commitCount": 9,
       "dateRange": {
         "from": "2026-04-16",
         "to": "2026-04-17"
       },
       "stats": {
         "release": 2,
-        "feature": 6,
+        "feature": 7,
         "fix": 0,
         "docs": 0,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "feat(export): enhance export functionality; support multiple database selections and improve error handling",
         "feat(export): update output file naming to use database name; enhance export success message",
         "feat(export): enhance export directory handling; create named export folder and update output path",
         "chore(version): update version to 1.1.10; refresh generatedAt timestamps and increment commit counts in version history; enhance export functionality in open-workbench.php",
         "chore(version): update version to 1.1.10; refresh generatedAt timestamps and increment commit counts in version history",
         "chore(version): update generatedAt timestamps and increment commit counts in version history; enhance version checking logic in ml.bat",
         "feat(help): add support for '-h' flag to show help; enhance command handling in ml.bat",
-        "feat(help): enhance command error handling to show full `ml` help when available; fallback to local usage if necessary",
-        "chore(version): update generatedAt timestamps and increment commit counts in version history; enhance project name detection in ml.bat"
+        "feat(help): enhance command error handling to show full `ml` help when available; fallback to local usage if necessary"
       ],
       "commits": [
+        {
+          "hash": "0d7b1afdce712ceccdb0cd5408e62c6762e4df1a",
+          "shortHash": "0d7b1af",
+          "date": "2026-04-17",
+          "title": "feat(export): enhance export functionality; support multiple database selections and improve error handling",
+          "type": "feature"
+        },
         {
           "hash": "9095be8be4db8be9679c9389e5d82a8cff9bd230",
           "shortHash": "9095be8",
