@@ -919,8 +919,9 @@ exit /b %RC%
 
 :cmd_wb
 set "LOCAL_PHP=%~dp0workbench\open-workbench.php"
+if not exist "!LOCAL_PHP!" set "LOCAL_PHP=C:\xampp\htdocs\mlhuillier\workbench\open-workbench.php"
 if exist "!LOCAL_PHP!" (
-        "%PHP_EXE%" -d display_errors=0 "!LOCAL_PHP!"
+        "%PHP_EXE%" -d display_errors=0 "!LOCAL_PHP!" %*
         set "RC=%ERRORLEVEL%"
         exit /b %RC%
 )
@@ -944,7 +945,7 @@ if %ERRORLEVEL% neq 0 (
         exit /b 2
 )
 
-"%PHP_EXE%" -d display_errors=0 "!TMP_FILE!"
+"%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" %*
 set "RC=%ERRORLEVEL%"
 call :maybe_show_update_notice
 del /f /q "!TMP_FILE!" >nul 2>&1

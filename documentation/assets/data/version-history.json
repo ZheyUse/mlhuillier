@@ -1,43 +1,47 @@
 {
-  "generatedAt": "2026-04-16T02:06:17.717Z",
-  "latestVersion": "1.1.9",
+  "generatedAt": "2026-04-17T01:11:42.773Z",
+  "latestVersion": "1.1.10",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 176
+    "commitCount": 177
   },
   "releases": [
     {
-      "version": "1.1.9",
+      "version": "1.1.10",
       "isLatest": true,
-      "commitCount": 12,
+      "commitCount": 5,
       "dateRange": {
-        "from": "2026-04-15",
-        "to": "2026-04-16"
+        "from": "2026-04-16",
+        "to": "2026-04-17"
       },
       "stats": {
-        "release": 2,
-        "feature": 7,
+        "release": 1,
+        "feature": 4,
         "fix": 0,
         "docs": 0,
         "refactor": 0,
         "performance": 0,
         "security": 0,
         "test": 0,
-        "chore": 3,
+        "chore": 0,
         "other": 0
       },
       "highlights": [
+        "chore(version): update version to 1.1.10; refresh generatedAt timestamps and increment commit counts in version history",
         "chore(version): update generatedAt timestamps and increment commit counts in version history; enhance version checking logic in ml.bat",
         "feat(help): add support for '-h' flag to show help; enhance command handling in ml.bat",
         "feat(help): enhance command error handling to show full `ml` help when available; fallback to local usage if necessary",
-        "chore(version): update generatedAt timestamps and increment commit counts in version history; enhance project name detection in ml.bat",
-        "chore(version): update generatedAt timestamps and increment commit counts in version history; update latest version to 1.1.9",
-        "chore(version): update version to 1.1.9 and adjust related files; update generatedAt timestamps and increment commit counts in version history",
-        "feat(updater): add changelog generation from recent commits in ml-update.php",
-        "chore(version): update generatedAt timestamps and increment commit counts in version history; add debug output to ml.bat"
+        "chore(version): update generatedAt timestamps and increment commit counts in version history; enhance project name detection in ml.bat"
       ],
       "commits": [
+        {
+          "hash": "65153ad00c7a2f8d7005496a89aec9f0088901e0",
+          "shortHash": "65153ad",
+          "date": "2026-04-17",
+          "title": "chore(version): update version to 1.1.10; refresh generatedAt timestamps and increment commit counts in version history",
+          "type": "release"
+        },
         {
           "hash": "ba3a8f52146ab5386c5895ada4fba68c677408aa",
           "shortHash": "ba3a8f5",
@@ -65,7 +69,37 @@
           "date": "2026-04-16",
           "title": "chore(version): update generatedAt timestamps and increment commit counts in version history; enhance project name detection in ml.bat",
           "type": "feature"
-        },
+        }
+      ]
+    },
+    {
+      "version": "1.1.9",
+      "isLatest": false,
+      "commitCount": 8,
+      "dateRange": {
+        "from": "2026-04-15",
+        "to": "2026-04-16"
+      },
+      "stats": {
+        "release": 2,
+        "feature": 3,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 3,
+        "other": 0
+      },
+      "highlights": [
+        "chore(version): update generatedAt timestamps and increment commit counts in version history; update latest version to 1.1.9",
+        "chore(version): update version to 1.1.9 and adjust related files; update generatedAt timestamps and increment commit counts in version history",
+        "feat(updater): add changelog generation from recent commits in ml-update.php",
+        "chore(version): update generatedAt timestamps and increment commit counts in version history; add debug output to ml.bat",
+        "chore(version): update generatedAt timestamps and increment commit counts in version history; add debug output to ml.bat"
+      ],
+      "commits": [
         {
           "hash": "f2abbcfb2ec60ac726b160f5ddcd14cd1d27cbb1",
           "shortHash": "f2abbcf",
