@@ -334,28 +334,35 @@ function parseDirectExportArgs(array $args): array
             if (!isset($args[$i + 1])) {
                 return [false, [], [], '', '', "Error: Invalid option, please try again"];
             }
-            $dbArg = trim((string) $args[++$i]);
+            $dbArg = consumeFlagValue($args, $i);
+            if ($dbArg === '') {
+                return [false, [], [], '', '', "Error: Invalid option, please try again"];
+            }
             continue;
         }
         if ($token === '-tb') {
             if (!isset($args[$i + 1])) {
                 return [false, [], [], '', '', "Error: Invalid option, please try again"];
             }
-            $tbArgs[] = trim((string) $args[++$i]);
+            $tbVal = consumeFlagValue($args, $i);
+            if ($tbVal === '') {
+                return [false, [], [], '', '', "Error: Invalid option, please try again"];
+            }
+            $tbArgs[] = $tbVal;
             continue;
         }
         if ($token === '-m') {
             if (!isset($args[$i + 1])) {
                 return [false, [], [], '', '', "Error: Invalid option, please try again"];
             }
-            $method = trim((string) $args[++$i]);
+            $method = consumeFlagValue($args, $i);
             continue;
         }
         if ($token === '-fn') {
             if (!isset($args[$i + 1])) {
                 return [false, [], [], '', '', "Error: Invalid option, please try again"];
             }
-            $fileName = trim((string) $args[++$i]);
+            $fileName = consumeFlagValue($args, $i);
             continue;
         }
 
@@ -367,6 +374,25 @@ function parseDirectExportArgs(array $args): array
     }
 
     return [true, splitCsv($dbArg), $tbArgs, $method, $fileName, ''];
+}
+
+function consumeFlagValue(array $args, int &$i): string
+{
+    $parts = [];
+    for ($j = $i + 1; $j < count($args); $j++) {
+        $next = (string) $args[$j];
+        if (strlen($next) > 0 && $next[0] === '-') {
+            break;
+        }
+        $parts[] = trim($next);
+    }
+
+    if (count($parts) === 0) {
+        return '';
+    }
+
+    $i += count($parts);
+    return trim(implode(' ', $parts));
 }
 
 function normalizeSelections(array $databases, array $tableArgs, array $allDatabases): array

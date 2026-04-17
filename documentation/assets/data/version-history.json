@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-04-17T02:08:57.447Z",
+  "generatedAt": "2026-04-17T02:18:54.750Z",
   "latestVersion": "1.1.10",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 182
+    "commitCount": 183
   },
   "releases": [
     {
       "version": "1.1.10",
       "isLatest": true,
-      "commitCount": 10,
+      "commitCount": 11,
       "dateRange": {
         "from": "2026-04-16",
         "to": "2026-04-17"
       },
       "stats": {
         "release": 2,
-        "feature": 8,
+        "feature": 9,
         "fix": 0,
         "docs": 0,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "feat(help): add support for help flags; implement showWorkbenchHelp function with usage instructions",
         "feat(export): extend export options; add new methods for data and schema exports, and improve export directory handling",
         "feat(export): enhance export functionality; support multiple database selections and improve error handling",
         "feat(export): update output file naming to use database name; enhance export success message",
         "feat(export): enhance export directory handling; create named export folder and update output path",
         "chore(version): update version to 1.1.10; refresh generatedAt timestamps and increment commit counts in version history; enhance export functionality in open-workbench.php",
         "chore(version): update version to 1.1.10; refresh generatedAt timestamps and increment commit counts in version history",
-        "chore(version): update generatedAt timestamps and increment commit counts in version history; enhance version checking logic in ml.bat",
-        "feat(help): add support for '-h' flag to show help; enhance command handling in ml.bat"
+        "chore(version): update generatedAt timestamps and increment commit counts in version history; enhance version checking logic in ml.bat"
       ],
       "commits": [
+        {
+          "hash": "0f1ab8836d489a58a9adfc563d1b52c6ab19e64b",
+          "shortHash": "0f1ab88",
+          "date": "2026-04-17",
+          "title": "feat(help): add support for help flags; implement showWorkbenchHelp function with usage instructions",
+          "type": "feature"
+        },
         {
           "hash": "acb431dfd137585f68a242ef153c9498314f2255",
           "shortHash": "acb431d",
