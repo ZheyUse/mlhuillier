@@ -918,17 +918,12 @@ del /f /q "!TMP_FILE!" >nul 2>&1
 exit /b %RC%
 
 :cmd_wb
-set "LOCAL_PHP=%~dp0workbench\open-workbench.php"
-if not exist "!LOCAL_PHP!" set "LOCAL_PHP=C:\xampp\htdocs\mlhuillier\workbench\open-workbench.php"
-if exist "!LOCAL_PHP!" (
-        "%PHP_EXE%" -d display_errors=0 "!LOCAL_PHP!" %*
-        set "RC=%ERRORLEVEL%"
-        exit /b %RC%
-)
 set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/workbench/open-workbench.php"
 set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
 set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
 set "TMP_FILE=%TEMP%\open-workbench.php"
+set "LOCAL_PHP=%~dp0workbench\open-workbench.php"
+if not exist "!LOCAL_PHP!" set "LOCAL_PHP=C:\xampp\htdocs\mlhuillier\workbench\open-workbench.php"
 call :strip_query "!RAW_URL!"
 rem URL hidden from output
 echo Opening MySQL Workbench...
@@ -941,7 +936,13 @@ if %ERRORLEVEL%==0 (
         powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!RAW_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
 )
 if %ERRORLEVEL% neq 0 (
-        echo Failed to fetch open-workbench script
+        echo Failed to fetch open-workbench script from remote.
+        if exist "!LOCAL_PHP!" (
+                echo Falling back to local workbench helper...
+                "%PHP_EXE%" -d display_errors=0 "!LOCAL_PHP!" %*
+                set "RC=%ERRORLEVEL%"
+                exit /b %RC%
+        )
         exit /b 2
 )
 
