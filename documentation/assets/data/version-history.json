@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-04-17T02:53:44.529Z",
+  "generatedAt": "2026-04-17T03:04:03.226Z",
   "latestVersion": "1.1.10",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 190
+    "commitCount": 191
   },
   "releases": [
     {
       "version": "1.1.10",
       "isLatest": true,
-      "commitCount": 18,
+      "commitCount": 19,
       "dateRange": {
         "from": "2026-04-16",
         "to": "2026-04-17"
       },
       "stats": {
         "release": 2,
-        "feature": 15,
+        "feature": 16,
         "fix": 1,
         "docs": 0,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "fix(help): update commands and version history; add export command details and increment commit counts",
         "fix(help): update workbench help command; refine usage instructions and examples for clarity",
         "fix(help): enhance workbench export help command; add usage instructions and flags for export functionality",
         "feat(help): add workbench help command; provide usage instructions and flags for export functionality",
         "fix(open-workbench): improve CSV splitting; support whitespace and comma separation in input values",
         "fix(workbench): improve error handling for fetching open-workbench script; add fallback to local script if remote fetch fails",
         "feat(export): enhance selection handling; add support for wildcard expansion in database and table arguments",
-        "feat(export): improve argument handling; add consumeFlagValue function for better flag value parsing in direct export",
-        "feat(help): add support for help flags; implement showWorkbenchHelp function with usage instructions"
+        "feat(export): improve argument handling; add consumeFlagValue function for better flag value parsing in direct export"
       ],
       "commits": [
+        {
+          "hash": "9cd9c675ee807f9b28b282f2b2d77ba58d975ae2",
+          "shortHash": "9cd9c67",
+          "date": "2026-04-17",
+          "title": "fix(help): update commands and version history; add export command details and increment commit counts",
+          "type": "feature"
+        },
         {
           "hash": "df20bb4ab41ce5abee5c870bbb276e0e2aa38a49",
           "shortHash": "df20bb4",
