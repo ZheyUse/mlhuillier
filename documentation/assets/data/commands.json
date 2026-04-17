@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-17T04:01:45.664Z",
+  "generatedAt": "2026-04-17T04:03:20.908Z",
   "source": "ml.bat",
   "cliVersion": "1.1.10",
   "commands": [
@@ -990,6 +990,14 @@
           "ml --c",
           "ml update",
           "ml test userdb"
+        ]
+      },
+      {
+        "title": "Automated Scenario Example",
+        "steps": [
+          "Run ml wb --export",
+          "Select DB names",
+          "Confirm export"
         ]
       }
     ],

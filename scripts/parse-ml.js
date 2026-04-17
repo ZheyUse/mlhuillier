@@ -552,7 +552,15 @@ function buildTutorials(commands) {
         title: 'Recovering from setup errors',
         steps: ['ml --v', 'ml --c', 'ml update', 'ml test userdb'],
       },
-    ],
+    
+      {
+        title: 'Automated Scenario Example',
+        steps: [
+          'Run ml wb --export',
+          'Select DB names',
+          'Confirm export'
+        ]
+      },],
     errors: [
       {
         error: 'Command not recognized',

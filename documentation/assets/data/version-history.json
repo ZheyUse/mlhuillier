@@ -1,16 +1,16 @@
 {
-  "generatedAt": "2026-04-17T04:00:16.786Z",
+  "generatedAt": "2026-04-17T04:01:53.925Z",
   "latestVersion": "1.1.10",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 193
+    "commitCount": 194
   },
   "releases": [
     {
       "version": "1.1.10",
       "isLatest": true,
-      "commitCount": 21,
+      "commitCount": 22,
       "dateRange": {
         "from": "2026-04-16",
         "to": "2026-04-17"
@@ -18,7 +18,7 @@
       "stats": {
         "release": 2,
         "feature": 17,
-        "fix": 2,
+        "fix": 3,
         "docs": 0,
         "refactor": 0,
         "performance": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "fix(version): update generatedAt timestamp and increment commit counts in version history",
         "fix(help): update generatedAt timestamp and increment commit counts; add interactive workbench export and PBAC scaffold tutorials",
         "fix(version): update generatedAt timestamp and increment commit counts in version history",
         "fix(help): update commands and version history; add export command details and increment commit counts",
         "fix(help): update workbench help command; refine usage instructions and examples for clarity",
         "fix(help): enhance workbench export help command; add usage instructions and flags for export functionality",
         "feat(help): add workbench help command; provide usage instructions and flags for export functionality",
-        "fix(open-workbench): improve CSV splitting; support whitespace and comma separation in input values",
-        "fix(workbench): improve error handling for fetching open-workbench script; add fallback to local script if remote fetch fails"
+        "fix(open-workbench): improve CSV splitting; support whitespace and comma separation in input values"
       ],
       "commits": [
+        {
+          "hash": "2693a0987f6f9ab09584e261d0643a7e2df38dc2",
+          "shortHash": "2693a09",
+          "date": "2026-04-17",
+          "title": "fix(version): update generatedAt timestamp and increment commit counts in version history",
+          "type": "fix"
+        },
         {
           "hash": "c43349809f7e4b49893641c63a632b0581e4e70b",
           "shortHash": "c433498",
