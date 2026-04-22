@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-04-22T01:47:25.564Z",
+  "generatedAt": "2026-04-22T02:04:19.617Z",
   "latestVersion": "1.1.11",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 200
+    "commitCount": 201
   },
   "releases": [
     {
       "version": "1.1.11",
       "isLatest": true,
-      "commitCount": 22,
+      "commitCount": 23,
       "dateRange": {
         "from": "2026-04-17",
         "to": "2026-04-22"
       },
       "stats": {
         "release": 2,
-        "feature": 16,
+        "feature": 17,
         "fix": 4,
         "docs": 0,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "fix(version): update generatedAt timestamp and increment commit counts in version history; add stop command for ngrok tunnel in ml-serve.php and ml.bat",
         "feat(commands): add new commands for serving projects locally and online",
         "fix(version): update generatedAt timestamp and increment commit counts in version history",
         "fix(version): update version to 1.1.11; increment commit counts and update timestamps in version history refactor(shim): remove unused parameter from PowerShell shim function refactor(nav): remove unused parameter from navigation script",
         "fix(version): update version to 1.1.11; increment commit counts and update timestamps in related files",
         "fix(pbac): enhance menu access validation; streamline permission checks and improve readability",
         "feat(scenarios): add automated scenario example and helper script for adding scenarios",
-        "fix(version): update generatedAt timestamp and increment commit counts in version history",
-        "fix(help): update generatedAt timestamp and increment commit counts; add interactive workbench export and PBAC scaffold tutorials"
+        "fix(version): update generatedAt timestamp and increment commit counts in version history"
       ],
       "commits": [
+        {
+          "hash": "2a7ad31dced35746f1f1ce7e94502358e238b1c4",
+          "shortHash": "2a7ad31",
+          "date": "2026-04-22",
+          "title": "fix(version): update generatedAt timestamp and increment commit counts in version history; add stop command for ngrok tunnel in ml-serve.php and ml.bat",
+          "type": "feature"
+        },
         {
           "hash": "f57738d1e64c19f7dcfe13357207549eb9213720",
           "shortHash": "f57738d",
