@@ -1,16 +1,16 @@
 {
-  "generatedAt": "2026-04-22T01:40:59.245Z",
+  "generatedAt": "2026-04-22T01:41:57.084Z",
   "latestVersion": "1.1.11",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 198
+    "commitCount": 199
   },
   "releases": [
     {
       "version": "1.1.11",
       "isLatest": true,
-      "commitCount": 20,
+      "commitCount": 21,
       "dateRange": {
         "from": "2026-04-17",
         "to": "2026-04-22"
@@ -18,7 +18,7 @@
       "stats": {
         "release": 2,
         "feature": 15,
-        "fix": 3,
+        "fix": 4,
         "docs": 0,
         "refactor": 0,
         "performance": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "fix(version): update generatedAt timestamp and increment commit counts in version history",
         "fix(version): update version to 1.1.11; increment commit counts and update timestamps in version history refactor(shim): remove unused parameter from PowerShell shim function refactor(nav): remove unused parameter from navigation script",
         "fix(version): update version to 1.1.11; increment commit counts and update timestamps in related files",
         "fix(pbac): enhance menu access validation; streamline permission checks and improve readability",
         "feat(scenarios): add automated scenario example and helper script for adding scenarios",
         "fix(version): update generatedAt timestamp and increment commit counts in version history",
         "fix(help): update generatedAt timestamp and increment commit counts; add interactive workbench export and PBAC scaffold tutorials",
-        "fix(version): update generatedAt timestamp and increment commit counts in version history",
-        "fix(help): update commands and version history; add export command details and increment commit counts"
+        "fix(version): update generatedAt timestamp and increment commit counts in version history"
       ],
       "commits": [
+        {
+          "hash": "fde7633fb4738e58acbe4fae425c9e42211348b0",
+          "shortHash": "fde7633",
+          "date": "2026-04-22",
+          "title": "fix(version): update generatedAt timestamp and increment commit counts in version history",
+          "type": "fix"
+        },
         {
           "hash": "40023d8e937cab1c828c6aee98f22981bd34063c",
           "shortHash": "40023d8",

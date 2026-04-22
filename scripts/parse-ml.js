@@ -560,6 +560,36 @@ function buildTutorials(commands) {
           'Select DB names',
           'Confirm export'
         ]
+      },
+      {
+        title: 'Serve Current Project (Local)',
+        steps: [
+          'ml serve',
+          'Opens http://localhost/<current_project> in browser'
+        ]
+      },
+      {
+        title: 'Serve Current Project (Online)',
+        steps: [
+          'ml serve -o',
+          'Creates ngrok tunnel on 80 (fallback 8080)',
+          'Opens https://<ngrok-domain>/<current_project>'
+        ]
+      },
+      {
+        title: 'Serve Specific Project (Local)',
+        steps: [
+          'ml serve --projectname',
+          'Opens http://localhost/<projectname> in browser'
+        ]
+      },
+      {
+        title: 'Serve Specific Project (Online)',
+        steps: [
+          'ml serve --projectname -o',
+          'Creates ngrok tunnel on 80 (fallback 8080)',
+          'Opens https://<ngrok-domain>/<projectname>'
+        ]
       },],
     errors: [
       {
