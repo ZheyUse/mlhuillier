@@ -72,6 +72,65 @@ function askInput(string $label): string
     return trim((string)$line);
 }
 
+function mlCliConfigPath(): string
+{
+    return 'C:\\ML CLI\\Tools\\mlcli-config.json';
+}
+
+function loadMlCliConfig(): array
+{
+    $path = mlCliConfigPath();
+    if (!is_file($path)) {
+        return [];
+    }
+
+    $raw = @file_get_contents($path);
+    if ($raw === false || trim($raw) === '') {
+        return [];
+    }
+
+    $decoded = json_decode($raw, true);
+    return is_array($decoded) ? $decoded : [];
+}
+
+function saveMlCliConfig(array $config): bool
+{
+    $path = mlCliConfigPath();
+    $json = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    if ($json === false) {
+        return false;
+    }
+
+    $dir = dirname($path);
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0777, true);
+    }
+
+    return @file_put_contents($path, $json . PHP_EOL) !== false;
+}
+
+function ensureNgrokAuthConfigKey(): array
+{
+    $config = loadMlCliConfig();
+    if (!array_key_exists('ngrok-auth', $config)) {
+        $config['ngrok-auth'] = '';
+        saveMlCliConfig($config);
+    }
+    return $config;
+}
+
+function getConfigNgrokAuthToken(array $config): string
+{
+    return trim((string)($config['ngrok-auth'] ?? ''));
+}
+
+function saveConfigNgrokAuthToken(string $token): void
+{
+    $config = loadMlCliConfig();
+    $config['ngrok-auth'] = $token;
+    saveMlCliConfig($config);
+}
+
 function ngrokConfigPaths(): array
 {
     $paths = [];
@@ -176,14 +235,23 @@ function ensureNgrokInstalled(): void
 
 function ensureNgrokAuthToken(): void
 {
+    $config = ensureNgrokAuthConfigKey();
+
     if (ngrokConfigHasToken()) {
         return;
     }
 
-    // Avoid false prompts when ngrok already has a valid config location that
-    // this script cannot parse consistently across versions or encodings.
-    if (hasAnyNgrokConfigFile() || ngrokConfigCheckPasses()) {
+    if (ngrokConfigCheckPasses()) {
         return;
+    }
+
+    $configToken = getConfigNgrokAuthToken($config);
+    if ($configToken !== '') {
+        $cmdFromConfig = 'ngrok config add-authtoken ' . shellQuote($configToken);
+        passthru($cmdFromConfig, $rcFromConfig);
+        if ($rcFromConfig === 0) {
+            return;
+        }
     }
 
     fwrite(STDOUT, 'Get your token on (https://dashboard.ngrok.com/get-started/your-authtoken)' . PHP_EOL);
@@ -199,6 +267,8 @@ function ensureNgrokAuthToken(): void
         fwrite(STDERR, 'Failed: unable to save NGROK Auth-Token' . PHP_EOL);
         exit(2);
     }
+
+    saveConfigNgrokAuthToken($token);
 }
 
 function startNgrokTunnel(int $port): void

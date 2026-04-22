@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-04-22T02:04:41.800Z",
+  "generatedAt": "2026-04-22T02:14:52.908Z",
   "latestVersion": "1.1.11",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 202
+    "commitCount": 203
   },
   "releases": [
     {
       "version": "1.1.11",
       "isLatest": true,
-      "commitCount": 24,
+      "commitCount": 25,
       "dateRange": {
         "from": "2026-04-17",
         "to": "2026-04-22"
       },
       "stats": {
         "release": 2,
-        "feature": 17,
+        "feature": 18,
         "fix": 5,
         "docs": 0,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "fix(ngrok): enhance ngrok configuration handling and add validation checks",
         "fix(version): update generatedAt timestamp and increment commit counts in version history",
         "fix(version): update generatedAt timestamp and increment commit counts in version history; add stop command for ngrok tunnel in ml-serve.php and ml.bat",
         "feat(commands): add new commands for serving projects locally and online",
         "fix(version): update generatedAt timestamp and increment commit counts in version history",
         "fix(version): update version to 1.1.11; increment commit counts and update timestamps in version history refactor(shim): remove unused parameter from PowerShell shim function refactor(nav): remove unused parameter from navigation script",
         "fix(version): update version to 1.1.11; increment commit counts and update timestamps in related files",
-        "fix(pbac): enhance menu access validation; streamline permission checks and improve readability",
-        "feat(scenarios): add automated scenario example and helper script for adding scenarios"
+        "fix(pbac): enhance menu access validation; streamline permission checks and improve readability"
       ],
       "commits": [
+        {
+          "hash": "359a191b6cdf5d81aa6eb8051fae4ae7f16cfa66",
+          "shortHash": "359a191",
+          "date": "2026-04-22",
+          "title": "fix(ngrok): enhance ngrok configuration handling and add validation checks",
+          "type": "feature"
+        },
         {
           "hash": "12830c0120ceb37be53ffe706909747704b20571",
           "shortHash": "12830c0",
