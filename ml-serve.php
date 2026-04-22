@@ -4,6 +4,7 @@
 //   php ml-serve.php [project]
 //   php ml-serve.php [project] -o
 //   php ml-serve.php --projectname -o
+//   php ml-serve.php -stop
 
 function isWindows(): bool
 {
@@ -71,21 +72,40 @@ function askInput(string $label): string
     return trim((string)$line);
 }
 
-function ngrokConfigHasToken(): bool
+function ngrokConfigPaths(): array
 {
     $paths = [];
-    if (isWindows()) {
-        $localAppData = getenv('LOCALAPPDATA') ?: '';
-        if ($localAppData !== '') {
-            $paths[] = $localAppData . DIRECTORY_SEPARATOR . 'ngrok' . DIRECTORY_SEPARATOR . 'ngrok.yml';
-        }
+    $localAppData = getenv('LOCALAPPDATA') ?: '';
+    $userProfile = getenv('USERPROFILE') ?: '';
+    $home = getenv('HOME') ?: '';
+    $appData = getenv('APPDATA') ?: '';
+
+    if ($localAppData !== '') {
+        $paths[] = $localAppData . DIRECTORY_SEPARATOR . 'ngrok' . DIRECTORY_SEPARATOR . 'ngrok.yml';
     }
-    $home = getenv('HOME') ?: getenv('USERPROFILE') ?: '';
+    if ($userProfile !== '') {
+        $paths[] = $userProfile . DIRECTORY_SEPARATOR . 'AppData' . DIRECTORY_SEPARATOR . 'Local' . DIRECTORY_SEPARATOR . 'ngrok' . DIRECTORY_SEPARATOR . 'ngrok.yml';
+        $paths[] = $userProfile . DIRECTORY_SEPARATOR . '.config' . DIRECTORY_SEPARATOR . 'ngrok' . DIRECTORY_SEPARATOR . 'ngrok.yml';
+    }
     if ($home !== '') {
+        $paths[] = $home . DIRECTORY_SEPARATOR . 'AppData' . DIRECTORY_SEPARATOR . 'Local' . DIRECTORY_SEPARATOR . 'ngrok' . DIRECTORY_SEPARATOR . 'ngrok.yml';
         $paths[] = $home . DIRECTORY_SEPARATOR . '.config' . DIRECTORY_SEPARATOR . 'ngrok' . DIRECTORY_SEPARATOR . 'ngrok.yml';
     }
+    if ($appData !== '') {
+        $paths[] = dirname($appData) . DIRECTORY_SEPARATOR . 'Local' . DIRECTORY_SEPARATOR . 'ngrok' . DIRECTORY_SEPARATOR . 'ngrok.yml';
+    }
 
-    foreach ($paths as $file) {
+    return array_values(array_unique(array_filter($paths, 'strlen')));
+}
+
+function ngrokConfigHasToken(): bool
+{
+    $envToken = trim((string)(getenv('NGROK_AUTHTOKEN') ?: ''));
+    if ($envToken !== '') {
+        return true;
+    }
+
+    foreach (ngrokConfigPaths() as $file) {
         if (!is_file($file)) {
             continue;
         }
@@ -93,7 +113,7 @@ function ngrokConfigHasToken(): bool
         if ($raw === false) {
             continue;
         }
-        if (preg_match('/^\s*authtoken\s*:\s*\S+/mi', $raw)) {
+        if (preg_match('/^\s*["\']?authtoken["\']?\s*:\s*.+$/mi', $raw)) {
             return true;
         }
     }
@@ -154,6 +174,25 @@ function startNgrokTunnel(int $port): void
         return;
     }
     @exec('ngrok http ' . $port . ' >/dev/null 2>&1 &');
+}
+
+function stopNgrokTunnel(): void
+{
+    $out = [];
+    $rc = 1;
+
+    if (isWindows()) {
+        @exec('taskkill /F /IM ngrok.exe >NUL 2>&1', $out, $rc);
+    } else {
+        @exec('pkill -f "ngrok http" >/dev/null 2>&1', $out, $rc);
+    }
+
+    if ($rc === 0) {
+        echo 'Stopped: NGROK tunnel ended.' . PHP_EOL;
+        return;
+    }
+
+    echo 'No active NGROK tunnel found.' . PHP_EOL;
 }
 
 function fetchNgrokTunnels(): array
@@ -224,6 +263,7 @@ function parseArgs(array $argv): array
     $args = array_slice($argv, 1);
     $project = null;
     $online = false;
+    $stop = false;
 
     for ($i = 0; $i < count($args); $i++) {
         $arg = trim((string)$args[$i]);
@@ -232,6 +272,10 @@ function parseArgs(array $argv): array
         }
         if ($arg === '-o' || $arg === '--online') {
             $online = true;
+            continue;
+        }
+        if ($arg === '-stop' || $arg === '--stop') {
+            $stop = true;
             continue;
         }
         if (stripos($arg, '--project=') === 0) {
@@ -258,10 +302,15 @@ function parseArgs(array $argv): array
         }
     }
 
-    return [$project, $online];
+    return [$project, $online, $stop];
 }
 
-[$project, $online] = parseArgs($argv);
+[$project, $online, $stop] = parseArgs($argv);
+
+if ($stop) {
+    stopNgrokTunnel();
+    exit(0);
+}
 
 if (!$project) {
     $cwd = getcwd();

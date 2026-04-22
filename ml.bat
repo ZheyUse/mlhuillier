@@ -361,6 +361,7 @@ echo.
 echo HELP: Serve project
 echo Usage: ml serve [project_name] [-o]
 echo        ml serve --projectname -o
+echo        ml serve -stop
 echo Description: Remote-only helper. Fetches and runs the GitHub-hosted
 echo   ml-serve.php which prints and opens the project URL at
 echo   http://localhost/^<project_name^>.
@@ -369,6 +370,7 @@ echo Online mode:
 echo   -o, --online   Start ngrok tunnel and open shareable URL:
 echo                  https://^<random-subdomain^>.ngrok-free.app/^<project_name^>
 echo                  Uses port 80 first, then falls back to 8080.
+echo   -stop          Stops active NGROK tunnel process.
 exit /b 0
 
 :help_reveal
@@ -1018,9 +1020,30 @@ set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml-serve.
 set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
 set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
 set "TMP_FILE=%TEMP%\ml-serve.php"
+set "ARG2=%~2"
+set "ARG3=%~3"
 rem URL hidden from output
 echo Executing serve helper...
 echo.
+
+if /I "%ARG2%"=="-stop" goto :serve_stop
+if /I "%ARG2%"=="--stop" goto :serve_stop
+if /I "%ARG3%"=="-stop" goto :serve_stop
+if /I "%ARG3%"=="--stop" goto :serve_stop
+
+goto :serve_start
+
+:serve_stop
+echo Stopping NGROK tunnel...
+taskkill /F /IM ngrok.exe >nul 2>&1
+if %ERRORLEVEL%==0 (
+        echo Stopped: NGROK tunnel ended.
+) else (
+        echo No active NGROK tunnel found.
+)
+exit /b 0
+
+:serve_start
 
 rem --- Ensure local Apache is running; attempt to start XAMPP Apache or Apache service if not ---
 echo Checking for local Apache process...
@@ -1135,8 +1158,6 @@ set "ARGS="
 set "ONLINE_MODE=0"
 rem Determine project name (accept --project, --projectname, --project=NAME, or direct name/path; otherwise use current directory)
 set "PROJECT="
-set "ARG2=%~2"
-set "ARG3=%~3"
 
 if /I "%ARG2%"=="-o" set "ONLINE_MODE=1"
 if /I "%ARG2%"=="--online" set "ONLINE_MODE=1"
