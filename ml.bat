@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.1.10"
+set "ML_VERSION=1.1.11"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -359,10 +359,16 @@ exit /b 0
 :help_serve
 echo.
 echo HELP: Serve project
-echo Usage: ml serve [project_name]
+echo Usage: ml serve [project_name] [-o]
+echo        ml serve --projectname -o
 echo Description: Remote-only helper. Fetches and runs the GitHub-hosted
 echo   ml-serve.php which prints and opens the project URL at
-echo   http://localhost/^<project_name^>. No local fallback if fetch fails.
+echo   http://localhost/^<project_name^>.
+echo.
+echo Online mode:
+echo   -o, --online   Start ngrok tunnel and open shareable URL:
+echo                  https://^<random-subdomain^>.ngrok-free.app/^<project_name^>
+echo                  Uses port 80 first, then falls back to 8080.
 exit /b 0
 
 :help_reveal
@@ -1126,37 +1132,55 @@ if %ERRORLEVEL% neq 0 (
 )
 
 set "ARGS="
+set "ONLINE_MODE=0"
 rem Determine project name (accept --project, --projectname, --project=NAME, or direct name/path; otherwise use current directory)
 set "PROJECT="
 set "ARG2=%~2"
 set "ARG3=%~3"
 
-if not "%ARG2%"=="" (
-        rem If user provided a single-dash flag (likely a typo), show top-level help
-        if "%ARG2:~0,1%"=="-" if not "%ARG2:~0,2%"=="--" (
-                echo Invalid flag: %ARG2%
-                echo.
-                call :show_help
-                del /f /q "!TMP_FILE!" >nul 2>&1
-                exit /b 2
-        )
+if /I "%ARG2%"=="-o" set "ONLINE_MODE=1"
+if /I "%ARG2%"=="--online" set "ONLINE_MODE=1"
+if /I "%ARG3%"=="-o" set "ONLINE_MODE=1"
+if /I "%ARG3%"=="--online" set "ONLINE_MODE=1"
 
-        if "%ARG2:~0,2%"=="--" (
-                set "ARG_BODY=%ARG2:~2%"
-                rem Split on '=' if present (e.g. --project=del)
-                for /f "tokens=1* delims==" %%K in ("!ARG_BODY!") do (
-                        set "KEY=%%K" & set "VAL=%%L"
-                )
-                if defined VAL (
-                        set "PROJECT=!VAL!"
-                ) else if not "%ARG3%"=="" (
-                        set "PROJECT=%~3"
-                ) else (
-                        rem Treat --foo as project name itself (e.g., --del)
-                        set "PROJECT=!ARG_BODY!"
-                )
+if not "%ARG2%"=="" (
+        if /I "%ARG2%"=="-o" (
+                for %%D in ("%CD%") do set "PROJECT=%%~nxD"
+        ) else if /I "%ARG2%"=="--online" (
+                for %%D in ("%CD%") do set "PROJECT=%%~nxD"
         ) else (
-                set "PROJECT=%~2"
+                rem If user provided a single-dash flag (likely a typo), show top-level help
+                if "%ARG2:~0,1%"=="-" if not "%ARG2:~0,2%"=="--" (
+                        echo Invalid flag: %ARG2%
+                        echo.
+                        call :show_help
+                        del /f /q "!TMP_FILE!" >nul 2>&1
+                        exit /b 2
+                )
+
+                if "%ARG2:~0,2%"=="--" (
+                        set "ARG_BODY=%ARG2:~2%"
+                        rem Split on '=' if present (e.g. --project=del)
+                        for /f "tokens=1* delims==" %%K in ("!ARG_BODY!") do (
+                                set "KEY=%%K" & set "VAL=%%L"
+                        )
+                        if defined VAL (
+                                set "PROJECT=!VAL!"
+                        ) else if not "%ARG3%"=="" (
+                                if /I "%ARG3%"=="-o" (
+                                        set "PROJECT=!ARG_BODY!"
+                                ) else if /I "%ARG3%"=="--online" (
+                                        set "PROJECT=!ARG_BODY!"
+                                ) else (
+                                        set "PROJECT=%~3"
+                                )
+                        ) else (
+                                rem Treat --foo as project name itself (e.g., --del)
+                                set "PROJECT=!ARG_BODY!"
+                        )
+                ) else (
+                        set "PROJECT=%~2"
+                )
         )
 ) else (
         for %%D in ("%CD%") do set "PROJECT=%%~nxD"
@@ -1223,7 +1247,11 @@ if exist "!LOCAL_PROJECT_PATH!" (
         exit /b 2
 )
 
-"%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" "!SERVE_PROJECT!"
+if /I "!ONLINE_MODE!"=="1" (
+        "%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" "!SERVE_PROJECT!" "--online"
+) else (
+        "%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" "!SERVE_PROJECT!"
+)
 set "RC=%ERRORLEVEL%"
 del /f /q "!TMP_FILE!" >nul 2>&1
 exit /b %RC%

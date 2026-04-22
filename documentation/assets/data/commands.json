@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-04-17T04:03:20.908Z",
+  "generatedAt": "2026-04-22T01:33:51.673Z",
   "source": "ml.bat",
-  "cliVersion": "1.1.10",
+  "cliVersion": "1.1.11",
   "commands": [
     {
       "name": "ml --b",
@@ -361,7 +361,7 @@
     {
       "name": "ml serve",
       "description": "Run remote serve helper and open project in browser.",
-      "syntax": "ml serve [project_name]",
+      "syntax": "ml serve [project_name] [-o]",
       "params": [
         "project_name (optional)"
       ],

@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-04-17T04:03:55.368Z",
+  "generatedAt": "2026-04-17T06:23:57.438Z",
   "latestVersion": "1.1.10",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 195
+    "commitCount": 196
   },
   "releases": [
     {
       "version": "1.1.10",
       "isLatest": true,
-      "commitCount": 23,
+      "commitCount": 24,
       "dateRange": {
         "from": "2026-04-16",
         "to": "2026-04-17"
       },
       "stats": {
         "release": 2,
-        "feature": 18,
+        "feature": 19,
         "fix": 3,
         "docs": 0,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "fix(pbac): enhance menu access validation; streamline permission checks and improve readability",
         "feat(scenarios): add automated scenario example and helper script for adding scenarios",
         "fix(version): update generatedAt timestamp and increment commit counts in version history",
         "fix(help): update generatedAt timestamp and increment commit counts; add interactive workbench export and PBAC scaffold tutorials",
         "fix(version): update generatedAt timestamp and increment commit counts in version history",
         "fix(help): update commands and version history; add export command details and increment commit counts",
         "fix(help): update workbench help command; refine usage instructions and examples for clarity",
-        "fix(help): enhance workbench export help command; add usage instructions and flags for export functionality",
-        "feat(help): add workbench help command; provide usage instructions and flags for export functionality"
+        "fix(help): enhance workbench export help command; add usage instructions and flags for export functionality"
       ],
       "commits": [
+        {
+          "hash": "620acef6a25255ef2169741912fea1b674d57c05",
+          "shortHash": "620acef",
+          "date": "2026-04-17",
+          "title": "fix(pbac): enhance menu access validation; streamline permission checks and improve readability",
+          "type": "feature"
+        },
         {
           "hash": "b14ba3716103b7661dfc474e607a2214504feee2",
           "shortHash": "b14ba37",
