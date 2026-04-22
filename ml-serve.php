@@ -86,16 +86,44 @@ function ngrokConfigPaths(): array
     if ($userProfile !== '') {
         $paths[] = $userProfile . DIRECTORY_SEPARATOR . 'AppData' . DIRECTORY_SEPARATOR . 'Local' . DIRECTORY_SEPARATOR . 'ngrok' . DIRECTORY_SEPARATOR . 'ngrok.yml';
         $paths[] = $userProfile . DIRECTORY_SEPARATOR . '.config' . DIRECTORY_SEPARATOR . 'ngrok' . DIRECTORY_SEPARATOR . 'ngrok.yml';
+        $paths[] = $userProfile . DIRECTORY_SEPARATOR . '.ngrok2' . DIRECTORY_SEPARATOR . 'ngrok.yml';
     }
     if ($home !== '') {
         $paths[] = $home . DIRECTORY_SEPARATOR . 'AppData' . DIRECTORY_SEPARATOR . 'Local' . DIRECTORY_SEPARATOR . 'ngrok' . DIRECTORY_SEPARATOR . 'ngrok.yml';
         $paths[] = $home . DIRECTORY_SEPARATOR . '.config' . DIRECTORY_SEPARATOR . 'ngrok' . DIRECTORY_SEPARATOR . 'ngrok.yml';
+        $paths[] = $home . DIRECTORY_SEPARATOR . '.ngrok2' . DIRECTORY_SEPARATOR . 'ngrok.yml';
     }
     if ($appData !== '') {
         $paths[] = dirname($appData) . DIRECTORY_SEPARATOR . 'Local' . DIRECTORY_SEPARATOR . 'ngrok' . DIRECTORY_SEPARATOR . 'ngrok.yml';
     }
 
     return array_values(array_unique(array_filter($paths, 'strlen')));
+}
+
+function hasAnyNgrokConfigFile(): bool
+{
+    foreach (ngrokConfigPaths() as $file) {
+        if (is_file($file)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function ngrokConfigCheckPasses(): bool
+{
+    if (!cmdExists('ngrok')) {
+        return false;
+    }
+
+    $out = [];
+    $rc = 1;
+    if (isWindows()) {
+        @exec('ngrok config check >NUL 2>&1', $out, $rc);
+    } else {
+        @exec('ngrok config check >/dev/null 2>&1', $out, $rc);
+    }
+    return $rc === 0;
 }
 
 function ngrokConfigHasToken(): bool
@@ -152,6 +180,12 @@ function ensureNgrokAuthToken(): void
         return;
     }
 
+    // Avoid false prompts when ngrok already has a valid config location that
+    // this script cannot parse consistently across versions or encodings.
+    if (hasAnyNgrokConfigFile() || ngrokConfigCheckPasses()) {
+        return;
+    }
+
     fwrite(STDOUT, 'Get your token on (https://dashboard.ngrok.com/get-started/your-authtoken)' . PHP_EOL);
     $token = askInput('NGROK Auth-Token: ');
     if ($token === '') {
@@ -161,7 +195,7 @@ function ensureNgrokAuthToken(): void
 
     $cmd = 'ngrok config add-authtoken ' . shellQuote($token);
     passthru($cmd, $rc);
-    if ($rc !== 0 || !ngrokConfigHasToken()) {
+    if ($rc !== 0) {
         fwrite(STDERR, 'Failed: unable to save NGROK Auth-Token' . PHP_EOL);
         exit(2);
     }
