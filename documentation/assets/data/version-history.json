@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-04-17T06:23:57.438Z",
-  "latestVersion": "1.1.10",
+  "generatedAt": "2026-04-22T01:34:42.394Z",
+  "latestVersion": "1.1.11",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 196
+    "commitCount": 197
   },
   "releases": [
     {
-      "version": "1.1.10",
+      "version": "1.1.11",
       "isLatest": true,
-      "commitCount": 24,
+      "commitCount": 19,
       "dateRange": {
-        "from": "2026-04-16",
-        "to": "2026-04-17"
+        "from": "2026-04-17",
+        "to": "2026-04-22"
       },
       "stats": {
-        "release": 2,
-        "feature": 19,
+        "release": 1,
+        "feature": 15,
         "fix": 3,
         "docs": 0,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "fix(version): update version to 1.1.11; increment commit counts and update timestamps in related files",
         "fix(pbac): enhance menu access validation; streamline permission checks and improve readability",
         "feat(scenarios): add automated scenario example and helper script for adding scenarios",
         "fix(version): update generatedAt timestamp and increment commit counts in version history",
         "fix(help): update generatedAt timestamp and increment commit counts; add interactive workbench export and PBAC scaffold tutorials",
         "fix(version): update generatedAt timestamp and increment commit counts in version history",
         "fix(help): update commands and version history; add export command details and increment commit counts",
-        "fix(help): update workbench help command; refine usage instructions and examples for clarity",
-        "fix(help): enhance workbench export help command; add usage instructions and flags for export functionality"
+        "fix(help): update workbench help command; refine usage instructions and examples for clarity"
       ],
       "commits": [
+        {
+          "hash": "7354c2caca969bec7f9d16e58ab00c029d24f49f",
+          "shortHash": "7354c2c",
+          "date": "2026-04-22",
+          "title": "fix(version): update version to 1.1.11; increment commit counts and update timestamps in related files",
+          "type": "release"
+        },
         {
           "hash": "620acef6a25255ef2169741912fea1b674d57c05",
           "shortHash": "620acef",
@@ -163,7 +170,38 @@
           "date": "2026-04-17",
           "title": "feat(export): enhance export directory handling; create named export folder and update output path",
           "type": "feature"
-        },
+        }
+      ]
+    },
+    {
+      "version": "1.1.10",
+      "isLatest": false,
+      "commitCount": 6,
+      "dateRange": {
+        "from": "2026-04-16",
+        "to": "2026-04-17"
+      },
+      "stats": {
+        "release": 2,
+        "feature": 4,
+        "fix": 0,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "chore(version): update version to 1.1.10; refresh generatedAt timestamps and increment commit counts in version history; enhance export functionality in open-workbench.php",
+        "chore(version): update version to 1.1.10; refresh generatedAt timestamps and increment commit counts in version history",
+        "chore(version): update generatedAt timestamps and increment commit counts in version history; enhance version checking logic in ml.bat",
+        "feat(help): add support for '-h' flag to show help; enhance command handling in ml.bat",
+        "feat(help): enhance command error handling to show full `ml` help when available; fallback to local usage if necessary",
+        "chore(version): update generatedAt timestamps and increment commit counts in version history; enhance project name detection in ml.bat"
+      ],
+      "commits": [
         {
           "hash": "bf1dcb93da599d3adf0b968cf3fd89d8edc546c0",
           "shortHash": "bf1dcb9",

@@ -78,7 +78,6 @@ try {
     # Add a lightweight PowerShell shim function `ml` that forwards to ml.cmd when present.
     $shimTemplate = @'
 function ml {
-    param([Parameter(ValueFromRemainingArguments=$true)][object[]]$Args)
     if ($Args.Count -gt 0 -and [string]$Args[0] -eq 'nav') {
         $htdocsPath = 'C:\xampp\htdocs'
         $navArg = if ($Args.Count -gt 1) { [string]$Args[1] } else { '' }

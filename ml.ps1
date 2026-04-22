@@ -1,5 +1,3 @@
-param([Parameter(ValueFromRemainingArguments=$true)] $Args)
-
 if ($Args.Count -gt 0 -and [string]$Args[0] -eq 'nav') {
     $htdocsPath = 'C:\xampp\htdocs'
     $navArg = if ($Args.Count -gt 1) { [string]$Args[1] } else { '' }
