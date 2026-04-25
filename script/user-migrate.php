@@ -253,7 +253,7 @@ function rewriteDbReferences(string $projectRoot, string $sourceDb, string $targ
 {
     $skipDirs = ['vendor', 'node_modules', '.git', '.idea', '.vscode', 'tmp', 'uploads'];
     $allowedExt = ['php', 'env', 'sql', 'js', 'json', 'md', 'txt', 'ini', 'htaccess'];
-    $skipRelativePrefixes = ['migration/userdb/'];
+   
     $changed = [];
 
     $iterator = new RecursiveIteratorIterator(
@@ -271,12 +271,6 @@ function rewriteDbReferences(string $projectRoot, string $sourceDb, string $targ
             continue;
         }
 
-        $relPath = str_replace('\\', '/', relativePath($projectRoot, $path));
-        foreach ($skipRelativePrefixes as $prefix) {
-            if (stripos($relPath, $prefix) === 0) {
-                continue 2;
-            }
-        }
 
         foreach ($skipDirs as $skip) {
             $needle = DIRECTORY_SEPARATOR . $skip . DIRECTORY_SEPARATOR;
@@ -302,7 +296,7 @@ function rewriteDbReferences(string $projectRoot, string $sourceDb, string $targ
         }
 
         if (@file_put_contents($path, $updated) !== false) {
-            $changed[] = $relPath;
+           $changed[] = relativePath($projectRoot, $path);
         }
     }
 

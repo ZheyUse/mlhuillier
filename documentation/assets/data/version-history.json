@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-04-25T02:09:53.754Z",
+  "generatedAt": "2026-04-25T02:12:43.885Z",
   "latestVersion": "1.1.12",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 212
+    "commitCount": 213
   },
   "releases": [
     {
       "version": "1.1.12",
       "isLatest": true,
-      "commitCount": 14,
+      "commitCount": 15,
       "dateRange": {
         "from": "2026-04-22",
         "to": "2026-04-25"
       },
       "stats": {
         "release": 1,
-        "feature": 9,
+        "feature": 10,
         "fix": 4,
         "docs": 0,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "docs(scenarios): add built-in scenario for decentralized DB migration; update documentation and version history",
         "fix(commands): update migrate command syntax and descriptions; enhance tutorial details for database workflows",
         "fix(commands): update migrate command syntax and descriptions; enhance help details and tutorials",
         "fix(version): update version to 1.1.12 and increment commit counts; add new migrate command and enhance command documentation",
         "fix(version): update generatedAt timestamp and increment commit counts in version history",
         "fix(commands): update command descriptions and syntax; add new commands for project navigation and serving",
         "feat(commands): add new ngrok commands for serving projects and stopping tunnels",
-        "fix(version): update generatedAt timestamp and increment commit counts in version history",
-        "fix(version): update generatedAt timestamp and increment commit counts; add stop command for ngrok tunnel and enhance command documentation"
+        "fix(version): update generatedAt timestamp and increment commit counts in version history"
       ],
       "commits": [
+        {
+          "hash": "bc99cafafc3de94bb3c7ea9ed3b0a52fd228e24b",
+          "shortHash": "bc99caf",
+          "date": "2026-04-25",
+          "title": "docs(scenarios): add built-in scenario for decentralized DB migration; update documentation and version history",
+          "type": "feature"
+        },
         {
           "hash": "dce7436ab0055dd0e2e885807cfda06d9ab9d3e8",
           "shortHash": "dce7436",
