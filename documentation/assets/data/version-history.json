@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-04-22T02:31:13.573Z",
+  "generatedAt": "2026-04-25T00:52:26.274Z",
   "latestVersion": "1.1.11",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 204
+    "commitCount": 205
   },
   "releases": [
     {
       "version": "1.1.11",
       "isLatest": true,
-      "commitCount": 26,
+      "commitCount": 27,
       "dateRange": {
         "from": "2026-04-17",
-        "to": "2026-04-22"
+        "to": "2026-04-25"
       },
       "stats": {
         "release": 2,
-        "feature": 19,
+        "feature": 20,
         "fix": 5,
         "docs": 0,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "fix(version): update generatedAt timestamp and increment commit counts; add stop command for ngrok tunnel and enhance command documentation",
         "feat(ml-serve): add ngrok auth token management functions and configuration handling",
         "fix(ngrok): enhance ngrok configuration handling and add validation checks",
         "fix(version): update generatedAt timestamp and increment commit counts in version history",
         "fix(version): update generatedAt timestamp and increment commit counts in version history; add stop command for ngrok tunnel in ml-serve.php and ml.bat",
         "feat(commands): add new commands for serving projects locally and online",
         "fix(version): update generatedAt timestamp and increment commit counts in version history",
-        "fix(version): update version to 1.1.11; increment commit counts and update timestamps in version history refactor(shim): remove unused parameter from PowerShell shim function refactor(nav): remove unused parameter from navigation script",
-        "fix(version): update version to 1.1.11; increment commit counts and update timestamps in related files"
+        "fix(version): update version to 1.1.11; increment commit counts and update timestamps in version history refactor(shim): remove unused parameter from PowerShell shim function refactor(nav): remove unused parameter from navigation script"
       ],
       "commits": [
+        {
+          "hash": "42c4acb065181ec14c1583f1d781dc512134689f",
+          "shortHash": "42c4acb",
+          "date": "2026-04-25",
+          "title": "fix(version): update generatedAt timestamp and increment commit counts; add stop command for ngrok tunnel and enhance command documentation",
+          "type": "feature"
+        },
         {
           "hash": "c7ae4eb14ad75ea0db99388e6d193520fa39e6cd",
           "shortHash": "c7ae4eb",
