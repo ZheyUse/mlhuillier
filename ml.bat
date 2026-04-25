@@ -1316,6 +1316,7 @@ set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/script/us
 set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
 set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
 set "TMP_FILE=%TEMP%\user-migrate.php"
+set "ML_CLI_ROOT=%~dp0"
 set "LOCAL_PHP=%~dp0script\user-migrate.php"
 if not exist "!LOCAL_PHP!" set "LOCAL_PHP=C:\xampp\htdocs\mlhuillier\script\user-migrate.php"
 call :strip_query "!RAW_URL!"

@@ -175,17 +175,53 @@ function askConfirmation(string $prompt): bool
 
 function resolveMigrationSql(string $fileName): ?string
 {
-    $root = dirname(__DIR__);
-    $candidates = [
-        $root . DIRECTORY_SEPARATOR . 'migration' . DIRECTORY_SEPARATOR . 'userdb' . DIRECTORY_SEPARATOR . $fileName,
-        $root . DIRECTORY_SEPARATOR . 'migration' . DIRECTORY_SEPARATOR . $fileName,
-    ];
+    $roots = [];
 
-    foreach ($candidates as $path) {
-        if (is_file($path)) {
-            return $path;
+    $envRoot = trim((string) getenv('ML_CLI_ROOT'));
+    if ($envRoot !== '') {
+        $roots[] = $envRoot;
+    }
+
+    $roots[] = dirname(__DIR__);
+    $roots[] = 'C:\\ML CLI\\Tools';
+
+    $cwd = getcwd();
+    if (is_string($cwd) && $cwd !== '') {
+        $current = $cwd;
+        while ($current !== dirname($current)) {
+            $roots[] = $current;
+            $current = dirname($current);
+        }
+        $roots[] = $current;
+    }
+
+    $seen = [];
+    foreach ($roots as $root) {
+        $resolved = realpath($root);
+        $base = is_string($resolved) ? $resolved : $root;
+        $base = rtrim($base, "\\/");
+        if ($base === '') {
+            continue;
+        }
+
+        $key = strtolower($base);
+        if (isset($seen[$key])) {
+            continue;
+        }
+        $seen[$key] = true;
+
+        $candidates = [
+            $base . DIRECTORY_SEPARATOR . 'migration' . DIRECTORY_SEPARATOR . 'userdb' . DIRECTORY_SEPARATOR . $fileName,
+            $base . DIRECTORY_SEPARATOR . 'migration' . DIRECTORY_SEPARATOR . $fileName,
+        ];
+
+        foreach ($candidates as $path) {
+            if (is_file($path)) {
+                return $path;
+            }
         }
     }
+
     return null;
 }
 
