@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-25T01:00:11.443Z",
+  "generatedAt": "2026-04-25T01:08:21.567Z",
   "source": "ml.bat",
   "cliVersion": "1.1.11",
   "commands": [
@@ -25,7 +25,7 @@
     },
     {
       "name": "ml --c",
-      "description": "Check local CLI version against remote GitHub version.",
+      "description": "Check remote ML CLI version",
       "syntax": "ml --c",
       "params": [],
       "example": "ml --c",
@@ -43,7 +43,7 @@
     },
     {
       "name": "ml --d",
-      "description": "Download and execute remote installer downloader.",
+      "description": "Download remote installer",
       "syntax": "ml --d",
       "params": [],
       "example": "ml --d",
@@ -115,7 +115,7 @@
     },
     {
       "name": "ml add userdb",
-      "description": "Import userdb SQL schema and supporting objects.",
+      "description": "Import userdb SQL (migration/userdb)",
       "syntax": "ml add userdb",
       "params": [],
       "example": "ml add userdb",
@@ -153,7 +153,7 @@
     },
     {
       "name": "ml create --a",
-      "description": "Open an interactive account creation flow.",
+      "description": "Create interactive account (add user)",
       "syntax": "ml create --a",
       "params": [
         "interactive prompts: id, first_name, last_name, role"
@@ -173,7 +173,7 @@
     },
     {
       "name": "ml create --config",
-      "description": "Create or update database backup connection config.",
+      "description": "Create DB config for backups",
       "syntax": "ml create --config",
       "params": [
         "interactive prompts: host, port, user, password, mysqldumpPath, backupPath"
@@ -303,7 +303,7 @@
     },
     {
       "name": "ml nav",
-      "description": "Navigate to htdocs projects quickly and optionally open VS Code.",
+      "description": "Navigate or open a project (ml nav)",
       "syntax": "ml nav",
       "params": [
         "--project_name (optional)",
@@ -341,6 +341,24 @@
       }
     },
     {
+      "name": "ml rev / reveal",
+      "description": "Reveal current project folder in File Explorer",
+      "syntax": "ml rev / reveal",
+      "params": [],
+      "example": "ml rev / reveal",
+      "category": "general",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml rev / reveal.",
+        "steps": [
+          "Run: ml rev / reveal",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
       "name": "ml reveal",
       "description": "Run this CLI command to execute its linked workflow.",
       "syntax": "ml reveal",
@@ -360,20 +378,38 @@
     },
     {
       "name": "ml serve",
-      "description": "Run remote serve helper and open project in browser.",
-      "syntax": "ml serve [project_name] [-o]",
+      "description": "Open local project in browser using localhost.",
+      "syntax": "ml serve | ml serve --projectname",
       "params": [
-        "project_name (optional)"
+        "--projectname (optional)"
       ],
       "example": "ml serve",
       "category": "workflow",
-      "expectedResult": "Opens the local project URL in your browser.",
+      "expectedResult": "Opens http://localhost/<project_name> in your browser.",
       "tutorial": {
         "whenToUse": "When you need to quickly preview the app in browser.",
         "scenario": "Typical workflow workflow using ml serve.",
         "steps": [
           "Run: ml serve",
-          "Review output and confirm expected result: Opens the local project URL in your browser.",
+          "Review output and confirm expected result: Opens http://localhost/<project_name> in your browser.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml serve --projectname -o",
+      "description": "Open selected project via ngrok share link",
+      "syntax": "ml serve --projectname -o",
+      "params": [],
+      "example": "ml serve --projectname -o",
+      "category": "workflow",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When you need to quickly preview the app in browser.",
+        "scenario": "Typical workflow workflow using ml serve --projectname -o.",
+        "steps": [
+          "Run: ml serve --projectname -o",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
       }
@@ -409,6 +445,42 @@
         "scenario": "Typical workflow workflow using ml serve -stop.",
         "steps": [
           "Run: ml serve -stop",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml serve projectname --online",
+      "description": "Open selected project via ngrok share link",
+      "syntax": "ml serve projectname --online",
+      "params": [],
+      "example": "ml serve projectname --online",
+      "category": "workflow",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When you need to quickly preview the app in browser.",
+        "scenario": "Typical workflow workflow using ml serve projectname --online.",
+        "steps": [
+          "Run: ml serve projectname --online",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml serve projectname -o",
+      "description": "Open selected project via ngrok share link",
+      "syntax": "ml serve projectname -o",
+      "params": [],
+      "example": "ml serve projectname -o",
+      "category": "workflow",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When you need to quickly preview the app in browser.",
+        "scenario": "Typical workflow workflow using ml serve projectname -o.",
+        "steps": [
+          "Run: ml serve projectname -o",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
@@ -470,7 +542,7 @@
     },
     {
       "name": "ml update",
-      "description": "Update local CLI runtime files from remote installer assets.",
+      "description": "Update ML CLI from remote",
       "syntax": "ml update",
       "params": [],
       "example": "ml update",
@@ -615,7 +687,7 @@
         "step": 5,
         "command": "ml serve",
         "explanation": "Run the app and verify menu-level and permission-level checks work as expected.",
-        "expectedResult": "Opens the local project URL in your browser."
+        "expectedResult": "Opens http://localhost/<project_name> in your browser."
       }
     ],
     "convertionPbacGuide": {
@@ -664,7 +736,7 @@
         "step": 4,
         "command": "ml serve",
         "explanation": "Run the app and validate role-based page/action access in browser.",
-        "expectedResult": "Opens the local project URL in your browser."
+        "expectedResult": "Opens http://localhost/<project_name> in your browser."
       }
     ],
     "generalUsage": [
@@ -880,6 +952,16 @@
         ]
       },
       {
+        "command": "ml rev / reveal",
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml rev / reveal.",
+        "steps": [
+          "Run: ml rev / reveal",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
         "command": "ml reveal",
         "whenToUse": "When this workflow matches your current task.",
         "scenario": "Typical general workflow using ml reveal.",
@@ -895,7 +977,17 @@
         "scenario": "Typical workflow workflow using ml serve.",
         "steps": [
           "Run: ml serve",
-          "Review output and confirm expected result: Opens the local project URL in your browser.",
+          "Review output and confirm expected result: Opens http://localhost/<project_name> in your browser.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml serve --projectname -o",
+        "whenToUse": "When you need to quickly preview the app in browser.",
+        "scenario": "Typical workflow workflow using ml serve --projectname -o.",
+        "steps": [
+          "Run: ml serve --projectname -o",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
       },
@@ -915,6 +1007,26 @@
         "scenario": "Typical workflow workflow using ml serve -stop.",
         "steps": [
           "Run: ml serve -stop",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml serve projectname --online",
+        "whenToUse": "When you need to quickly preview the app in browser.",
+        "scenario": "Typical workflow workflow using ml serve projectname --online.",
+        "steps": [
+          "Run: ml serve projectname --online",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml serve projectname -o",
+        "whenToUse": "When you need to quickly preview the app in browser.",
+        "scenario": "Typical workflow workflow using ml serve projectname -o.",
+        "steps": [
+          "Run: ml serve projectname -o",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]

@@ -630,20 +630,35 @@ function buildNav() {
     nav.append(link);
   });
 
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (!entry.isIntersecting) return;
-      const id = entry.target.id;
-      document.querySelectorAll('.nav-link').forEach((link) => {
-        link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
-      });
-    });
-  }, { threshold: 0.3 });
+  const sectionNodes = sections
+    .map(([, id]) => document.getElementById(id))
+    .filter(Boolean);
 
-  sections.forEach(([, id]) => {
-    const target = document.getElementById(id);
-    if (target) observer.observe(target);
-  });
+  const setActive = (id) => {
+    document.querySelectorAll('.nav-link').forEach((link) => {
+      link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
+    });
+  };
+
+  const updateActiveByScroll = () => {
+    if (!sectionNodes.length) return;
+
+    const marker = 140;
+    let activeId = sectionNodes[0].id;
+
+    sectionNodes.forEach((node) => {
+      if (node.getBoundingClientRect().top - marker <= 0) {
+        activeId = node.id;
+      }
+    });
+
+    setActive(activeId);
+  };
+
+  window.addEventListener('scroll', updateActiveByScroll, { passive: true });
+  window.addEventListener('resize', updateActiveByScroll);
+  window.addEventListener('hashchange', updateActiveByScroll);
+  updateActiveByScroll();
 }
 
 async function init() {

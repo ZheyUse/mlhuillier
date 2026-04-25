@@ -168,8 +168,9 @@ function inferCategory(name) {
 }
 
 function inferDescription(command) {
-  if (command.helpDescription) return command.helpDescription;
   const name = command.name.toLowerCase();
+  if (name === 'ml serve') return 'Open local project in browser using localhost.';
+  if (command.helpDescription) return command.helpDescription;
   if (name === 'ml test userdb') return 'Execute database connectivity and schema checks for userdb.';
   if (name === 'ml add userdb') return 'Import userdb SQL schema and supporting objects.';
   if (name === 'ml create --a') return 'Open an interactive account creation flow.';
@@ -187,6 +188,8 @@ function inferDescription(command) {
 }
 
 function inferSyntax(command, helpDetails) {
+  const lower = command.name.toLowerCase();
+  if (lower === 'ml serve') return 'ml serve | ml serve --projectname';
   if (command.syntax) return command.syntax;
   const keyMap = new Map([
     ['ml test userdb', 'test_userdb'],
@@ -221,6 +224,7 @@ function inferSyntax(command, helpDetails) {
 function inferParams(command) {
   if (Array.isArray(command.params)) return command.params;
   const lower = command.name.toLowerCase();
+  if (lower === 'ml serve') return ['--projectname (optional)'];
   if (lower === 'ml create --a') return ['interactive prompts: id, first_name, last_name, role'];
   if (lower === 'ml create --config') return ['interactive prompts: host, port, user, password, mysqldumpPath, backupPath'];
   if (lower === 'ml --b') return ['schema (optional, use all for all schemas)'];
@@ -238,7 +242,7 @@ function inferExpectedResult(command) {
   if (lower === 'ml update') return 'Downloads latest CLI runtime and refreshes installed tools.';
   if (lower === 'ml --c') return 'Displays whether a newer version is available.';
   if (lower === 'ml --v') return 'Prints current CLI version number.';
-  if (lower === 'ml serve') return 'Opens the local project URL in your browser.';
+  if (lower === 'ml serve') return 'Opens http://localhost/<project_name> in your browser.';
   if (lower === 'ml nav') return 'Moves shell to selected project folder under htdocs.';
   if (lower === 'ml create --config') return 'Creates C:\\ML CLI\\Tools\\mlcli-config.json for backup connectivity.';
   if (lower === 'ml --b') return 'Creates schema SQL dumps under C:\\ML CLI\\Backup\\BACKUP_MM-DD-YY\\<schema>.';
