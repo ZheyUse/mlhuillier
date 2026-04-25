@@ -93,6 +93,11 @@ echo   test ^<database^>     Run DB connection test for a specified database (e.
 echo   add userdb         Import userdb SQL (migration/userdb)
 echo   nav                Navigate or open a project (ml nav)
 echo   serve              Open project locally/online or stop online tunnel (ml serve)
+echo   serve -o           Open current project via ngrok share link
+echo   serve --projectname -o      Open selected project via ngrok share link
+echo   serve projectname -o        Open selected project via ngrok share link
+echo   serve projectname --online  Open selected project via ngrok share link
+echo   serve -stop        Stop active ngrok online tunnel
 echo   wb                 Open MySQL Workbench (ml wb)
 echo   wb --export        Run Workbench export helper (ml wb --export)
 echo   doc                Open online documentation (GitHub Pages)

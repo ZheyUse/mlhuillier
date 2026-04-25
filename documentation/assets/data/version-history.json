@@ -1,16 +1,16 @@
 {
-  "generatedAt": "2026-04-25T00:52:26.274Z",
+  "generatedAt": "2026-04-25T00:55:39.138Z",
   "latestVersion": "1.1.11",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 205
+    "commitCount": 206
   },
   "releases": [
     {
       "version": "1.1.11",
       "isLatest": true,
-      "commitCount": 27,
+      "commitCount": 28,
       "dateRange": {
         "from": "2026-04-17",
         "to": "2026-04-25"
@@ -18,7 +18,7 @@
       "stats": {
         "release": 2,
         "feature": 20,
-        "fix": 5,
+        "fix": 6,
         "docs": 0,
         "refactor": 0,
         "performance": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "fix(version): update generatedAt timestamp and increment commit counts in version history",
         "fix(version): update generatedAt timestamp and increment commit counts; add stop command for ngrok tunnel and enhance command documentation",
         "feat(ml-serve): add ngrok auth token management functions and configuration handling",
         "fix(ngrok): enhance ngrok configuration handling and add validation checks",
         "fix(version): update generatedAt timestamp and increment commit counts in version history",
         "fix(version): update generatedAt timestamp and increment commit counts in version history; add stop command for ngrok tunnel in ml-serve.php and ml.bat",
         "feat(commands): add new commands for serving projects locally and online",
-        "fix(version): update generatedAt timestamp and increment commit counts in version history",
-        "fix(version): update version to 1.1.11; increment commit counts and update timestamps in version history refactor(shim): remove unused parameter from PowerShell shim function refactor(nav): remove unused parameter from navigation script"
+        "fix(version): update generatedAt timestamp and increment commit counts in version history"
       ],
       "commits": [
+        {
+          "hash": "15e8f16a4fdf7819750b3fe813b6995e5626af3d",
+          "shortHash": "15e8f16",
+          "date": "2026-04-25",
+          "title": "fix(version): update generatedAt timestamp and increment commit counts in version history",
+          "type": "fix"
+        },
         {
           "hash": "42c4acb065181ec14c1583f1d781dc512134689f",
           "shortHash": "42c4acb",

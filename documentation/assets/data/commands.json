@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-25T00:55:03.753Z",
+  "generatedAt": "2026-04-25T01:00:11.443Z",
   "source": "ml.bat",
   "cliVersion": "1.1.11",
   "commands": [
@@ -374,6 +374,42 @@
         "steps": [
           "Run: ml serve",
           "Review output and confirm expected result: Opens the local project URL in your browser.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml serve -o",
+      "description": "Open current project via ngrok share link",
+      "syntax": "ml serve -o",
+      "params": [],
+      "example": "ml serve -o",
+      "category": "workflow",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When you need to quickly preview the app in browser.",
+        "scenario": "Typical workflow workflow using ml serve -o.",
+        "steps": [
+          "Run: ml serve -o",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml serve -stop",
+      "description": "Stop active ngrok online tunnel",
+      "syntax": "ml serve -stop",
+      "params": [],
+      "example": "ml serve -stop",
+      "category": "workflow",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When you need to quickly preview the app in browser.",
+        "scenario": "Typical workflow workflow using ml serve -stop.",
+        "steps": [
+          "Run: ml serve -stop",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
       }
@@ -860,6 +896,26 @@
         "steps": [
           "Run: ml serve",
           "Review output and confirm expected result: Opens the local project URL in your browser.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml serve -o",
+        "whenToUse": "When you need to quickly preview the app in browser.",
+        "scenario": "Typical workflow workflow using ml serve -o.",
+        "steps": [
+          "Run: ml serve -o",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml serve -stop",
+        "whenToUse": "When you need to quickly preview the app in browser.",
+        "scenario": "Typical workflow workflow using ml serve -stop.",
+        "steps": [
+          "Run: ml serve -stop",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
       },

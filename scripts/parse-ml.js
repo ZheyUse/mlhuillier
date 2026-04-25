@@ -83,7 +83,7 @@ function parseHelpCommands(content) {
       continue;
     }
 
-    const m = line.match(/^echo\s{2,}([^\s][^\s]*?(?:\s+[^\s][^\s]*)?)\s{2,}(.+)$/i);
+    const m = line.match(/^echo\s{2,}(.+?)\s{2,}(.+)$/i);
     if (!m) {
       continue;
     }
@@ -168,6 +168,7 @@ function inferCategory(name) {
 }
 
 function inferDescription(command) {
+  if (command.helpDescription) return command.helpDescription;
   const name = command.name.toLowerCase();
   if (name === 'ml test userdb') return 'Execute database connectivity and schema checks for userdb.';
   if (name === 'ml add userdb') return 'Import userdb SQL schema and supporting objects.';
@@ -182,10 +183,11 @@ function inferDescription(command) {
   if (name === 'ml create --config') return 'Create or update database backup connection config.';
   if (name === 'ml --h') return 'Show global or command-level help output.';
   if (name === 'ml --v') return 'Display currently installed CLI version.';
-  return command.helpDescription || 'Run this CLI command to execute its linked workflow.';
+  return 'Run this CLI command to execute its linked workflow.';
 }
 
 function inferSyntax(command, helpDetails) {
+  if (command.syntax) return command.syntax;
   const keyMap = new Map([
     ['ml test userdb', 'test_userdb'],
     ['ml add userdb', 'add_userdb'],
@@ -217,6 +219,7 @@ function inferSyntax(command, helpDetails) {
 }
 
 function inferParams(command) {
+  if (Array.isArray(command.params)) return command.params;
   const lower = command.name.toLowerCase();
   if (lower === 'ml create --a') return ['interactive prompts: id, first_name, last_name, role'];
   if (lower === 'ml create --config') return ['interactive prompts: host, port, user, password, mysqldumpPath, backupPath'];
@@ -228,6 +231,7 @@ function inferParams(command) {
 }
 
 function inferExpectedResult(command) {
+  if (command.expectedResult) return command.expectedResult;
   const lower = command.name.toLowerCase();
   if (lower === 'ml test userdb') return 'Shows DB connection status and schema check result.';
   if (lower === 'ml add userdb') return 'Creates/imports required userdb tables and structures.';
@@ -314,6 +318,71 @@ function buildCommands(content) {
     };
     createCmd.tutorial = commandTutorial(createCmd);
     results.push(createCmd);
+  }
+
+  const syntheticCommands = [
+    {
+      name: 'ml serve -o',
+      top: 'serve',
+      sub: '-o',
+      helpDescription: 'Start ngrok online tunnel for current project and open shareable URL.',
+      syntax: 'ml serve -o',
+      params: ['project_name (resolved from current directory)'],
+      expectedResult: 'Opens shareable ngrok URL for the current project.',
+    },
+    {
+      name: 'ml serve --projectname -o',
+      top: 'serve',
+      sub: '--projectname -o',
+      helpDescription: 'Start ngrok online tunnel for explicit project and open shareable URL.',
+      syntax: 'ml serve --projectname -o',
+      params: ['--projectname'],
+      expectedResult: 'Opens shareable ngrok URL for the selected project.',
+    },
+    {
+      name: 'ml serve projectname -o',
+      top: 'serve',
+      sub: 'projectname -o',
+      helpDescription: 'Start ngrok online tunnel for explicit project and open shareable URL.',
+      syntax: 'ml serve projectname -o',
+      params: ['projectname'],
+      expectedResult: 'Opens shareable ngrok URL for the selected project.',
+    },
+    {
+      name: 'ml serve projectname --online',
+      top: 'serve',
+      sub: 'projectname --online',
+      helpDescription: 'Start ngrok online tunnel for explicit project and open shareable URL.',
+      syntax: 'ml serve projectname --online',
+      params: ['projectname'],
+      expectedResult: 'Opens shareable ngrok URL for the selected project.',
+    },
+    {
+      name: 'ml serve -stop',
+      top: 'serve',
+      sub: '-stop',
+      helpDescription: 'Stop active ngrok online tunnel process.',
+      syntax: 'ml serve -stop',
+      params: [],
+      expectedResult: 'Stops active ngrok tunnel process if running.',
+    },
+  ];
+
+  for (const entry of syntheticCommands) {
+    if (results.some((x) => x.name.toLowerCase() === entry.name.toLowerCase())) {
+      continue;
+    }
+    const item = {
+      name: entry.name,
+      description: inferDescription(entry),
+      syntax: inferSyntax(entry, helpDetails),
+      params: inferParams(entry),
+      example: entry.name,
+      category: inferCategory(entry.name),
+      expectedResult: inferExpectedResult(entry),
+    };
+    item.tutorial = commandTutorial(item);
+    results.push(item);
   }
 
   return results.sort((a, b) => a.name.localeCompare(b.name));
