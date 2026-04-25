@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.1.11"
+set "ML_VERSION=1.1.12"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -51,6 +51,7 @@ if /I "%~1"=="update" goto :cmd_update
 if /I "%~1"=="nav" goto :cmd_nav
 if /I "%~1"=="clone" if /I "%~2"=="local" goto :cmd_clone_local
 if /I "%~1"=="serve" goto :cmd_serve
+if /I "%~1"=="migrate" goto :cmd_migrate
 
 if /I "%~1"=="rev" goto :cmd_reveal
 if /I "%~1"=="reveal" goto :cmd_reveal
@@ -98,6 +99,7 @@ echo   serve --projectname -o      Open selected project via ngrok share link
 echo   serve projectname -o        Open selected project via ngrok share link
 echo   serve projectname --online  Open selected project via ngrok share link
 echo   serve -stop        Stop active ngrok online tunnel
+echo   migrate -db ^<database_name^>   Migrate userdb structures to target DB
 echo   wb                 Open MySQL Workbench (ml wb)
 echo   wb --export        Run Workbench export helper (ml wb --export)
 echo   doc                Open online documentation (GitHub Pages)
@@ -129,6 +131,7 @@ echo   ml serve --projectname -o
 echo   ml serve projectname -o
 echo   ml serve projectname --online
 echo   ml serve -stop
+echo   ml migrate -db ^<database_name^>
 echo   ml --h nav
 echo   ml --h add userdb
 echo   ml --h rev
@@ -169,6 +172,7 @@ if /I "%CMD%"=="wb" (
 )
 if /I "%CMD%"=="nav" goto :help_nav
 if /I "%CMD%"=="serve" goto :help_serve
+if /I "%CMD%"=="migrate" goto :help_migrate
 if /I "%CMD%"=="dev" goto :help_dev
 if /I "%CMD%"=="--b" goto :help_backup
 if /I "%CMD%"=="create" if /I "%SUB%"=="--a" goto :help_create_account
@@ -391,6 +395,16 @@ echo   ml serve --projectname -o
 echo   ml serve projectname -o
 echo   ml serve projectname --online
 echo   ml serve -stop
+exit /b 0
+
+:help_migrate
+echo.
+echo HELP: Migrate userdb structures
+echo Usage: ml migrate -db ^<databasename^>
+echo Description: Migrates table structures from userdb to a target database.
+echo   Includes users and userlogs structure and, when detected, converted
+echo   PBAC/RBAC table structures. No row data is copied.
+echo   Also rewrites project references from userdb to the target database.
 exit /b 0
 
 :help_reveal
@@ -1296,6 +1310,42 @@ if /I "!ONLINE_MODE!"=="1" (
 set "RC=%ERRORLEVEL%"
 del /f /q "!TMP_FILE!" >nul 2>&1
 exit /b %RC%
+
+:cmd_migrate
+set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/script/user-migrate.php"
+set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
+set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
+set "TMP_FILE=%TEMP%\user-migrate.php"
+set "LOCAL_PHP=%~dp0script\user-migrate.php"
+if not exist "!LOCAL_PHP!" set "LOCAL_PHP=C:\xampp\htdocs\mlhuillier\script\user-migrate.php"
+call :strip_query "!RAW_URL!"
+rem URL hidden from output
+echo Executing migrate helper...
+echo.
+
+where curl >nul 2>&1
+if %ERRORLEVEL%==0 (
+        curl -s -f -o "!TMP_FILE!" "!RAW_URL!"
+) else (
+        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!RAW_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
+)
+if %ERRORLEVEL% neq 0 (
+        echo Failed to fetch remote migrate helper script.
+        if exist "!LOCAL_PHP!" (
+                echo Falling back to local migrate helper...
+                "%PHP_EXE%" -d display_errors=0 "!LOCAL_PHP!" %*
+                set "RC=%ERRORLEVEL%"
+                exit /b %RC%
+        )
+        exit /b 2
+)
+
+"%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" %*
+set "RC=%ERRORLEVEL%"
+call :maybe_show_update_notice
+del /f /q "!TMP_FILE!" >nul 2>&1
+exit /b %RC%
+
 :cmd_nav
 set "HTDOCS_DIR=C:\xampp\htdocs"
 if "%~2"=="" (

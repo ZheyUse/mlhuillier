@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-04-25T01:10:01.755Z",
+  "generatedAt": "2026-04-25T02:04:35.299Z",
   "source": "ml.bat",
-  "cliVersion": "1.1.11",
+  "cliVersion": "1.1.12",
   "commands": [
     {
       "name": "ml --b",
@@ -296,6 +296,42 @@
         "scenario": "Typical general workflow using ml gen.",
         "steps": [
           "Run: ml gen",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml migrate",
+      "description": "Run this CLI command to execute its linked workflow.",
+      "syntax": "ml migrate",
+      "params": [],
+      "example": "ml migrate",
+      "category": "general",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml migrate.",
+        "steps": [
+          "Run: ml migrate",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml migrate -db ^<database_name^>",
+      "description": "Migrate userdb structures to target DB",
+      "syntax": "ml migrate -db ^<database_name^>",
+      "params": [],
+      "example": "ml migrate -db ^<database_name^>",
+      "category": "general",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml migrate -db ^<database_name^>.",
+        "steps": [
+          "Run: ml migrate -db ^<database_name^>",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
@@ -927,6 +963,26 @@
         "scenario": "Typical general workflow using ml gen.",
         "steps": [
           "Run: ml gen",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml migrate",
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml migrate.",
+        "steps": [
+          "Run: ml migrate",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml migrate -db ^<database_name^>",
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml migrate -db ^<database_name^>.",
+        "steps": [
+          "Run: ml migrate -db ^<database_name^>",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]

@@ -1,16 +1,16 @@
 {
-  "generatedAt": "2026-04-25T01:08:37.268Z",
+  "generatedAt": "2026-04-25T01:10:19.018Z",
   "latestVersion": "1.1.11",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 208
+    "commitCount": 209
   },
   "releases": [
     {
       "version": "1.1.11",
       "isLatest": true,
-      "commitCount": 30,
+      "commitCount": 31,
       "dateRange": {
         "from": "2026-04-17",
         "to": "2026-04-25"
@@ -18,7 +18,7 @@
       "stats": {
         "release": 2,
         "feature": 22,
-        "fix": 6,
+        "fix": 7,
         "docs": 0,
         "refactor": 0,
         "performance": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "fix(version): update generatedAt timestamp and increment commit counts in version history",
         "fix(commands): update command descriptions and syntax; add new commands for project navigation and serving",
         "feat(commands): add new ngrok commands for serving projects and stopping tunnels",
         "fix(version): update generatedAt timestamp and increment commit counts in version history",
         "fix(version): update generatedAt timestamp and increment commit counts; add stop command for ngrok tunnel and enhance command documentation",
         "feat(ml-serve): add ngrok auth token management functions and configuration handling",
         "fix(ngrok): enhance ngrok configuration handling and add validation checks",
-        "fix(version): update generatedAt timestamp and increment commit counts in version history",
-        "fix(version): update generatedAt timestamp and increment commit counts in version history; add stop command for ngrok tunnel in ml-serve.php and ml.bat"
+        "fix(version): update generatedAt timestamp and increment commit counts in version history"
       ],
       "commits": [
+        {
+          "hash": "4bcdbcd17f5b5499c6c564b0f269c86a580efb5b",
+          "shortHash": "4bcdbcd",
+          "date": "2026-04-25",
+          "title": "fix(version): update generatedAt timestamp and increment commit counts in version history",
+          "type": "fix"
+        },
         {
           "hash": "13ff7009d771cfdd1c17ded437637dfc955557be",
           "shortHash": "13ff700",
