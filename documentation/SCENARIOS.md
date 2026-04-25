@@ -61,3 +61,20 @@ node -e "const s=require('./documentation/assets/data/commands.json').tutorials.
 
 - If the new scenario doesn't show up, ensure `npm run docs:build` completed without errors. The docs build regenerates `commands.json` from `scripts/parse-ml.js`.
 - If you added an identical title multiple times, remove duplicates by editing `scripts/parse-ml.js`.
+
+## Built-in Scenario: Decentralized DB Migration
+
+Use this scenario to migrate from the default authentication schema to a project-specific database.
+
+Title:
+- Migrating to a decentralized database
+
+Steps:
+1. `ml nav --<project_name>`
+2. `ml migrate -db <DATABASE>`
+3. Confirm migration prompt with `Y`
+4. Review `migration-log.md` for copied rows and rewritten files
+
+Verification:
+- Run `npm run docs:build`
+- Confirm the scenario exists in `documentation/assets/data/commands.json` under `tutorials.scenarios`
