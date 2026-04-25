@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-25T02:09:00.889Z",
+  "generatedAt": "2026-04-25T02:09:40.390Z",
   "source": "ml.bat",
   "cliVersion": "1.1.12",
   "commands": [
@@ -303,36 +303,40 @@
     },
     {
       "name": "ml migrate",
-      "description": "Run this CLI command to execute its linked workflow.",
-      "syntax": "ml migrate",
-      "params": [],
+      "description": "Run database decentralization helper (use -db <DATABASE>).",
+      "syntax": "ml migrate -db <DATABASE>",
+      "params": [
+        "-db <DATABASE>"
+      ],
       "example": "ml migrate",
-      "category": "general",
-      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "category": "database",
+      "expectedResult": "Copies userdb table structures and data to target DB, rewrites project DB references, and writes migration-log.md.",
       "tutorial": {
         "whenToUse": "When this workflow matches your current task.",
-        "scenario": "Typical general workflow using ml migrate.",
+        "scenario": "Typical database workflow using ml migrate.",
         "steps": [
           "Run: ml migrate",
-          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "Review output and confirm expected result: Copies userdb table structures and data to target DB, rewrites project DB references, and writes migration-log.md.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
       }
     },
     {
-      "name": "ml migrate -db ^<DATABASE^>",
-      "description": "Migrate userdb tables to target DB",
-      "syntax": "ml migrate -db ^<DATABASE^>",
-      "params": [],
-      "example": "ml migrate -db ^<DATABASE^>",
-      "category": "general",
-      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "name": "ml migrate -db <DATABASE>",
+      "description": "Migrate userdb table structures and data to a decentralized target database.",
+      "syntax": "ml migrate -db <DATABASE>",
+      "params": [
+        "-db <DATABASE>"
+      ],
+      "example": "ml migrate -db <DATABASE>",
+      "category": "database",
+      "expectedResult": "Copies userdb table structures and data to target DB, rewrites project DB references, and writes migration-log.md.",
       "tutorial": {
         "whenToUse": "When this workflow matches your current task.",
-        "scenario": "Typical general workflow using ml migrate -db ^<DATABASE^>.",
+        "scenario": "Typical database workflow using ml migrate -db <DATABASE>.",
         "steps": [
-          "Run: ml migrate -db ^<DATABASE^>",
-          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "Run: ml migrate -db <DATABASE>",
+          "Review output and confirm expected result: Copies userdb table structures and data to target DB, rewrites project DB references, and writes migration-log.md.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
       }
@@ -541,18 +545,18 @@
       }
     },
     {
-      "name": "ml test ^<database^>",
+      "name": "ml test <database>",
       "description": "Run DB connection test for a specified database (e.g., userdb, gledb)",
-      "syntax": "ml test ^<database^>",
+      "syntax": "ml test <database>",
       "params": [],
-      "example": "ml test ^<database^>",
+      "example": "ml test <database>",
       "category": "database",
       "expectedResult": "Runs the command workflow and returns success or actionable error output.",
       "tutorial": {
         "whenToUse": "When this workflow matches your current task.",
-        "scenario": "Typical database workflow using ml test ^<database^>.",
+        "scenario": "Typical database workflow using ml test <database>.",
         "steps": [
-          "Run: ml test ^<database^>",
+          "Run: ml test <database>",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
@@ -970,20 +974,20 @@
       {
         "command": "ml migrate",
         "whenToUse": "When this workflow matches your current task.",
-        "scenario": "Typical general workflow using ml migrate.",
+        "scenario": "Typical database workflow using ml migrate.",
         "steps": [
           "Run: ml migrate",
-          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "Review output and confirm expected result: Copies userdb table structures and data to target DB, rewrites project DB references, and writes migration-log.md.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
       },
       {
-        "command": "ml migrate -db ^<DATABASE^>",
+        "command": "ml migrate -db <DATABASE>",
         "whenToUse": "When this workflow matches your current task.",
-        "scenario": "Typical general workflow using ml migrate -db ^<DATABASE^>.",
+        "scenario": "Typical database workflow using ml migrate -db <DATABASE>.",
         "steps": [
-          "Run: ml migrate -db ^<DATABASE^>",
-          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "Run: ml migrate -db <DATABASE>",
+          "Review output and confirm expected result: Copies userdb table structures and data to target DB, rewrites project DB references, and writes migration-log.md.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
       },
@@ -1098,11 +1102,11 @@
         ]
       },
       {
-        "command": "ml test ^<database^>",
+        "command": "ml test <database>",
         "whenToUse": "When this workflow matches your current task.",
-        "scenario": "Typical database workflow using ml test ^<database^>.",
+        "scenario": "Typical database workflow using ml test <database>.",
         "steps": [
-          "Run: ml test ^<database^>",
+          "Run: ml test <database>",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
@@ -1196,6 +1200,15 @@
           "ml test userdb",
           "ml add userdb",
           "ml test userdb"
+        ]
+      },
+      {
+        "title": "Migrating to a decentralized database",
+        "steps": [
+          "ml nav --<project_name>",
+          "ml migrate -db <DATABASE>",
+          "Confirm migration prompt with Y",
+          "Review migration-log.md for copied rows and rewritten files"
         ]
       },
       {
