@@ -1,16 +1,16 @@
 {
-  "generatedAt": "2026-04-25T02:12:43.885Z",
+  "generatedAt": "2026-04-25T02:26:23.515Z",
   "latestVersion": "1.1.12",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 213
+    "commitCount": 214
   },
   "releases": [
     {
       "version": "1.1.12",
       "isLatest": true,
-      "commitCount": 15,
+      "commitCount": 16,
       "dateRange": {
         "from": "2026-04-22",
         "to": "2026-04-25"
@@ -18,7 +18,7 @@
       "stats": {
         "release": 1,
         "feature": 10,
-        "fix": 4,
+        "fix": 5,
         "docs": 0,
         "refactor": 0,
         "performance": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "fix(user-migrate): remove unnecessary skip prefixes in rewriteDbReferences function; streamline path handling",
         "docs(scenarios): add built-in scenario for decentralized DB migration; update documentation and version history",
         "fix(commands): update migrate command syntax and descriptions; enhance tutorial details for database workflows",
         "fix(commands): update migrate command syntax and descriptions; enhance help details and tutorials",
         "fix(version): update version to 1.1.12 and increment commit counts; add new migrate command and enhance command documentation",
         "fix(version): update generatedAt timestamp and increment commit counts in version history",
         "fix(commands): update command descriptions and syntax; add new commands for project navigation and serving",
-        "feat(commands): add new ngrok commands for serving projects and stopping tunnels",
-        "fix(version): update generatedAt timestamp and increment commit counts in version history"
+        "feat(commands): add new ngrok commands for serving projects and stopping tunnels"
       ],
       "commits": [
+        {
+          "hash": "f6c9e50e9ffb024eb700ad895fedc2736e5090b8",
+          "shortHash": "f6c9e50",
+          "date": "2026-04-25",
+          "title": "fix(user-migrate): remove unnecessary skip prefixes in rewriteDbReferences function; streamline path handling",
+          "type": "fix"
+        },
         {
           "hash": "bc99cafafc3de94bb3c7ea9ed3b0a52fd228e24b",
           "shortHash": "bc99caf",
