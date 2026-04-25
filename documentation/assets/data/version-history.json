@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-04-25T01:00:24.943Z",
+  "generatedAt": "2026-04-25T01:08:37.268Z",
   "latestVersion": "1.1.11",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 207
+    "commitCount": 208
   },
   "releases": [
     {
       "version": "1.1.11",
       "isLatest": true,
-      "commitCount": 29,
+      "commitCount": 30,
       "dateRange": {
         "from": "2026-04-17",
         "to": "2026-04-25"
       },
       "stats": {
         "release": 2,
-        "feature": 21,
+        "feature": 22,
         "fix": 6,
         "docs": 0,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "fix(commands): update command descriptions and syntax; add new commands for project navigation and serving",
         "feat(commands): add new ngrok commands for serving projects and stopping tunnels",
         "fix(version): update generatedAt timestamp and increment commit counts in version history",
         "fix(version): update generatedAt timestamp and increment commit counts; add stop command for ngrok tunnel and enhance command documentation",
         "feat(ml-serve): add ngrok auth token management functions and configuration handling",
         "fix(ngrok): enhance ngrok configuration handling and add validation checks",
         "fix(version): update generatedAt timestamp and increment commit counts in version history",
-        "fix(version): update generatedAt timestamp and increment commit counts in version history; add stop command for ngrok tunnel in ml-serve.php and ml.bat",
-        "feat(commands): add new commands for serving projects locally and online"
+        "fix(version): update generatedAt timestamp and increment commit counts in version history; add stop command for ngrok tunnel in ml-serve.php and ml.bat"
       ],
       "commits": [
+        {
+          "hash": "13ff7009d771cfdd1c17ded437637dfc955557be",
+          "shortHash": "13ff700",
+          "date": "2026-04-25",
+          "title": "fix(commands): update command descriptions and syntax; add new commands for project navigation and serving",
+          "type": "feature"
+        },
         {
           "hash": "15a2a064be8682853e5b84ccf2ca89eb55d7112b",
           "shortHash": "15a2a06",
