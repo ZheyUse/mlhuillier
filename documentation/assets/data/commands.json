@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-22T02:04:32.482Z",
+  "generatedAt": "2026-04-25T00:52:12.984Z",
   "source": "ml.bat",
   "cliVersion": "1.1.11",
   "commands": [
@@ -1026,8 +1026,18 @@
         "title": "Serve Specific Project (Online)",
         "steps": [
           "ml serve --projectname -o",
+          "ml serve projectname -o",
+          "ml serve projectname --online",
           "Creates ngrok tunnel on 80 (fallback 8080)",
           "Opens https://<ngrok-domain>/<projectname>"
+        ]
+      },
+      {
+        "title": "Stop Online Tunnel",
+        "steps": [
+          "ml serve -o",
+          "Share link is created via ngrok",
+          "ml serve -stop"
         ]
       }
     ],

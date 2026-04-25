@@ -235,8 +235,6 @@ function ensureNgrokInstalled(): void
 
 function ensureNgrokAuthToken(): void
 {
-    $config = ensureNgrokAuthConfigKey();
-
     if (ngrokConfigHasToken()) {
         return;
     }
@@ -244,6 +242,14 @@ function ensureNgrokAuthToken(): void
     if (ngrokConfigCheckPasses()) {
         return;
     }
+
+    if (!is_file(mlCliConfigPath())) {
+        fwrite(STDERR, 'mlcli-config has not been setup' . PHP_EOL);
+        fwrite(STDERR, 'setup your config by running: ml create --config' . PHP_EOL);
+        exit(2);
+    }
+
+    $config = ensureNgrokAuthConfigKey();
 
     $configToken = getConfigNgrokAuthToken($config);
     if ($configToken !== '') {

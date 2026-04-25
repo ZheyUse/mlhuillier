@@ -92,7 +92,7 @@ echo Commands:
 echo   test ^<database^>     Run DB connection test for a specified database (e.g., userdb, gledb)
 echo   add userdb         Import userdb SQL (migration/userdb)
 echo   nav                Navigate or open a project (ml nav)
-echo   serve              Open current project in browser (ml serve)
+echo   serve              Open project locally/online or stop online tunnel (ml serve)
 echo   wb                 Open MySQL Workbench (ml wb)
 echo   wb --export        Run Workbench export helper (ml wb --export)
 echo   doc                Open online documentation (GitHub Pages)
@@ -119,6 +119,11 @@ echo   ml --h create --pbac
 echo   ml --h create --rbac
 echo   ml --h --d
 echo   ml --h serve
+echo   ml serve -o
+echo   ml serve --projectname -o
+echo   ml serve projectname -o
+echo   ml serve projectname --online
+echo   ml serve -stop
 echo   ml --h nav
 echo   ml --h add userdb
 echo   ml --h rev
@@ -361,6 +366,8 @@ echo.
 echo HELP: Serve project
 echo Usage: ml serve [project_name] [-o]
 echo        ml serve --projectname -o
+echo        ml serve projectname -o
+echo        ml serve projectname --online
 echo        ml serve -stop
 echo Description: Remote-only helper. Fetches and runs the GitHub-hosted
 echo   ml-serve.php which prints and opens the project URL at
@@ -371,6 +378,14 @@ echo   -o, --online   Start ngrok tunnel and open shareable URL:
 echo                  https://^<random-subdomain^>.ngrok-free.app/^<project_name^>
 echo                  Uses port 80 first, then falls back to 8080.
 echo   -stop          Stops active NGROK tunnel process.
+echo.
+echo Examples:
+echo   ml serve
+echo   ml serve -o
+echo   ml serve --projectname -o
+echo   ml serve projectname -o
+echo   ml serve projectname --online
+echo   ml serve -stop
 exit /b 0
 
 :help_reveal

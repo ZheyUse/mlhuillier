@@ -587,8 +587,18 @@ function buildTutorials(commands) {
         title: 'Serve Specific Project (Online)',
         steps: [
           'ml serve --projectname -o',
+          'ml serve projectname -o',
+          'ml serve projectname --online',
           'Creates ngrok tunnel on 80 (fallback 8080)',
           'Opens https://<ngrok-domain>/<projectname>'
+        ]
+      },
+      {
+        title: 'Stop Online Tunnel',
+        steps: [
+          'ml serve -o',
+          'Share link is created via ngrok',
+          'ml serve -stop'
         ]
       },],
     errors: [
