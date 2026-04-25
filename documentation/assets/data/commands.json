@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-25T02:04:35.299Z",
+  "generatedAt": "2026-04-25T02:09:00.889Z",
   "source": "ml.bat",
   "cliVersion": "1.1.12",
   "commands": [
@@ -320,18 +320,18 @@
       }
     },
     {
-      "name": "ml migrate -db ^<database_name^>",
-      "description": "Migrate userdb structures to target DB",
-      "syntax": "ml migrate -db ^<database_name^>",
+      "name": "ml migrate -db ^<DATABASE^>",
+      "description": "Migrate userdb tables to target DB",
+      "syntax": "ml migrate -db ^<DATABASE^>",
       "params": [],
-      "example": "ml migrate -db ^<database_name^>",
+      "example": "ml migrate -db ^<DATABASE^>",
       "category": "general",
       "expectedResult": "Runs the command workflow and returns success or actionable error output.",
       "tutorial": {
         "whenToUse": "When this workflow matches your current task.",
-        "scenario": "Typical general workflow using ml migrate -db ^<database_name^>.",
+        "scenario": "Typical general workflow using ml migrate -db ^<DATABASE^>.",
         "steps": [
-          "Run: ml migrate -db ^<database_name^>",
+          "Run: ml migrate -db ^<DATABASE^>",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
@@ -978,11 +978,11 @@
         ]
       },
       {
-        "command": "ml migrate -db ^<database_name^>",
+        "command": "ml migrate -db ^<DATABASE^>",
         "whenToUse": "When this workflow matches your current task.",
-        "scenario": "Typical general workflow using ml migrate -db ^<database_name^>.",
+        "scenario": "Typical general workflow using ml migrate -db ^<DATABASE^>.",
         "steps": [
-          "Run: ml migrate -db ^<database_name^>",
+          "Run: ml migrate -db ^<DATABASE^>",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]

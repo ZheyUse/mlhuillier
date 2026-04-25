@@ -1,24 +1,24 @@
 {
-  "generatedAt": "2026-04-25T01:10:19.018Z",
-  "latestVersion": "1.1.11",
+  "generatedAt": "2026-04-25T02:05:01.300Z",
+  "latestVersion": "1.1.12",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 209
+    "commitCount": 210
   },
   "releases": [
     {
-      "version": "1.1.11",
+      "version": "1.1.12",
       "isLatest": true,
-      "commitCount": 31,
+      "commitCount": 12,
       "dateRange": {
-        "from": "2026-04-17",
+        "from": "2026-04-22",
         "to": "2026-04-25"
       },
       "stats": {
-        "release": 2,
-        "feature": 22,
-        "fix": 7,
+        "release": 1,
+        "feature": 7,
+        "fix": 4,
         "docs": 0,
         "refactor": 0,
         "performance": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "fix(version): update version to 1.1.12 and increment commit counts; add new migrate command and enhance command documentation",
         "fix(version): update generatedAt timestamp and increment commit counts in version history",
         "fix(commands): update command descriptions and syntax; add new commands for project navigation and serving",
         "feat(commands): add new ngrok commands for serving projects and stopping tunnels",
         "fix(version): update generatedAt timestamp and increment commit counts in version history",
         "fix(version): update generatedAt timestamp and increment commit counts; add stop command for ngrok tunnel and enhance command documentation",
         "feat(ml-serve): add ngrok auth token management functions and configuration handling",
-        "fix(ngrok): enhance ngrok configuration handling and add validation checks",
-        "fix(version): update generatedAt timestamp and increment commit counts in version history"
+        "fix(ngrok): enhance ngrok configuration handling and add validation checks"
       ],
       "commits": [
+        {
+          "hash": "731e5a9c677f404e28a0e305329d120dfc6302eb",
+          "shortHash": "731e5a9",
+          "date": "2026-04-25",
+          "title": "fix(version): update version to 1.1.12 and increment commit counts; add new migrate command and enhance command documentation",
+          "type": "release"
+        },
         {
           "hash": "4bcdbcd17f5b5499c6c564b0f269c86a580efb5b",
           "shortHash": "4bcdbcd",
@@ -114,7 +121,40 @@
           "date": "2026-04-22",
           "title": "fix(version): update generatedAt timestamp and increment commit counts in version history",
           "type": "fix"
-        },
+        }
+      ]
+    },
+    {
+      "version": "1.1.11",
+      "isLatest": false,
+      "commitCount": 20,
+      "dateRange": {
+        "from": "2026-04-17",
+        "to": "2026-04-22"
+      },
+      "stats": {
+        "release": 2,
+        "feature": 15,
+        "fix": 3,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "fix(version): update version to 1.1.11; increment commit counts and update timestamps in version history refactor(shim): remove unused parameter from PowerShell shim function refactor(nav): remove unused parameter from navigation script",
+        "fix(version): update version to 1.1.11; increment commit counts and update timestamps in related files",
+        "fix(pbac): enhance menu access validation; streamline permission checks and improve readability",
+        "feat(scenarios): add automated scenario example and helper script for adding scenarios",
+        "fix(version): update generatedAt timestamp and increment commit counts in version history",
+        "fix(help): update generatedAt timestamp and increment commit counts; add interactive workbench export and PBAC scaffold tutorials",
+        "fix(version): update generatedAt timestamp and increment commit counts in version history",
+        "fix(help): update commands and version history; add export command details and increment commit counts"
+      ],
+      "commits": [
         {
           "hash": "40023d8e937cab1c828c6aee98f22981bd34063c",
           "shortHash": "40023d8",

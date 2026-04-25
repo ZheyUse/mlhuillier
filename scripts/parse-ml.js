@@ -88,7 +88,7 @@ function parseHelpCommands(content) {
       continue;
     }
 
-    const token = m[1].trim();
+    const token = m[1].trim().replace(/\^/g, '');
     const desc = m[2].trim();
     if (/^(--h|--v|--c|--d)$/i.test(token)) {
       commands.push({
@@ -160,6 +160,7 @@ function parseHelpDetails(content) {
 
 function inferCategory(name) {
   const lower = name.toLowerCase();
+  if (lower.includes('migrate')) return 'database';
   if (lower.includes('--b') || lower.includes('userdb') || lower.includes('test') || lower.includes('add')) return 'database';
   if (lower.includes('create') || lower.includes('clone')) return 'project';
   if (lower.includes('serve') || lower.includes('nav')) return 'workflow';
@@ -169,6 +170,8 @@ function inferCategory(name) {
 
 function inferDescription(command) {
   const name = command.name.toLowerCase();
+  if (name === 'ml migrate -db <database>') return 'Migrate userdb table structures and data to a decentralized target database.';
+  if (name === 'ml migrate') return 'Run database decentralization helper (use -db <DATABASE>).';
   if (name === 'ml serve') return 'Open local project in browser using localhost.';
   if (command.helpDescription) return command.helpDescription;
   if (name === 'ml test userdb') return 'Execute database connectivity and schema checks for userdb.';
@@ -189,6 +192,8 @@ function inferDescription(command) {
 
 function inferSyntax(command, helpDetails) {
   const lower = command.name.toLowerCase();
+  if (lower === 'ml migrate') return 'ml migrate -db <DATABASE>';
+  if (lower === 'ml migrate -db <database>') return 'ml migrate -db <DATABASE>';
   if (lower === 'ml serve') return 'ml serve | ml serve --projectname';
   if (command.syntax) return command.syntax;
   const keyMap = new Map([
@@ -224,6 +229,7 @@ function inferSyntax(command, helpDetails) {
 function inferParams(command) {
   if (Array.isArray(command.params)) return command.params;
   const lower = command.name.toLowerCase();
+  if (lower === 'ml migrate' || lower === 'ml migrate -db <database>') return ['-db <DATABASE>'];
   if (lower === 'ml serve') return ['--projectname (optional)'];
   if (lower === 'ml create --a') return ['interactive prompts: id, first_name, last_name, role'];
   if (lower === 'ml create --config') return ['interactive prompts: host, port, user, password, mysqldumpPath, backupPath'];
@@ -237,6 +243,7 @@ function inferParams(command) {
 function inferExpectedResult(command) {
   if (command.expectedResult) return command.expectedResult;
   const lower = command.name.toLowerCase();
+  if (lower === 'ml migrate' || lower === 'ml migrate -db <database>') return 'Copies userdb table structures and data to target DB, rewrites project DB references, and writes migration-log.md.';
   if (lower === 'ml test userdb') return 'Shows DB connection status and schema check result.';
   if (lower === 'ml add userdb') return 'Creates/imports required userdb tables and structures.';
   if (lower === 'ml update') return 'Downloads latest CLI runtime and refreshes installed tools.';
@@ -616,6 +623,15 @@ function buildTutorials(commands) {
       {
         title: 'Fixing database connection issues',
         steps: ['ml test userdb', 'ml add userdb', 'ml test userdb'],
+      },
+      {
+        title: 'Migrating to a decentralized database',
+        steps: [
+          'ml nav --<project_name>',
+          'ml migrate -db <DATABASE>',
+          'Confirm migration prompt with Y',
+          'Review migration-log.md for copied rows and rewritten files',
+        ],
       },
       {
         title: 'Starting development session',

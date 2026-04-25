@@ -99,7 +99,7 @@ echo   serve --projectname -o      Open selected project via ngrok share link
 echo   serve projectname -o        Open selected project via ngrok share link
 echo   serve projectname --online  Open selected project via ngrok share link
 echo   serve -stop        Stop active ngrok online tunnel
-echo   migrate -db ^<database_name^>   Migrate userdb structures to target DB
+echo   migrate -db ^<DATABASE^>   Migrate userdb tables to target DB
 echo   wb                 Open MySQL Workbench (ml wb)
 echo   wb --export        Run Workbench export helper (ml wb --export)
 echo   doc                Open online documentation (GitHub Pages)
@@ -131,7 +131,7 @@ echo   ml serve --projectname -o
 echo   ml serve projectname -o
 echo   ml serve projectname --online
 echo   ml serve -stop
-echo   ml migrate -db ^<database_name^>
+echo   ml migrate -db ^<DATABASE^>
 echo   ml --h nav
 echo   ml --h add userdb
 echo   ml --h rev
@@ -400,11 +400,11 @@ exit /b 0
 :help_migrate
 echo.
 echo HELP: Migrate userdb structures
-echo Usage: ml migrate -db ^<databasename^>
-echo Description: Migrates table structures from userdb to a target database.
-echo   Includes users and userlogs structure and, when detected, converted
-echo   PBAC/RBAC table structures. No row data is copied.
-echo   Also rewrites project references from userdb to the target database.
+echo Usage: ml migrate -db ^<DATABASE^>
+echo Description: Migrates table structures and data from userdb to a target database.
+echo   Includes users and userlogs and, when detected, converted
+echo   PBAC/RBAC tables.
+echo   Also rewrites project references and updates .env for the target database.
 exit /b 0
 
 :help_reveal
