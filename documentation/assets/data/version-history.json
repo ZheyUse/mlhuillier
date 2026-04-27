@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-04-25T02:31:29.289Z",
+  "generatedAt": "2026-04-25T02:37:13.466Z",
   "latestVersion": "1.1.12",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 215
+    "commitCount": 216
   },
   "releases": [
     {
       "version": "1.1.12",
       "isLatest": true,
-      "commitCount": 17,
+      "commitCount": 18,
       "dateRange": {
         "from": "2026-04-22",
         "to": "2026-04-25"
       },
       "stats": {
         "release": 1,
-        "feature": 11,
+        "feature": 12,
         "fix": 5,
         "docs": 0,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "fix(migration): enhance resolveMigrationSql function to support multiple root directories; improve file resolution logic",
         "fix(user-migrate): add skipRelativePrefixes to rewriteDbReferences function; improve path handling",
         "fix(user-migrate): remove unnecessary skip prefixes in rewriteDbReferences function; streamline path handling",
         "docs(scenarios): add built-in scenario for decentralized DB migration; update documentation and version history",
         "fix(commands): update migrate command syntax and descriptions; enhance tutorial details for database workflows",
         "fix(commands): update migrate command syntax and descriptions; enhance help details and tutorials",
         "fix(version): update version to 1.1.12 and increment commit counts; add new migrate command and enhance command documentation",
-        "fix(version): update generatedAt timestamp and increment commit counts in version history",
-        "fix(commands): update command descriptions and syntax; add new commands for project navigation and serving"
+        "fix(version): update generatedAt timestamp and increment commit counts in version history"
       ],
       "commits": [
+        {
+          "hash": "8c502f890854fcaf61b06a57fac266b98ae70cbd",
+          "shortHash": "8c502f8",
+          "date": "2026-04-25",
+          "title": "fix(migration): enhance resolveMigrationSql function to support multiple root directories; improve file resolution logic",
+          "type": "feature"
+        },
         {
           "hash": "73dbb1d2e6f6cf358294d54c39ff048386ef75fe",
           "shortHash": "73dbb1d",

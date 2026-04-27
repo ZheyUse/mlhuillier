@@ -105,6 +105,14 @@ if ($isDirectMode) {
         if (isAllSelector($tables)) {
             continue;
         }
+        $allTables = listTables($mysqli, $db);
+        [$ok, $tables, $error] = resolveNumberedSelections($tables, $allTables);
+        if (!$ok) {
+            fwrite(STDOUT, "{$error} cannot be found, please select again\n");
+            exit(2);
+        }
+        $tableSelections[$i] = $tables;
+
         $missing = firstMissingTable($mysqli, $db, $tables);
         if ($missing !== null) {
             fwrite(STDOUT, "{$missing} cannot be found, please select again\n");
@@ -206,7 +214,7 @@ function promptUntilValidDatabases(mysqli $mysqli): array
         fwrite(STDOUT, "all\n");
         fwrite(STDOUT, "*\n\n");
 
-        $input = prompt("Select database(s): ");
+        $input = prompt("Select database(s) by name, number, or range: ");
         $tokens = splitCsv($input);
         if (count($tokens) === 0) {
             fwrite(STDOUT, "Please select at least one database\n");
@@ -221,13 +229,19 @@ function promptUntilValidDatabases(mysqli $mysqli): array
             return $allDatabases;
         }
 
-        $missing = firstMissingFromSet($tokens, $allDatabases);
+        [$ok, $selected, $error] = resolveNumberedSelections($tokens, $allDatabases);
+        if (!$ok) {
+            fwrite(STDOUT, "{$error} cannot be found, please try again\n");
+            continue;
+        }
+
+        $missing = firstMissingFromSet($selected, $allDatabases);
         if ($missing !== null) {
             fwrite(STDOUT, "{$missing} cannot be found, please try again\n");
             continue;
         }
 
-        return dedupePreserveOrder($tokens);
+        return dedupePreserveOrder($selected);
     }
 }
 
@@ -245,7 +259,7 @@ function promptUntilValidTables(mysqli $mysqli, string $database): array
     fwrite(STDOUT, "*\n\n");
 
     while (true) {
-        $input = prompt("Tables (comma-separated): ");
+        $input = prompt("Tables (names, numbers, or ranges): ");
         $tables = splitCsv($input);
         if (count($tables) === 0) {
             fwrite(STDOUT, "Please select at least one table\n");
@@ -254,9 +268,15 @@ function promptUntilValidTables(mysqli $mysqli, string $database): array
         if (count($tables) === 1 && isUniversalToken($tables[0])) {
             return ['*'];
         }
-        $missing = firstMissingTable($mysqli, $database, $tables);
+        [$ok, $selected, $error] = resolveNumberedSelections($tables, $allTables);
+        if (!$ok) {
+            fwrite(STDOUT, "{$error} cannot be found, please select again\n");
+            continue;
+        }
+
+        $missing = firstMissingTable($mysqli, $database, $selected);
         if ($missing === null) {
-            return dedupePreserveOrder($tables);
+            return dedupePreserveOrder($selected);
         }
         fwrite(STDOUT, "{$missing} cannot be found, please select again\n");
     }
@@ -410,6 +430,10 @@ function normalizeSelections(array $databases, array $tableArgs, array $allDatab
     if (count($databases) === 1 && isUniversalToken($databases[0])) {
         $databases = $allDatabases;
     } else {
+        [$ok, $databases, $error] = resolveNumberedSelections($databases, $allDatabases);
+        if (!$ok) {
+            return [false, [], [], "{$error} cannot be found, please try again"];
+        }
         $databases = dedupePreserveOrder($databases);
     }
 
@@ -457,6 +481,44 @@ function splitCsv(string $value): array
         array_map('trim', preg_split('/[\s,]+/', $value) ?: []),
         'strlen'
     ));
+}
+
+function resolveNumberedSelections(array $tokens, array $available): array
+{
+    $selected = [];
+
+    foreach ($tokens as $token) {
+        $token = trim((string) $token);
+        if ($token === '') {
+            continue;
+        }
+
+        if (preg_match('/^\d+$/', $token) === 1) {
+            $index = (int) $token;
+            if ($index < 1 || $index > count($available)) {
+                return [false, [], $token];
+            }
+            $selected[] = (string) $available[$index - 1];
+            continue;
+        }
+
+        if (preg_match('/^(\d+)-(\d+)$/', $token, $m) === 1) {
+            $start = (int) $m[1];
+            $end = (int) $m[2];
+            if ($start < 1 || $end < 1 || $start > $end || $end > count($available)) {
+                return [false, [], $token];
+            }
+
+            for ($i = $start; $i <= $end; $i++) {
+                $selected[] = (string) $available[$i - 1];
+            }
+            continue;
+        }
+
+        $selected[] = $token;
+    }
+
+    return [true, dedupePreserveOrder($selected), ''];
 }
 
 function looksLikeExpandedWildcard(string $value): bool
@@ -769,10 +831,11 @@ function showWorkbenchHelp(): void
     fwrite(STDOUT, "\n");
     fwrite(STDOUT, "Direct export example:\n");
     fwrite(STDOUT, "  ml wb --export -db userdb,gledb -tb * -tb users -m 6 -fn backup1\n");
+    fwrite(STDOUT, "  ml wb --export -db 1 -tb 1-2,3,6-9 -m 6 -fn backup1\n");
     fwrite(STDOUT, "\n");
     fwrite(STDOUT, "Notes:\n");
-    fwrite(STDOUT, "  -db    Comma-separated list of databases (or 'all' / '*')\n");
-    fwrite(STDOUT, "  -tb    Repeatable; each -tb maps by position to a -db entry (or use 'all' / '*')\n");
+    fwrite(STDOUT, "  -db    Comma-separated database names, numbers, ranges, or 'all' / '*'\n");
+    fwrite(STDOUT, "  -tb    Repeatable; table names, numbers, ranges, or 'all' / '*'; maps by position to -db\n");
     fwrite(STDOUT, "  -m     Method 1..6 (see below)\n");
     fwrite(STDOUT, "  -fn    Optional export folder name (created under C:\\ML CLI\\Exports)\n");
     fwrite(STDOUT, "\n");
