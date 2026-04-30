@@ -343,18 +343,19 @@
     },
     {
       "name": "ml migrate global",
-      "description": "Run this CLI command to execute its linked workflow.",
+      "description": "Centralize a decentralized project back to userdb — rewrites all DB references in project files and updates .env to use userdb.",
       "syntax": "ml migrate global",
       "params": [],
       "example": "ml migrate global",
       "category": "database",
-      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "expectedResult": "Project: <project_name> userdb has been centralized.",
       "tutorial": {
-        "whenToUse": "When this workflow matches your current task.",
+        "whenToUse": "When a project was decentralized with `ml migrate -db <DATABASE>` and you want to revert it to use the shared userdb.",
         "scenario": "Typical database workflow using ml migrate global.",
         "steps": [
           "Run: ml migrate global",
-          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "Confirm the centralization warning prompt with Y",
+          "Review output and confirm: Project: <project_name> userdb has been centralized.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
       }

@@ -481,10 +481,7 @@ if ($targetDb === '__global__') {
         exit(2);
     }
 
-    $centralizeDb = $currentDb;
-
-    $confirmMsg = 'WARNING: This will copy userdb tables from ' . $centralizeDb . ' back to ' . $sourceDb
-        . ', rewrite project references to \'' . $sourceDb . '\', and update .env.' . PHP_EOL
+    $confirmMsg = 'WARNING: This will rewrite all references from \'' . $currentDb . '\' back to \'' . $sourceDb . '\' in your project files, and update .env.' . PHP_EOL
         . 'Project: ' . $projectName . PHP_EOL
         . 'Do you want to proceed? (Y/N): ';
 
@@ -493,69 +490,8 @@ if ($targetDb === '__global__') {
         exit(0);
     }
 
-    $dsnServer = sprintf('mysql:host=%s;port=%s;charset=%s', $host, $port, $charset);
-
-    try {
-        $pdo = new PDO($dsnServer, $user, $pass, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_TIMEOUT => 8,
-        ]);
-    } catch (Throwable $e) {
-        err('Failed to connect to MySQL server: ' . $e->getMessage());
-        exit(2);
-    }
-
-    $pdoCentralize = $pdo;
-    $pdoCentralize->exec('CREATE DATABASE IF NOT EXISTS `' . $sourceDb . '`');
-
-    $usersSql = resolveMigrationSql('userdb_users.sql');
-    $logsSql = resolveMigrationSql('userdb_userlogs.sql');
-    if ($usersSql === null || $logsSql === null) {
-        throw new RuntimeException('Migration SQL files were not found.');
-    }
-
-    createTableFromSqlFile($pdoCentralize, $sourceDb, $usersSql, 'users');
-    createTableFromSqlFile($pdoCentralize, $sourceDb, $logsSql, 'userlogs');
-
-    $convertedTables = detectConvertedTables($pdoCentralize, $projectRoot, $centralizeDb, (string) $projectName);
-
-    foreach ($convertedTables as $tableName) {
-        if (!tableExists($pdoCentralize, $centralizeDb, $tableName)) {
-            continue;
-        }
-        cloneTableStructure($pdoCentralize, $centralizeDb, $sourceDb, $tableName);
-    }
-
-    $tablesToCopy = ['users'];
-    foreach ($convertedTables as $tableName) {
-        $tablesToCopy[] = $tableName;
-    }
-    $tablesToCopy[] = 'userlogs';
-    $tablesToCopy = array_values(array_unique($tablesToCopy));
-
-    $copiedRows = [];
-    $pdoCentralize->beginTransaction();
-    $pdoCentralize->exec('SET FOREIGN_KEY_CHECKS=0');
-    try {
-        foreach ($tablesToCopy as $tableName) {
-            if (!tableExists($pdoCentralize, $centralizeDb, $tableName) || !tableExists($pdoCentralize, $sourceDb, $tableName)) {
-                continue;
-            }
-            $copiedRows[$tableName] = copyTableData($pdoCentralize, $centralizeDb, $sourceDb, $tableName);
-        }
-        $pdoCentralize->exec('SET FOREIGN_KEY_CHECKS=1');
-        $pdoCentralize->commit();
-    } catch (Throwable $copyError) {
-        if ($pdoCentralize->inTransaction()) {
-            $pdoCentralize->rollBack();
-        }
-        $pdoCentralize->exec('SET FOREIGN_KEY_CHECKS=1');
-        throw $copyError;
-    }
-
     // Rewrite project references back to userdb
-    $rewrittenFiles = rewriteDbReferences($projectRoot, $centralizeDb, $sourceDb);
+    $rewrittenFiles = rewriteDbReferences($projectRoot, $currentDb, $sourceDb);
 
     // Restore .env back to userdb
     $updatedLines = [];
@@ -585,10 +521,9 @@ if ($targetDb === '__global__') {
         sort($logFiles);
     }
 
-    writeMigrationLog($projectRoot, $centralizeDb, $sourceDb, $copiedRows, $logFiles, $envChanged);
+    writeMigrationLog($projectRoot, $currentDb, $sourceDb, [], $logFiles, $envChanged);
 
     out('Project: ' . $projectName . ' userdb has been centralized.');
-    out('Tables restored: ' . implode(', ', $tablesToCopy));
     exit(0);
 }
 // ── End global/centralize ───────────────────────────────────────────────────
