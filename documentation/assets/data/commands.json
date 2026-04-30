@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-04-27T03:49:13.338Z",
+  "generatedAt": "2026-04-30T03:54:23.583Z",
   "source": "ml.bat",
-  "cliVersion": "1.1.12",
+  "cliVersion": "1.1.13",
   "commands": [
     {
       "name": "ml --b",
@@ -337,6 +337,24 @@
         "steps": [
           "Run: ml migrate -db <DATABASE>",
           "Review output and confirm expected result: Copies userdb table structures and data to target DB, rewrites project DB references, and writes migration-log.md.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml migrate global",
+      "description": "Run this CLI command to execute its linked workflow.",
+      "syntax": "ml migrate global",
+      "params": [],
+      "example": "ml migrate global",
+      "category": "database",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical database workflow using ml migrate global.",
+        "steps": [
+          "Run: ml migrate global",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
       }
@@ -988,6 +1006,16 @@
         "steps": [
           "Run: ml migrate -db <DATABASE>",
           "Review output and confirm expected result: Copies userdb table structures and data to target DB, rewrites project DB references, and writes migration-log.md.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml migrate global",
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical database workflow using ml migrate global.",
+        "steps": [
+          "Run: ml migrate global",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
       },

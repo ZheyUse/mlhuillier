@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.1.12"
+set "ML_VERSION=1.1.13"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -52,6 +52,7 @@ if /I "%~1"=="nav" goto :cmd_nav
 if /I "%~1"=="clone" if /I "%~2"=="local" goto :cmd_clone_local
 if /I "%~1"=="serve" goto :cmd_serve
 if /I "%~1"=="migrate" goto :cmd_migrate
+if /I "%~1"=="migrate" if /I "%~2"=="global" goto :cmd_migrate
 
 if /I "%~1"=="rev" goto :cmd_reveal
 if /I "%~1"=="reveal" goto :cmd_reveal
@@ -100,6 +101,7 @@ echo   serve projectname -o        Open selected project via ngrok share link
 echo   serve projectname --online  Open selected project via ngrok share link
 echo   serve -stop        Stop active ngrok online tunnel
 echo   migrate -db ^<DATABASE^>   Migrate userdb tables to target DB
+  migrate global              Centralize / restore project back to userdb
 echo   wb                 Open MySQL Workbench (ml wb)
 echo   wb --export        Run Workbench export helper (ml wb --export)
 echo   doc                Open online documentation (GitHub Pages)
@@ -401,10 +403,13 @@ exit /b 0
 echo.
 echo HELP: Migrate userdb structures
 echo Usage: ml migrate -db ^<DATABASE^>
+echo        ml migrate global
 echo Description: Migrates table structures and data from userdb to a target database.
-echo   Includes users and userlogs and, when detected, converted
-echo   PBAC/RBAC tables.
 echo   Also rewrites project references and updates .env for the target database.
+echo   The global subcommand copies userdb tables from the project's current
+echo   decentralized database back to userdb and resets the project to use userdb.
+echo.
+echo   ml migrate global   Restore the project to use centralized userdb.
 exit /b 0
 
 :help_reveal

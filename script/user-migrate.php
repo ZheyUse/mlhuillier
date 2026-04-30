@@ -93,6 +93,10 @@ function parseTargetDb(array $argv): string
             continue;
         }
 
+        if (strtolower($arg) === 'global') {
+            return '__global__';
+        }
+
         if (strtolower($arg) === '-db') {
             $target = trim((string) ($args[$i + 1] ?? ''));
             break;
@@ -467,6 +471,127 @@ if (strtolower($targetDb) === strtolower($sourceDb)) {
     err('Target database must be different from source database.');
     exit(2);
 }
+
+// ── Handle: ml migrate global (centralize back to userdb) ──────────────────
+if ($targetDb === '__global__') {
+    $currentDb = $env['DB_DATABASE'] ?? '';
+
+    if ($currentDb === '' || strtolower($currentDb) === strtolower($sourceDb)) {
+        err('Project is already using the centralized userdb. Nothing to centralize.');
+        exit(2);
+    }
+
+    $centralizeDb = $currentDb;
+
+    $confirmMsg = 'WARNING: This will copy userdb tables from ' . $centralizeDb . ' back to ' . $sourceDb
+        . ', rewrite project references to \'' . $sourceDb . '\', and update .env.' . PHP_EOL
+        . 'Project: ' . $projectName . PHP_EOL
+        . 'Do you want to proceed? (Y/N): ';
+
+    if (!askConfirmation($confirmMsg)) {
+        out('Centralization cancelled.');
+        exit(0);
+    }
+
+    $dsnServer = sprintf('mysql:host=%s;port=%s;charset=%s', $host, $port, $charset);
+
+    try {
+        $pdo = new PDO($dsnServer, $user, $pass, [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_TIMEOUT => 8,
+        ]);
+    } catch (Throwable $e) {
+        err('Failed to connect to MySQL server: ' . $e->getMessage());
+        exit(2);
+    }
+
+    $pdoCentralize = $pdo;
+    $pdoCentralize->exec('CREATE DATABASE IF NOT EXISTS `' . $sourceDb . '`');
+
+    $usersSql = resolveMigrationSql('userdb_users.sql');
+    $logsSql = resolveMigrationSql('userdb_userlogs.sql');
+    if ($usersSql === null || $logsSql === null) {
+        throw new RuntimeException('Migration SQL files were not found.');
+    }
+
+    createTableFromSqlFile($pdoCentralize, $sourceDb, $usersSql, 'users');
+    createTableFromSqlFile($pdoCentralize, $sourceDb, $logsSql, 'userlogs');
+
+    $convertedTables = detectConvertedTables($pdoCentralize, $projectRoot, $centralizeDb, (string) $projectName);
+
+    foreach ($convertedTables as $tableName) {
+        if (!tableExists($pdoCentralize, $centralizeDb, $tableName)) {
+            continue;
+        }
+        cloneTableStructure($pdoCentralize, $centralizeDb, $sourceDb, $tableName);
+    }
+
+    $tablesToCopy = ['users'];
+    foreach ($convertedTables as $tableName) {
+        $tablesToCopy[] = $tableName;
+    }
+    $tablesToCopy[] = 'userlogs';
+    $tablesToCopy = array_values(array_unique($tablesToCopy));
+
+    $copiedRows = [];
+    $pdoCentralize->beginTransaction();
+    $pdoCentralize->exec('SET FOREIGN_KEY_CHECKS=0');
+    try {
+        foreach ($tablesToCopy as $tableName) {
+            if (!tableExists($pdoCentralize, $centralizeDb, $tableName) || !tableExists($pdoCentralize, $sourceDb, $tableName)) {
+                continue;
+            }
+            $copiedRows[$tableName] = copyTableData($pdoCentralize, $centralizeDb, $sourceDb, $tableName);
+        }
+        $pdoCentralize->exec('SET FOREIGN_KEY_CHECKS=1');
+        $pdoCentralize->commit();
+    } catch (Throwable $copyError) {
+        if ($pdoCentralize->inTransaction()) {
+            $pdoCentralize->rollBack();
+        }
+        $pdoCentralize->exec('SET FOREIGN_KEY_CHECKS=1');
+        throw $copyError;
+    }
+
+    // Rewrite project references back to userdb
+    $rewrittenFiles = rewriteDbReferences($projectRoot, $centralizeDb, $sourceDb);
+
+    // Restore .env back to userdb
+    $updatedLines = [];
+    $rawEnv = is_file($projectRoot . DIRECTORY_SEPARATOR . '.env')
+        ? (string) file_get_contents($projectRoot . DIRECTORY_SEPARATOR . '.env')
+        : '';
+    $envChanged = false;
+
+    foreach (preg_split('/\r\n|\n|\r/', $rawEnv) as $line) {
+        $trimmed = trim((string) $line);
+        if (preg_match('/^DB_DATABASE\s*=/i', $trimmed)) {
+            $updatedLines[] = 'DB_DATABASE=' . $sourceDb;
+            $envChanged = true;
+        } else {
+            $updatedLines[] = $line;
+        }
+    }
+
+    if ($envChanged && file_put_contents($projectRoot . DIRECTORY_SEPARATOR . '.env', implode(PHP_EOL, $updatedLines) . PHP_EOL) === false) {
+        err('Failed to update .env file.');
+        exit(3);
+    }
+
+    $logFiles = $rewrittenFiles;
+    if ($envChanged) {
+        $logFiles[] = '.env';
+        sort($logFiles);
+    }
+
+    writeMigrationLog($projectRoot, $centralizeDb, $sourceDb, $copiedRows, $logFiles, $envChanged);
+
+    out('Project: ' . $projectName . ' userdb has been centralized.');
+    out('Tables restored: ' . implode(', ', $tablesToCopy));
+    exit(0);
+}
+// ── End global/centralize ───────────────────────────────────────────────────
 
 $dsnServer = sprintf('mysql:host=%s;port=%s;charset=%s', $host, $port, $charset);
 
