@@ -1,24 +1,24 @@
 {
-  "generatedAt": "2026-04-30T09:13:35.823Z",
-  "latestVersion": "1.1.13",
+  "generatedAt": "2026-04-30T10:51:30.981Z",
+  "latestVersion": "1.1.14",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 226
+    "commitCount": 227
   },
   "releases": [
     {
-      "version": "1.1.13",
+      "version": "1.1.14",
       "isLatest": true,
-      "commitCount": 16,
+      "commitCount": 9,
       "dateRange": {
-        "from": "2026-04-25",
+        "from": "2026-04-30",
         "to": "2026-04-30"
       },
       "stats": {
         "release": 1,
-        "feature": 11,
-        "fix": 4,
+        "feature": 5,
+        "fix": 3,
         "docs": 0,
         "refactor": 0,
         "performance": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "fix(version): update version to 1.1.14 Added ml install ai command",
         "feat(icons): add validation and fallback for Material Icons in sidebar menu",
         "feat(nim): add diagnostic scripts for NVIDIA NIM API connectivity and performance testing",
         "fix(sidebar): enhance JSON response handling and validation in NVIDIA NIM AI integration",
         "feat(sidebar): integrate NVIDIA NIM AI for dynamic menu and submenu metadata generation",
         "feat(menu): add command to create sidebar menu and submenus with scaffolding",
         "fix(commands): update migrate command description and tutorial details for centralized database workflow fix(version): update generatedAt timestamp and increment commit count in version history",
-        "fix(version): update generatedAt timestamp and increment commit count in version history",
-        "fix(version): update generatedAt timestamp and latest version in version history; increment commit count"
+        "fix(version): update generatedAt timestamp and increment commit count in version history"
       ],
       "commits": [
+        {
+          "hash": "dd6b1780a8e70cfff66b4dfc2ca9907aca1891e3",
+          "shortHash": "dd6b178",
+          "date": "2026-04-30",
+          "title": "fix(version): update version to 1.1.14 Added ml install ai command",
+          "type": "release"
+        },
         {
           "hash": "f86f31372eb93573336bb90f27ce06e77a46c40c",
           "shortHash": "f86f313",
@@ -93,7 +100,40 @@
           "date": "2026-04-30",
           "title": "fix(version): update generatedAt timestamp and latest version in version history; increment commit count",
           "type": "fix"
-        },
+        }
+      ]
+    },
+    {
+      "version": "1.1.13",
+      "isLatest": false,
+      "commitCount": 8,
+      "dateRange": {
+        "from": "2026-04-25",
+        "to": "2026-04-30"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 6,
+        "fix": 1,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "fix(version): update version to 1.1.13; enhance commands and documentation for centralized database migration",
+        "fix(workbench): enhance table and database selection logic; add support for numbered selections and improve prompts",
+        "fix(migration): enhance resolveMigrationSql function to support multiple root directories; improve file resolution logic",
+        "fix(user-migrate): add skipRelativePrefixes to rewriteDbReferences function; improve path handling",
+        "fix(user-migrate): remove unnecessary skip prefixes in rewriteDbReferences function; streamline path handling",
+        "docs(scenarios): add built-in scenario for decentralized DB migration; update documentation and version history",
+        "fix(commands): update migrate command syntax and descriptions; enhance tutorial details for database workflows",
+        "fix(commands): update migrate command syntax and descriptions; enhance help details and tutorials"
+      ],
+      "commits": [
         {
           "hash": "5588d69ea1537f7d54d589aff942032055d3b28f",
           "shortHash": "5588d69",
