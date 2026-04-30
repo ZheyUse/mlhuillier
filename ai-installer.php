@@ -425,5 +425,6 @@ echo 'CLI: Settings.json has been configured ...ok' . PHP_EOL;
 
 echo PHP_EOL . 'CLI: All set! Run the following:' . PHP_EOL;
 echo '  ml --ai          Start uvicorn + Claude Code' . PHP_EOL;
+echo '  ml --ai key      Update NVIDIA_NIM_API_KEY' . PHP_EOL;
 echo PHP_EOL;
 exit(0);

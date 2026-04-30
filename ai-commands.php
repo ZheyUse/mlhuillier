@@ -1,6 +1,6 @@
 <?php
 // ai-commands.php
-// Usage: php ai-commands.php [claude|bg|stop|restart|cm]
+// Usage: php ai-commands.php [claude|bg|stop|restart|cm|key]
 // Works on Windows (PowerShell), macOS, and Linux (bash/sh).
 
 function isWindows(): bool
@@ -165,6 +165,28 @@ function changeModel(): void
     setEnvValue($envPath, $key, $fullModel);
 
     echo $label . ' is now using ' . modelDisplayName($fullModel) . PHP_EOL;
+}
+
+function changeApiKey(): void
+{
+    ensureInstalled();
+
+    $envPath = aiEnvPath();
+    if (!is_file($envPath)) {
+        fwrite(STDERR, 'Free Claude Code .env file was not found: ' . $envPath . PHP_EOL);
+        fwrite(STDERR, 'Run: ml install ai' . PHP_EOL);
+        exit(2);
+    }
+
+    $key = promptInput('Enter NVIDIA_NIM_API_KEY: ');
+    if ($key === '') {
+        fwrite(STDERR, 'NVIDIA_NIM_API_KEY cannot be empty.' . PHP_EOL);
+        exit(2);
+    }
+
+    setEnvValue($envPath, 'NVIDIA_NIM_API_KEY', $key);
+
+    echo 'NVIDIA_NIM_API_KEY has been set sucessfully' . PHP_EOL;
 }
 
 // ── Windows implementation ─────────────────────────────────────────────────────
@@ -529,8 +551,12 @@ switch ($subcommand) {
         changeModel();
         exit(0);
 
+    case 'key':
+        changeApiKey();
+        exit(0);
+
     default:
         fwrite(STDERR, 'Unknown ml --ai subcommand: ' . $subcommand . PHP_EOL);
-        fwrite(STDERR, 'Use: ml --ai [claude|bg|stop|restart|cm]' . PHP_EOL);
+        fwrite(STDERR, 'Use: ml --ai [claude|bg|stop|restart|cm|key]' . PHP_EOL);
         exit(2);
 }

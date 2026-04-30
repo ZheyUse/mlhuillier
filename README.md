@@ -269,6 +269,7 @@ ml serve -o       (share via ngrok tunnel)
 - `ml --ai stop` : stop all Free Claude Code processes
 - `ml --ai restart` : stop and restart both in the background
 - `ml --ai cm` : change Opus, Sonnet, Haiku, or default model in Free Claude Code `.env`
+- `ml --ai key` : update or rotate `NVIDIA_NIM_API_KEY` in Free Claude Code `.env`
 
 `ml install ai` follows the upstream Free Claude Code requirements:
 

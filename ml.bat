@@ -256,6 +256,7 @@ echo   ml --ai bg       Start both processes in the background
 echo   ml --ai stop     Stop Free Claude Code processes started by ml --ai
 echo   ml --ai restart  Stop then start both processes in the background
 echo   ml --ai cm       Change Opus, Sonnet, Haiku, or default model in .env
+echo   ml --ai key      Update NVIDIA_NIM_API_KEY in .env
 exit /b 0
 
 :help_wb

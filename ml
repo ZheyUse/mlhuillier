@@ -279,6 +279,7 @@ show_top_help() {
     echo "  --ai bg          Start both in background"
     echo "  --ai stop        Stop all processes"
     echo "  --ai cm          Change configured model"
+    echo "  --ai key         Update NVIDIA_NIM_API_KEY"
     echo ""
     echo "Docs: ml doc"
     echo ""
@@ -299,6 +300,7 @@ show_help_command() {
                     echo "  stop      Stop all processes"
                     echo "  restart   Stop then start both in background"
                     echo "  cm        Change Opus, Sonnet, Haiku, or default model"
+                    echo "  key       Update NVIDIA_NIM_API_KEY in .env"
                     ;;
         install)    if [[ "$sub" == "ai" ]]; then
                         echo "Usage: ml install ai"

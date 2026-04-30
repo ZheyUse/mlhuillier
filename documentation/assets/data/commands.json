@@ -22,6 +22,24 @@
       }
     },
     {
+      "name": "ml --ai key",
+      "description": "Update or rotate the NVIDIA NIM API key used by Free Claude Code.",
+      "syntax": "ml --ai key",
+      "params": [],
+      "example": "ml --ai key",
+      "category": "general",
+      "expectedResult": "Prompts for NVIDIA_NIM_API_KEY and writes the new value to the Free Claude Code .env file.",
+      "tutorial": {
+        "whenToUse": "When you need to update, change, or rotate the NVIDIA NIM API key.",
+        "scenario": "Rotate the Free Claude Code NVIDIA NIM API key.",
+        "steps": [
+          "Run: ml --ai key",
+          "Enter the new NVIDIA_NIM_API_KEY when prompted.",
+          "Confirm the CLI reports that NVIDIA_NIM_API_KEY has been set."
+        ]
+      }
+    },
+    {
       "name": "ml --b",
       "description": "Backup MySQL schemas using configured server credentials.",
       "syntax": "ml --b [schema]",
