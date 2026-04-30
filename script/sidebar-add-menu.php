@@ -114,10 +114,13 @@ function promptAndSaveApiKey(string $configPath): string
     out('Get your API Key on https://build.nvidia.com/');
     $apiKey = ask('API KEY:');
 
-    file_put_contents($configPath, json_encode(
-        ['nvidia_api_key' => $apiKey],
-        JSON_PRETTY_PRINT
-    ));
+    // Read existing config and merge, so all other fields are preserved
+    $existing = is_file($configPath)
+        ? json_decode((string) file_get_contents($configPath), true) ?? []
+        : [];
+    $existing['nvidia_api_key'] = $apiKey;
+
+    file_put_contents($configPath, json_encode($existing, JSON_PRETTY_PRINT));
 
     return $apiKey;
 }
@@ -208,14 +211,37 @@ PROMPT;
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
         'Content-Type: application/json',
         'Authorization: Bearer ' . $apiKey,
+        'Host: integrate.api.nvidia.com',
+        'User-Agent: MLHuillier-CLI/1.0',
     ]);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+    curl_setopt($ch, CURLOPT_TCP_NODELAY, true);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 20);
 
-    $response = curl_exec($ch);
+    // Retry up to 2 times on timeout (NIM free tier can be slow to cold-start)
+    $response = null;
+    $lastCurlErr = 0;
+    for ($attempt = 1; $attempt <= 3; $attempt++) {
+        curl_setopt($ch, CURLOPT_TIMEOUT, $attempt === 1 ? 120 : 60);
+        $response = curl_exec($ch);
+        $lastCurlErr = curl_errno($ch);
 
-    if (curl_errno($ch)) {
+        if ($lastCurlErr === 0) {
+            break; // success
+        }
+        if ($lastCurlErr !== 28) {
+            break; // real error, no point retrying
+        }
+        if ($attempt < 3) {
+            $sleepMs = $attempt * 3000;
+            usleep($sleepMs * 1000); // 3s, then 6s backoff
+        }
+    }
+
+    if ($lastCurlErr !== 0) {
         curl_close($ch);
-        return ['error' => 'API_CONNECTION_FAILED'];
+        return ['error' => 'API_CONNECTION_FAILED', 'curl_err' => $lastCurlErr];
     }
 
     $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php -v)",
+      "Bash(curl --version)",
+      "Bash(php scripts/test-nim-connection.php)",
+      "Bash(php scripts/test-nim-deep.php)"
+    ]
+  }
+}
