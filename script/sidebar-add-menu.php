@@ -147,27 +147,46 @@ function callNvidiaNim(string $apiKey, string $menuName, array $submenuNames): a
 Menu: {$menuName}
 Submenus: {$submenuList}
 
-Return this exact JSON structure (nothing else):
+Return ONLY this JSON. No extra text. Fill every field based on the menu/submenu names above.
+
 {
   "menu": {
-    "name": "Properly formatted menu name in Title Case",
-    "icon": "material_icons_name"
+    "name": "Title Case menu name",
+    "icon": "snake_case_material_icon"
   },
   "submenus": [
     {
-      "name": "Properly formatted submenu name in Title Case",
-      "icon": "material_icons_name",
+      "name": "Title Case submenu name",
+      "icon": "snake_case_material_icon",
       "title": "Short page title",
-      "subtitle": "One-line description of what this page does"
+      "subtitle": "One sentence describing what this page does"
     }
   ]
 }
 
-Rules:
-- Menu and submenu names must be in Title Case
-- Icons must be valid Material Icons names (snake_case, e.g. manage_accounts, build, inventory_2)
-- One submenu entry per submenu, in the same order as given
-- subtitle must be a single descriptive sentence
+Example — if input was Menu: Maintenance, Submenus: Account Management, Access Level:
+{
+  "menu": {
+    "name": "Maintenance",
+    "icon": "build"
+  },
+  "submenus": [
+    {
+      "name": "Account Management",
+      "icon": "manage_accounts",
+      "title": "Account Management",
+      "subtitle": "Manage user accounts and statuses"
+    },
+    {
+      "name": "Access Level",
+      "icon": "security",
+      "title": "Access Level",
+      "subtitle": "Configure role-based access and permissions"
+    }
+  ]
+}
+
+Now do the same for: Menu: {$menuName}, Submenus: {$submenuList}
 PROMPT;
 
     $payload = [
@@ -214,15 +233,23 @@ PROMPT;
 
     $raw = trim((string) $decoded['choices'][0]['message']['content']);
 
-    // Strip any accidental text before the opening brace
-    $raw = (string) preg_replace('/^[^{]*/s', '', $raw);
-    // Strip any accidental text after the closing brace
-    $raw = (string) preg_replace('/}[^}]*$/s', '}', $raw);
+    // Strip markdown code fences if AI wrapped the JSON in ```json ... ```
+    $raw = (string) preg_replace('/^```(?:json)?\s*/i', '', $raw);
+    $raw = (string) preg_replace('/\s*```\s*$/i', '', $raw);
+    $raw = trim($raw);
+
+    // Extract the outermost JSON object (from first { to last })
+    $start = strpos($raw, '{');
+    $end   = strrpos($raw, '}');
+    if ($start === false || $end === false || $end <= $start) {
+        return ['error' => 'INVALID_JSON_FROM_AI', 'raw' => $raw];
+    }
+    $raw = substr($raw, $start, $end - $start + 1);
 
     $aiData = json_decode($raw, true);
 
     if (json_last_error() !== JSON_ERROR_NONE) {
-        return ['error' => 'INVALID_JSON_FROM_AI'];
+        return ['error' => 'INVALID_JSON_FROM_AI', 'raw' => $raw];
     }
 
     // Validate required fields
@@ -230,7 +257,7 @@ PROMPT;
         || !is_array($aiData['submenus'])
         || count($aiData['submenus']) === 0
     ) {
-        return ['error' => 'MISSING_FIELDS'];
+        return ['error' => 'MISSING_FIELDS', 'raw' => $raw];
     }
 
     return $aiData;
@@ -494,8 +521,13 @@ if (isset($aiData['error'])) {
         err('Error: API Key is INVALID');
         exit(4);
     }
-    // Any other error — warn and fall back to defaults so the command still works
-    out('Warning: AI unavailable (' . $aiData['error'] . ') — using default metadata.');
+    // Show exactly what went wrong so it's not silent
+    out('Warning: AI unavailable — error: ' . $aiData['error']);
+    if (!empty($aiData['raw'])) {
+        out('AI raw response was:');
+        out('  ' . $aiData['raw']);
+    }
+    out('Falling back to default metadata.');
     $aiData = buildFallbackMetadata($menuTitle, $submenuNames);
 }
 
