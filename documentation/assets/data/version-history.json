@@ -1,24 +1,24 @@
 {
-  "generatedAt": "2026-04-27T03:49:34.648Z",
-  "latestVersion": "1.1.12",
+  "generatedAt": "2026-04-30T03:54:40.128Z",
+  "latestVersion": "1.1.13",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 217
+    "commitCount": 218
   },
   "releases": [
     {
-      "version": "1.1.12",
+      "version": "1.1.13",
       "isLatest": true,
-      "commitCount": 19,
+      "commitCount": 8,
       "dateRange": {
-        "from": "2026-04-22",
-        "to": "2026-04-27"
+        "from": "2026-04-25",
+        "to": "2026-04-30"
       },
       "stats": {
         "release": 1,
-        "feature": 13,
-        "fix": 5,
+        "feature": 6,
+        "fix": 1,
         "docs": 0,
         "refactor": 0,
         "performance": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "fix(version): update version to 1.1.13; enhance commands and documentation for centralized database migration",
         "fix(workbench): enhance table and database selection logic; add support for numbered selections and improve prompts",
         "fix(migration): enhance resolveMigrationSql function to support multiple root directories; improve file resolution logic",
         "fix(user-migrate): add skipRelativePrefixes to rewriteDbReferences function; improve path handling",
         "fix(user-migrate): remove unnecessary skip prefixes in rewriteDbReferences function; streamline path handling",
         "docs(scenarios): add built-in scenario for decentralized DB migration; update documentation and version history",
         "fix(commands): update migrate command syntax and descriptions; enhance tutorial details for database workflows",
-        "fix(commands): update migrate command syntax and descriptions; enhance help details and tutorials",
-        "fix(version): update version to 1.1.12 and increment commit counts; add new migrate command and enhance command documentation"
+        "fix(commands): update migrate command syntax and descriptions; enhance help details and tutorials"
       ],
       "commits": [
+        {
+          "hash": "5588d69ea1537f7d54d589aff942032055d3b28f",
+          "shortHash": "5588d69",
+          "date": "2026-04-30",
+          "title": "fix(version): update version to 1.1.13; enhance commands and documentation for centralized database migration",
+          "type": "release"
+        },
         {
           "hash": "be7efdb16f1298db1f37a16f879f81db086fdb35",
           "shortHash": "be7efdb",
@@ -86,7 +93,40 @@
           "date": "2026-04-25",
           "title": "fix(commands): update migrate command syntax and descriptions; enhance help details and tutorials",
           "type": "feature"
-        },
+        }
+      ]
+    },
+    {
+      "version": "1.1.12",
+      "isLatest": false,
+      "commitCount": 12,
+      "dateRange": {
+        "from": "2026-04-22",
+        "to": "2026-04-25"
+      },
+      "stats": {
+        "release": 1,
+        "feature": 7,
+        "fix": 4,
+        "docs": 0,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "fix(version): update version to 1.1.12 and increment commit counts; add new migrate command and enhance command documentation",
+        "fix(version): update generatedAt timestamp and increment commit counts in version history",
+        "fix(commands): update command descriptions and syntax; add new commands for project navigation and serving",
+        "feat(commands): add new ngrok commands for serving projects and stopping tunnels",
+        "fix(version): update generatedAt timestamp and increment commit counts in version history",
+        "fix(version): update generatedAt timestamp and increment commit counts; add stop command for ngrok tunnel and enhance command documentation",
+        "feat(ml-serve): add ngrok auth token management functions and configuration handling",
+        "fix(ngrok): enhance ngrok configuration handling and add validation checks"
+      ],
+      "commits": [
         {
           "hash": "731e5a9c677f404e28a0e305329d120dfc6302eb",
           "shortHash": "731e5a9",
