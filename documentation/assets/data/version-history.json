@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-04-30T08:52:58.032Z",
+  "generatedAt": "2026-04-30T09:13:35.823Z",
   "latestVersion": "1.1.13",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 225
+    "commitCount": 226
   },
   "releases": [
     {
       "version": "1.1.13",
       "isLatest": true,
-      "commitCount": 15,
+      "commitCount": 16,
       "dateRange": {
         "from": "2026-04-25",
         "to": "2026-04-30"
       },
       "stats": {
         "release": 1,
-        "feature": 10,
+        "feature": 11,
         "fix": 4,
         "docs": 0,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "feat(icons): add validation and fallback for Material Icons in sidebar menu",
         "feat(nim): add diagnostic scripts for NVIDIA NIM API connectivity and performance testing",
         "fix(sidebar): enhance JSON response handling and validation in NVIDIA NIM AI integration",
         "feat(sidebar): integrate NVIDIA NIM AI for dynamic menu and submenu metadata generation",
         "feat(menu): add command to create sidebar menu and submenus with scaffolding",
         "fix(commands): update migrate command description and tutorial details for centralized database workflow fix(version): update generatedAt timestamp and increment commit count in version history",
         "fix(version): update generatedAt timestamp and increment commit count in version history",
-        "fix(version): update generatedAt timestamp and latest version in version history; increment commit count",
-        "fix(version): update version to 1.1.13; enhance commands and documentation for centralized database migration"
+        "fix(version): update generatedAt timestamp and latest version in version history; increment commit count"
       ],
       "commits": [
+        {
+          "hash": "f86f31372eb93573336bb90f27ce06e77a46c40c",
+          "shortHash": "f86f313",
+          "date": "2026-04-30",
+          "title": "feat(icons): add validation and fallback for Material Icons in sidebar menu",
+          "type": "feature"
+        },
         {
           "hash": "b0a22aa0bf7571efcb9b60d2cf723846aacadfc7",
           "shortHash": "b0a22aa",

@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.1.13"
+set "ML_VERSION=1.1.14"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -23,6 +23,7 @@ if /I "%~1"=="--d" goto :cmd_download_installer
 if /I "%~1"=="doc" goto :cmd_docs
 if /I "%~1"=="docs" goto :cmd_docs
 if /I "%~1"=="--b" goto :cmd_backup
+if /I "%~1"=="--ai" goto :cmd_ai
 
 echo.
 echo ==============================
@@ -36,6 +37,7 @@ if /I "%~1"=="test" if /I "%~2"=="userdb" goto :cmd_test_userdb
 if /I "%~1"=="test" goto :cmd_test_db
 if /I "%~1"=="add" if /I "%~2"=="userdb" goto :cmd_add_userdb
 if /I "%~1"=="add" if /I "%~2"=="menu" goto :cmd_add_menu
+if /I "%~1"=="install" if /I "%~2"=="ai" goto :cmd_install_ai
 if /I "%~1"=="create" if /I "%~2"=="--a" goto :cmd_create_account
 if /I "%~1"=="create" if /I "%~3"=="--a" goto :cmd_create_account
 if /I "%~1"=="create" if /I "%~2"=="--config" goto :cmd_create_config
@@ -85,6 +87,7 @@ echo   --v    Show version
 echo   --c    Check for newer version
 echo   --d    Download remote installer
 echo   --b    Backup schemas (use ml --b [schema])
+echo   --ai   Start or manage Free Claude Code (use ml --ai [subcommand])
 echo   --a    Account creation (use with `ml create --a`)
 echo   --export    Workbench export helper (use with `ml wb --export`)
 echo   --pbac      PBAC scaffold Converter (use with `ml create --pbac`)
@@ -95,6 +98,7 @@ echo Commands:
 echo   test ^<database^>     Run DB connection test for a specified database (e.g., userdb, gledb)
 echo   add userdb         Import userdb SQL (migration/userdb)
 echo   add menu           Add sidebar menu and submenu scaffold (ml add menu)
+echo   install ai         Install Free Claude Code stack
 echo   nav                Navigate or open a project (ml nav)
 echo   serve              Open project locally/online or stop online tunnel (ml serve)
 echo   serve -o           Open current project via ngrok share link
@@ -103,7 +107,7 @@ echo   serve projectname -o        Open selected project via ngrok share link
 echo   serve projectname --online  Open selected project via ngrok share link
 echo   serve -stop        Stop active ngrok online tunnel
 echo   migrate -db ^<DATABASE^>   Migrate userdb tables to target DB
-  migrate global              Centralize / restore project back to userdb
+echo   migrate global              Centralize / restore project back to userdb
 echo   wb                 Open MySQL Workbench (ml wb)
 echo   wb --export        Run Workbench export helper (ml wb --export)
 echo   doc                Open online documentation (GitHub Pages)
@@ -113,6 +117,7 @@ echo   create --pbac      Create PBAC table and apply PBAC scaffold
 echo   create --rbac      Create RBAC table in userdb
 echo   gen                Generate local PBAC access map (ml gen)
 echo   update             Update ML CLI from remote
+echo   --ai               Start Free Claude Code servers
 echo   --d                Download remote installer
 echo   --c                Check remote ML CLI version
 echo   rev / reveal       Reveal current project folder in File Explorer
@@ -138,6 +143,8 @@ echo   ml serve -stop
 echo   ml migrate -db ^<DATABASE^>
 echo   ml --h nav
 echo   ml --h add userdb
+echo   ml --h install ai
+echo   ml --h --ai
 echo   ml --h rev
 echo   ml --h reveal
 echo   ml --h gen
@@ -170,6 +177,8 @@ if /I "%CMD%"=="update" goto :help_update
 if /I "%CMD%"=="--d" goto :help_download_installer
 if /I "%CMD%"=="doc" goto :help_docs
 if /I "%CMD%"=="docs" goto :help_docs
+if /I "%CMD%"=="--ai" goto :help_ai
+if /I "%CMD%"=="install" if /I "%SUB%"=="ai" goto :help_install_ai
 if /I "%CMD%"=="wb" (
         if /I "%SUB%"=="--export" goto :help_wb_export
         goto :help_wb
@@ -224,6 +233,28 @@ echo   By default this opens the hosted docs at:
 echo   https://zheyuse.github.io/mlhuillier/documentation/
 echo   If you have installed the CLI locally the installer also places a
 echo   copy of the documentation under C:\ML CLI\Tools\documentation\
+exit /b 0
+
+:help_install_ai
+echo.
+echo HELP: Install Free Claude Code
+echo Usage: ml install ai
+echo Description: Downloads and runs the Free Claude Code installer helper.
+echo   Installs prerequisites, clones the stack to C:\free-claude-code\free-claude-code,
+echo   configures .env, installs Claude Code, and patches VS Code settings.
+exit /b 0
+
+:help_ai
+echo.
+echo HELP: Free Claude Code
+echo Usage: ml --ai [subcommand]
+echo.
+echo Subcommands:
+echo   ml --ai          Start uvicorn and Claude Code in visible terminals
+echo   ml --ai claude   Start uvicorn in the background and Claude Code visibly
+echo   ml --ai bg       Start both processes in the background
+echo   ml --ai stop     Stop Free Claude Code processes started by ml --ai
+echo   ml --ai restart  Stop then start both processes in the background
 exit /b 0
 
 :help_wb
@@ -1093,6 +1124,61 @@ if %ERRORLEVEL% neq 0 (
 )
 
 "%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" %*
+set "RC=%ERRORLEVEL%"
+call :maybe_show_update_notice
+del /f /q "!TMP_FILE!" >nul 2>&1
+exit /b %RC%
+
+:cmd_install_ai
+set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ai-installer.php"
+set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
+set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
+set "TMP_FILE=%TEMP%\ai-installer.php"
+call :strip_query "!RAW_URL!"
+rem URL hidden from output
+echo Executing AI installer...
+echo.
+
+where curl >nul 2>&1
+if %ERRORLEVEL%==0 (
+        curl -s -f -o "!TMP_FILE!" "!RAW_URL!"
+) else (
+        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!RAW_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
+)
+if %ERRORLEVEL% neq 0 (
+        echo Failed to fetch AI installer script
+        exit /b 2
+)
+
+"%PHP_EXE%" -d display_errors=0 "!TMP_FILE!"
+set "RC=%ERRORLEVEL%"
+call :maybe_show_update_notice
+del /f /q "!TMP_FILE!" >nul 2>&1
+exit /b %RC%
+
+:cmd_ai
+set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ai-commands.php"
+set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
+set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
+set "TMP_FILE=%TEMP%\ai-commands.php"
+set "ARG2=%~2"
+call :strip_query "!RAW_URL!"
+rem URL hidden from output
+echo Executing AI helper...
+echo.
+
+where curl >nul 2>&1
+if %ERRORLEVEL%==0 (
+        curl -s -f -o "!TMP_FILE!" "!RAW_URL!"
+) else (
+        powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!RAW_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
+)
+if %ERRORLEVEL% neq 0 (
+        echo Failed to fetch AI helper script
+        exit /b 2
+)
+
+"%PHP_EXE%" -d display_errors=0 "!TMP_FILE!" "!ARG2!"
 set "RC=%ERRORLEVEL%"
 call :maybe_show_update_notice
 del /f /q "!TMP_FILE!" >nul 2>&1

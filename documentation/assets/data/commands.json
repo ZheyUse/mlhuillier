@@ -1,8 +1,26 @@
 {
-  "generatedAt": "2026-04-30T05:30:26.525Z",
+  "generatedAt": "2026-04-30T10:50:41.071Z",
   "source": "ml.bat",
-  "cliVersion": "1.1.13",
+  "cliVersion": "1.1.14",
   "commands": [
+    {
+      "name": "ml --ai",
+      "description": "Start Free Claude Code servers",
+      "syntax": "ml --ai",
+      "params": [],
+      "example": "ml --ai",
+      "category": "general",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml --ai.",
+        "steps": [
+          "Run: ml --ai",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
     {
       "name": "ml --b",
       "description": "Backup MySQL schemas using configured server credentials.",
@@ -320,6 +338,24 @@
       }
     },
     {
+      "name": "ml install ai",
+      "description": "Install Free Claude Code stack",
+      "syntax": "ml install ai",
+      "params": [],
+      "example": "ml install ai",
+      "category": "general",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml install ai.",
+        "steps": [
+          "Run: ml install ai",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
       "name": "ml migrate",
       "description": "Run database decentralization helper (use -db <DATABASE>).",
       "syntax": "ml migrate -db <DATABASE>",
@@ -361,7 +397,7 @@
     },
     {
       "name": "ml migrate global",
-      "description": "Run this CLI command to execute its linked workflow.",
+      "description": "Centralize / restore project back to userdb",
       "syntax": "ml migrate global",
       "params": [],
       "example": "ml migrate global",
@@ -848,6 +884,16 @@
     ],
     "commandLevel": [
       {
+        "command": "ml --ai",
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml --ai.",
+        "steps": [
+          "Run: ml --ai",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
         "command": "ml --b",
         "whenToUse": "When you need on-demand backups for one schema or all schemas.",
         "scenario": "Typical database workflow using ml --b.",
@@ -1013,6 +1059,16 @@
         "scenario": "Typical general workflow using ml gen.",
         "steps": [
           "Run: ml gen",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml install ai",
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml install ai.",
+        "steps": [
+          "Run: ml install ai",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
