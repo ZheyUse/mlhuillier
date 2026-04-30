@@ -1,16 +1,16 @@
 {
-  "generatedAt": "2026-04-30T03:54:40.128Z",
+  "generatedAt": "2026-04-30T03:55:34.570Z",
   "latestVersion": "1.1.13",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 218
+    "commitCount": 219
   },
   "releases": [
     {
       "version": "1.1.13",
       "isLatest": true,
-      "commitCount": 8,
+      "commitCount": 9,
       "dateRange": {
         "from": "2026-04-25",
         "to": "2026-04-30"
@@ -18,7 +18,7 @@
       "stats": {
         "release": 1,
         "feature": 6,
-        "fix": 1,
+        "fix": 2,
         "docs": 0,
         "refactor": 0,
         "performance": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "fix(version): update generatedAt timestamp and latest version in version history; increment commit count",
         "fix(version): update version to 1.1.13; enhance commands and documentation for centralized database migration",
         "fix(workbench): enhance table and database selection logic; add support for numbered selections and improve prompts",
         "fix(migration): enhance resolveMigrationSql function to support multiple root directories; improve file resolution logic",
         "fix(user-migrate): add skipRelativePrefixes to rewriteDbReferences function; improve path handling",
         "fix(user-migrate): remove unnecessary skip prefixes in rewriteDbReferences function; streamline path handling",
         "docs(scenarios): add built-in scenario for decentralized DB migration; update documentation and version history",
-        "fix(commands): update migrate command syntax and descriptions; enhance tutorial details for database workflows",
-        "fix(commands): update migrate command syntax and descriptions; enhance help details and tutorials"
+        "fix(commands): update migrate command syntax and descriptions; enhance tutorial details for database workflows"
       ],
       "commits": [
+        {
+          "hash": "8daf3372f68d8f912f9e722cd0fbee0e4b74867e",
+          "shortHash": "8daf337",
+          "date": "2026-04-30",
+          "title": "fix(version): update generatedAt timestamp and latest version in version history; increment commit count",
+          "type": "fix"
+        },
         {
           "hash": "5588d69ea1537f7d54d589aff942032055d3b28f",
           "shortHash": "5588d69",
