@@ -1,22 +1,22 @@
 {
-  "generatedAt": "2026-04-30T10:51:30.981Z",
+  "generatedAt": "2026-04-30T10:51:40.527Z",
   "latestVersion": "1.1.14",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 227
+    "commitCount": 228
   },
   "releases": [
     {
       "version": "1.1.14",
       "isLatest": true,
-      "commitCount": 9,
+      "commitCount": 10,
       "dateRange": {
         "from": "2026-04-30",
         "to": "2026-04-30"
       },
       "stats": {
-        "release": 1,
+        "release": 2,
         "feature": 5,
         "fix": 3,
         "docs": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "feat(ai): add ai-commands.php for managing AI processes and scripts feat(installer): introduce ai-installer.php for setting up Free-Claude-Code environment fix(version): update version history to 1.1.14 and increment commit count",
         "fix(version): update version to 1.1.14 Added ml install ai command",
         "feat(icons): add validation and fallback for Material Icons in sidebar menu",
         "feat(nim): add diagnostic scripts for NVIDIA NIM API connectivity and performance testing",
         "fix(sidebar): enhance JSON response handling and validation in NVIDIA NIM AI integration",
         "feat(sidebar): integrate NVIDIA NIM AI for dynamic menu and submenu metadata generation",
         "feat(menu): add command to create sidebar menu and submenus with scaffolding",
-        "fix(commands): update migrate command description and tutorial details for centralized database workflow fix(version): update generatedAt timestamp and increment commit count in version history",
-        "fix(version): update generatedAt timestamp and increment commit count in version history"
+        "fix(commands): update migrate command description and tutorial details for centralized database workflow fix(version): update generatedAt timestamp and increment commit count in version history"
       ],
       "commits": [
+        {
+          "hash": "66591cc7d2aa11d8441e9ac99592efdd1142be3b",
+          "shortHash": "66591cc",
+          "date": "2026-04-30",
+          "title": "feat(ai): add ai-commands.php for managing AI processes and scripts feat(installer): introduce ai-installer.php for setting up Free-Claude-Code environment fix(version): update version history to 1.1.14 and increment commit count",
+          "type": "release"
+        },
         {
           "hash": "dd6b1780a8e70cfff66b4dfc2ca9907aca1891e3",
           "shortHash": "dd6b178",
