@@ -12,9 +12,40 @@ declare(strict_types=1);
 
 mysqli_report(MYSQLI_REPORT_OFF);
 
-if (strncasecmp(PHP_OS, 'WIN', 3) !== 0) {
-    fwrite(STDOUT, "This helper currently supports Windows only.\n");
-    exit(2);
+function isWindows(): bool
+{
+    return strncasecmp(PHP_OS, 'WIN', 3) === 0;
+}
+
+function isMac(): bool
+{
+    return strncasecmp(PHP_OS, 'DAR', 3) === 0;
+}
+
+function mlToolsDir(): string
+{
+    $override = getenv('ML_CLI_TOOLS');
+    if (is_string($override) && trim($override) !== '') {
+        return rtrim($override, "\\/");
+    }
+    if (isWindows()) {
+        return 'C:\\ML CLI\\Tools';
+    }
+    $home = getenv('HOME') ?: sys_get_temp_dir();
+    return $home . DIRECTORY_SEPARATOR . '.ml-cli';
+}
+
+function mlExportsDir(): string
+{
+    $override = getenv('ML_CLI_EXPORTS');
+    if (is_string($override) && trim($override) !== '') {
+        return rtrim($override, "\\/");
+    }
+    if (isWindows()) {
+        return 'C:\\ML CLI\\Exports';
+    }
+    $home = getenv('HOME') ?: sys_get_temp_dir();
+    return $home . DIRECTORY_SEPARATOR . 'ML CLI' . DIRECTORY_SEPARATOR . 'Exports';
 }
 
 $args = $argv;
@@ -66,7 +97,7 @@ if ($mysqli->connect_errno) {
     fwrite(STDOUT, "Database connection failed.\n");
     fwrite(STDOUT, "Host: {$connCfg['host']}:{$connCfg['port']} User: {$connCfg['user']}\n");
     fwrite(STDOUT, "MySQL error: {$mysqli->connect_error}\n");
-    fwrite(STDOUT, "Tip: configure credentials via ml create --config (writes C:\\ML CLI\\Tools\\mlcli-config.json)\n");
+    fwrite(STDOUT, "Tip: configure credentials via ml create --config (writes " . mlToolsDir() . DIRECTORY_SEPARATOR . "mlcli-config.json)\n");
     exit(2);
 }
 
@@ -137,13 +168,13 @@ if ($isDirectMode) {
 }
 
 $dateFolder = date('m-d-Y');
-$exportDir = 'C:\\ML CLI\\Exports\\' . $dateFolder;
+$exportDir = mlExportsDir() . DIRECTORY_SEPARATOR . $dateFolder;
 if (!is_dir($exportDir) && !@mkdir($exportDir, 0777, true) && !is_dir($exportDir)) {
     fwrite(STDOUT, "Failed to create export folder: {$exportDir}\n");
     exit(2);
 }
 
-$namedExportDir = $exportDir . '\\' . $fileName;
+$namedExportDir = $exportDir . DIRECTORY_SEPARATOR . $fileName;
 $origNamedExportDir = $namedExportDir;
 $counter = 1;
 while (file_exists($namedExportDir)) {
@@ -166,7 +197,7 @@ for ($i = 0; $i < count($databaseSelections); $i++) {
     $db = $databaseSelections[$i];
     $tables = $tableSelections[$i];
     $tablesForExport = isAllSelector($tables) ? [] : $tables;
-    $outputPath = $namedExportDir . '\\' . $db . '.sql';
+    $outputPath = $namedExportDir . DIRECTORY_SEPARATOR . $db . '.sql';
 
     $dumpResult = runExport(
         $mysqldump,
@@ -193,7 +224,7 @@ foreach ($outputPaths as $path) {
     fwrite(STDOUT, "Location: {$path}\n");
 }
 
-@pclose(@popen('cmd /c start "" explorer "' . str_replace('"', '', $namedExportDir) . '"', 'r'));
+openFolder($namedExportDir);
 exit(0);
 
 function prompt(string $label): string
@@ -704,7 +735,7 @@ function firstMissingTable(mysqli $mysqli, string $database, array $tables): ?st
 
 function getConnectionConfig(): array
 {
-    $cfgPath = 'C:\\ML CLI\\Tools\\mlcli-config.json';
+    $cfgPath = mlToolsDir() . DIRECTORY_SEPARATOR . 'mlcli-config.json';
     if (!is_file($cfgPath)) {
         fwrite(STDOUT, "Error: missing config file\n");
         fwrite(STDOUT, "Setup your config by running:\n");
@@ -736,19 +767,28 @@ function findMysqldump(array $cfg = []): ?string
     }
 
     $out = [];
-    exec('where mysqldump.exe 2>NUL', $out, $rc);
+    $locator = isWindows() ? 'where mysqldump.exe 2>NUL' : 'command -v mysqldump 2>/dev/null';
+    exec($locator, $out, $rc);
     if ($rc === 0 && !empty($out) && file_exists($out[0])) {
         return $out[0];
     }
 
-    $patterns = [
-        'C:\\Program Files\\MySQL\\*\\bin\\mysqldump.exe',
-        'C:\\Program Files\\MySQL Workbench *\\mysqldump.exe',
-        'C:\\Program Files (x86)\\MySQL\\*\\bin\\mysqldump.exe',
-        'C:\\xampp\\mysql\\bin\\mysqldump.exe',
-        'C:\\xampp\\php\\mysqldump.exe',
-        'C:\\Program Files\\MariaDB*\\*\\bin\\mysqldump.exe',
-    ];
+    $patterns = isWindows()
+        ? [
+            'C:\\Program Files\\MySQL\\*\\bin\\mysqldump.exe',
+            'C:\\Program Files\\MySQL Workbench *\\mysqldump.exe',
+            'C:\\Program Files (x86)\\MySQL\\*\\bin\\mysqldump.exe',
+            'C:\\xampp\\mysql\\bin\\mysqldump.exe',
+            'C:\\xampp\\php\\mysqldump.exe',
+            'C:\\Program Files\\MariaDB*\\*\\bin\\mysqldump.exe',
+        ]
+        : [
+            '/opt/homebrew/bin/mysqldump',
+            '/usr/local/bin/mysqldump',
+            '/usr/local/mysql/bin/mysqldump',
+            '/opt/lampp/bin/mysqldump',
+            '/usr/bin/mysqldump',
+        ];
     foreach ($patterns as $p) {
         foreach (glob($p) as $m) {
             if (file_exists($m)) return $m;
@@ -818,7 +858,23 @@ function runExport(string $mysqldump, array $cfg, string $db, array $tables, str
 
 function quoteCmd(string $value): string
 {
-    return '"' . str_replace('"', '\\"', $value) . '"';
+    if (isWindows()) {
+        return '"' . str_replace('"', '\\"', $value) . '"';
+    }
+    return escapeshellarg($value);
+}
+
+function openFolder(string $path): void
+{
+    if (isWindows()) {
+        @pclose(@popen('cmd /c start "" explorer "' . str_replace('"', '', $path) . '"', 'r'));
+        return;
+    }
+    if (isMac()) {
+        @exec('open ' . escapeshellarg($path) . ' >/dev/null 2>&1 &');
+        return;
+    }
+    @exec('xdg-open ' . escapeshellarg($path) . ' >/dev/null 2>&1 &');
 }
 
 function showWorkbenchHelp(): void
@@ -837,7 +893,7 @@ function showWorkbenchHelp(): void
     fwrite(STDOUT, "  -db    Comma-separated database names, numbers, ranges, or 'all' / '*'\n");
     fwrite(STDOUT, "  -tb    Repeatable; table names, numbers, ranges, or 'all' / '*'; maps by position to -db\n");
     fwrite(STDOUT, "  -m     Method 1..6 (see below)\n");
-    fwrite(STDOUT, "  -fn    Optional export folder name (created under C:\\ML CLI\\Exports)\n");
+    fwrite(STDOUT, "  -fn    Optional export folder name (created under " . mlExportsDir() . ")\n");
     fwrite(STDOUT, "\n");
     fwrite(STDOUT, "Methods:\n");
     fwrite(STDOUT, "  1 Structure Only\n");
@@ -855,6 +911,44 @@ function launchWorkbench(): void
     $env = getenv('MYSQL_WORKBENCH');
     if ($env) {
         $candidates[] = $env;
+    }
+
+    if (!isWindows()) {
+        if ($env && (is_file($env) || is_dir($env))) {
+            if (isMac() && is_dir($env)) {
+                @exec('open ' . escapeshellarg($env));
+            } else {
+                @exec(escapeshellarg($env) . ' >/dev/null 2>&1 &');
+            }
+            fwrite(STDOUT, "Opening MySQL Workbench: {$env}\n");
+            return;
+        }
+
+        if (isMac()) {
+            $apps = [
+                '/Applications/MySQLWorkbench.app',
+                '/Applications/MySQL Workbench.app',
+            ];
+            foreach ($apps as $app) {
+                if (is_dir($app)) {
+                    @exec('open ' . escapeshellarg($app));
+                    fwrite(STDOUT, "Opening MySQL Workbench: {$app}\n");
+                    return;
+                }
+            }
+        }
+
+        $out = [];
+        exec('command -v mysql-workbench 2>/dev/null', $out, $rc);
+        if ($rc === 0 && !empty($out)) {
+            @exec(escapeshellarg($out[0]) . ' >/dev/null 2>&1 &');
+            fwrite(STDOUT, "Opening MySQL Workbench: {$out[0]}\n");
+            return;
+        }
+
+        fwrite(STDOUT, "Could not find MySQL Workbench.\n");
+        fwrite(STDOUT, "Set MYSQL_WORKBENCH to its full path, or install it from https://dev.mysql.com/downloads/workbench/\n");
+        exit(2);
     }
 
     $candidates[] = 'C:\\Program Files\\MySQL\\MySQL Workbench 8.0\\MySQLWorkbench.exe';

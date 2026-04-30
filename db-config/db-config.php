@@ -3,15 +3,43 @@
  * db-config.php
  *
  * Interactive helper to create the config used by `backup-db.php`.
- * It writes a JSON config to: C:\\ML CLI\\Tools\\mlcli-config.json
+ * It writes a JSON config to the ML CLI tools directory.
  *
  * Usage:
  *  php db-config.php
  */
 date_default_timezone_set(@date_default_timezone_get() ?: 'UTC');
 
-$toolsDir = 'C:\\ML CLI\\Tools';
-$defaultBackup = 'C:\\ML CLI\\Backup';
+function is_windows(): bool {
+    return stripos(PHP_OS, 'WIN') === 0;
+}
+
+function ml_tools_dir(): string {
+    $override = getenv('ML_CLI_TOOLS');
+    if (is_string($override) && trim($override) !== '') {
+        return rtrim($override, "\\/");
+    }
+    if (is_windows()) {
+        return 'C:\\ML CLI\\Tools';
+    }
+    $home = getenv('HOME') ?: sys_get_temp_dir();
+    return $home . DIRECTORY_SEPARATOR . '.ml-cli';
+}
+
+function ml_backup_dir(): string {
+    $override = getenv('ML_CLI_BACKUP');
+    if (is_string($override) && trim($override) !== '') {
+        return rtrim($override, "\\/");
+    }
+    if (is_windows()) {
+        return 'C:\\ML CLI\\Backup';
+    }
+    $home = getenv('HOME') ?: sys_get_temp_dir();
+    return $home . DIRECTORY_SEPARATOR . 'ML CLI' . DIRECTORY_SEPARATOR . 'Backup';
+}
+
+$toolsDir = ml_tools_dir();
+$defaultBackup = ml_backup_dir();
 
 // Try to detect common mysqldump locations (XAMPP / system MySQL)
 function detect_mysqldump(): ?string {

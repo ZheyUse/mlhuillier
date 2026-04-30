@@ -1,9 +1,16 @@
 <?php
 // download-installer.php
-// Downloads the remote install-ml.bat into the user's Downloads folder.
+// Downloads the remote installer/launcher into the user's Downloads folder.
 // Run via: php download-installer.php
 
-$rawUrl = 'https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/install-ml.bat';
+function isWindows(): bool
+{
+    return stripos(PHP_OS, 'WIN') === 0;
+}
+
+$targetName = isWindows() ? 'install-ml.bat' : 'ml';
+$rawFile = isWindows() ? 'install-ml.bat' : 'ml';
+$rawUrl = 'https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/' . $rawFile;
 
 // Determine Downloads folder on Windows (USERPROFILE) or fallback to HOME/Downloads
 $home = getenv('USERPROFILE') ?: getenv('HOME');
@@ -16,11 +23,11 @@ if (!is_dir($downloads)) {
     }
 }
 
-$targetName = 'install-ml.bat';
 $targetPath = $downloads . DIRECTORY_SEPARATOR . $targetName;
 if (file_exists($targetPath)) {
     $ts = date('Ymd-His');
-    $targetPath = $downloads . DIRECTORY_SEPARATOR . "install-ml-{$ts}.bat";
+    $suffix = isWindows() ? ".bat" : "";
+    $targetPath = $downloads . DIRECTORY_SEPARATOR . "install-ml-{$ts}{$suffix}";
 }
 
 echo "Downloading installer from $rawUrl ...\n";
@@ -47,5 +54,12 @@ if (@file_put_contents($targetPath, $data) === false) {
     exit(2);
 }
 
+if (!isWindows()) {
+    @chmod($targetPath, 0755);
+}
+
 echo "Saved installer to: $targetPath\n";
+if (!isWindows()) {
+    echo "Run it with: {$targetPath} --h\n";
+}
 exit(0);

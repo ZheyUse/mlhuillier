@@ -74,7 +74,15 @@ function askInput(string $label): string
 
 function mlCliConfigPath(): string
 {
-    return 'C:\\ML CLI\\Tools\\mlcli-config.json';
+    $override = getenv('ML_CLI_TOOLS');
+    if (is_string($override) && trim($override) !== '') {
+        return rtrim($override, "\\/") . DIRECTORY_SEPARATOR . 'mlcli-config.json';
+    }
+    if (isWindows()) {
+        return 'C:\\ML CLI\\Tools\\mlcli-config.json';
+    }
+    $home = getenv('HOME') ?: sys_get_temp_dir();
+    return $home . DIRECTORY_SEPARATOR . '.ml-cli' . DIRECTORY_SEPARATOR . 'mlcli-config.json';
 }
 
 function loadMlCliConfig(): array
@@ -221,7 +229,11 @@ function ensureNgrokInstalled(): void
     }
 
     if (!isWindows()) {
-        fwrite(STDERR, 'Failed: automatic NGROK install is only configured for Windows winget.' . PHP_EOL);
+        if (stripos(PHP_OS, 'DAR') === 0) {
+            fwrite(STDERR, 'Failed: NGROK is missing. Install it with: brew install ngrok/ngrok/ngrok' . PHP_EOL);
+        } else {
+            fwrite(STDERR, 'Failed: NGROK is missing. Install ngrok with your package manager.' . PHP_EOL);
+        }
         exit(2);
     }
 

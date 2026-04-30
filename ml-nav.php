@@ -1,20 +1,44 @@
 <?php
 // ml-nav.php
 // CLI helper for `ml nav` commands.
+// Works on Windows, macOS, and Linux.
 
-// Configuration
-define('HTDOCS_PATH', 'C:\\xampp\\htdocs');
+function get_htdocs_path(): string
+{
+    $override = getenv('ML_HTDOCS') ?: '';
+    if ($override !== '' && is_dir($override)) {
+        return rtrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $override), DIRECTORY_SEPARATOR);
+    }
+
+    if (stripos(PHP_OS, 'WIN') === 0) {
+        return 'C:\\xampp\\htdocs';
+    }
+
+    $home = getenv('HOME') ?: '';
+    if ($home !== '') {
+        $xampp = $home . DIRECTORY_SEPARATOR . 'xampp' . DIRECTORY_SEPARATOR . 'htdocs';
+        if (is_dir($xampp)) {
+            return $xampp;
+        }
+    }
+    if (is_dir('/Applications/XAMPP/htdocs')) {
+        return '/Applications/XAMPP/htdocs';
+    }
+    if (is_dir('/opt/lampp/htdocs')) {
+        return '/opt/lampp/htdocs';
+    }
+    // Fallback
+    return '/var/www/html';
+}
+
+$HTDOCS_PATH = get_htdocs_path();
 
 $args = $argv;
 array_shift($args); // remove script name
 
 $opts = [];
 foreach ($args as $a) {
-    if (substr($a,0,2) === '--') {
-        $opts[] = $a;
-    } else {
-        $opts[] = $a;
-    }
+    $opts[] = $a;
 }
 
 $remoteOnly = in_array('--remote', $opts, true) || getenv('ML_REMOTE') === '1';
@@ -42,9 +66,9 @@ function prompt($label) {
 $selectedPath = null;
 if (count($opts) === 0) {
     // Interactive prompt
-    $projects = list_projects(HTDOCS_PATH);
+    $projects = list_projects($HTDOCS_PATH);
     echo "Where do you want to go?\n";
-    echo "0) New (" . HTDOCS_PATH . ")\n";
+    echo "0) New (" . $HTDOCS_PATH . ")\n";
     $i = 1;
     foreach ($projects as $p) {
         echo "$i) $p\n";
@@ -53,39 +77,52 @@ if (count($opts) === 0) {
     echo "Enter number or project name: ";
     $choice = trim(fgets(STDIN));
     if ($choice === '0' || strcasecmp($choice, 'new') === 0) {
-        $selectedPath = HTDOCS_PATH;
+        $selectedPath = $HTDOCS_PATH;
     } elseif (is_numeric($choice)) {
         $idx = intval($choice) - 1;
         if (isset($projects[$idx])) {
-            $selectedPath = HTDOCS_PATH . DIRECTORY_SEPARATOR . $projects[$idx];
+            $selectedPath = $HTDOCS_PATH . DIRECTORY_SEPARATOR . $projects[$idx];
         }
     } else {
         // treat as name
-        $candidate = HTDOCS_PATH . DIRECTORY_SEPARATOR . $choice;
+        $candidate = $HTDOCS_PATH . DIRECTORY_SEPARATOR . $choice;
         if (is_dir($candidate)) $selectedPath = $candidate;
     }
 } else {
     // Handle flags
     foreach ($opts as $o) {
+        if (strcasecmp($o, 'ml') === 0 || strcasecmp($o, 'nav') === 0) {
+            continue;
+        }
+        if ($o === '--remote') {
+            continue;
+        }
         if ($o === '--new') {
-            $selectedPath = HTDOCS_PATH;
+            $selectedPath = $HTDOCS_PATH;
             break;
         }
         if (substr($o,0,2) === '--') {
             $proj = substr($o,2);
-            $candidate = HTDOCS_PATH . DIRECTORY_SEPARATOR . $proj;
+            $candidate = $HTDOCS_PATH . DIRECTORY_SEPARATOR . $proj;
             if (is_dir($candidate)) {
                 $selectedPath = $candidate;
                 break;
             }
             // try case-insensitive search
-            $projects = list_projects(HTDOCS_PATH);
+            $projects = list_projects($HTDOCS_PATH);
             foreach ($projects as $p) {
                 if (strcasecmp($p, $proj) === 0) {
-                    $selectedPath = HTDOCS_PATH . DIRECTORY_SEPARATOR . $p;
+                    $selectedPath = $HTDOCS_PATH . DIRECTORY_SEPARATOR . $p;
                     break 2;
                 }
             }
+            continue;
+        }
+
+        $candidate = $HTDOCS_PATH . DIRECTORY_SEPARATOR . $o;
+        if (is_dir($candidate)) {
+            $selectedPath = $candidate;
+            break;
         }
     }
 }

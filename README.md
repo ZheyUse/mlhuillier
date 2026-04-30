@@ -1,11 +1,18 @@
 # ML CLI (M Lhuillier)
 
-Quick install (curl)
+Quick install (Windows)
 ```bat
 curl -L https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/install-ml.bat -o install-ml.bat && install-ml.bat
 ```
 
-ML CLI is a Windows-first PHP command-line toolkit for scaffolding projects, managing a shared user database, automating local development workflows, and integrating AI capabilities into your stack.
+Quick install (macOS/Linux)
+```bash
+curl -L https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml -o ml
+chmod +x ml
+sudo mv ml /usr/local/bin/ml
+```
+
+ML CLI is a PHP command-line toolkit for scaffolding projects, managing a shared user database, automating local development workflows, and integrating AI capabilities into your stack. It supports Windows through `ml.bat`/wrappers and macOS/Linux through the Unix `ml` launcher.
 
 It is designed for teams building multiple PHP apps (typically under XAMPP) that need:
 
@@ -22,7 +29,7 @@ It is designed for teams building multiple PHP apps (typically under XAMPP) that
 ML CLI provides one command surface (`ml`) for:
 
 - Creating starter PHP project structures
-- Navigating quickly between projects under `C:\xampp\htdocs`
+- Navigating quickly between projects under your XAMPP `htdocs` directory
 - Opening projects in browser (`http://localhost/<project>`) or online via ngrok tunnel
 - Importing and testing a shared `userdb` schema
 - Creating user accounts from terminal prompts
@@ -33,24 +40,29 @@ ML CLI provides one command surface (`ml`) for:
 - Installing and managing **Free Claude Code** (uvicorn API server + Claude Code agent)
 - Migrating userdb tables between databases (decentralize / centralize)
 - Exporting MySQL databases via MySQL Workbench (6 export methods)
-- Opening project folders in Windows File Explorer
+- Opening project folders in File Explorer, Finder, or the Linux desktop file manager
 
 ## Core Purpose
 
-This repository solves repetitive setup work for local PHP development on Windows.
+This repository solves repetitive setup work for local PHP development across Windows, macOS, and Linux.
 
 Instead of manually creating files, wiring auth tables, writing one-off DB scripts, or setting up AI tooling for every project, you can run a small set of `ml` commands and start building features immediately.
 
 ## Prerequisites
 
-- Windows (PowerShell / CMD)
-- PHP CLI installed (XAMPP `C:\xampp\php\php.exe` is auto-detected)
+- PHP CLI installed and on `PATH` (auto-detected on Windows XAMPP)
 - MySQL/MariaDB access
+- Git installed (for `ml install ai`)
+- Node.js/npm installed (for `ml install ai` and Claude Code)
 - Internet access for remote helper downloads/updates
+
+Platform-specific notes:
+- **Windows**: PHP from XAMPP (`C:\xampp\php\php.exe`) is auto-detected
+- **macOS / Linux**: `php`, `git`, `npm`, and `curl` need to be on your PATH; projects default to `~/xampp/htdocs/`
 
 Optional:
 
-- Node.js (only for rebuilding docs JSON)
+- Node.js (only for rebuilding docs JSON if you are not using AI features)
 - VS Code CLI (`code`) for `ml nav` open-in-editor flow
 - MySQL Workbench (for `ml wb` and `ml wb --export`)
 - ngrok (for `ml serve -o` online sharing)
@@ -58,7 +70,7 @@ Optional:
 
 ## Installation
 
-### Option A: Standard Installer (recommended)
+### Option A: Standard Installer (Windows)
 
 From the repository root:
 
@@ -79,7 +91,28 @@ After install, open a new terminal and verify:
 ml --v
 ```
 
-### Option B: Local Developer Install
+### Option B: Mac / Linux Shell Install
+
+Download and set up the Unix shell wrapper from the repo:
+
+On macOS/Linux, `ml` requires PHP to be installed. Project lookup uses the first available path from:
+
+- `ML_HTDOCS` environment variable
+- `~/xampp/htdocs`
+- `/Applications/XAMPP/htdocs`
+- `/opt/lampp/htdocs`
+- `/var/www/html`
+
+```bash
+# Clone or copy the ml file somewhere on your PATH
+chmod +x ml
+sudo cp ml /usr/local/bin/ml
+
+# Verify
+ml --v
+```
+
+### Option C: Local Developer Install
 
 ```bat
 php ml-local.php
@@ -91,7 +124,13 @@ You can also pass a custom destination:
 php ml-local.php "C:\Some\Path"
 ```
 
-### Option C: NPM Global Install (CLI command only)
+On macOS/Linux, the default local developer destination is `~/.ml-cli`:
+
+```bash
+php ml-local.php
+```
+
+### Option D: NPM Global Install (CLI command only)
 
 This installs the `ml` command through npm so users do not need to run the
 manual curl installer command.
@@ -108,7 +147,6 @@ ml --v
 
 Note:
 
-- This package is Windows-first and intended to expose the `ml` command.
 - PHP is still required on the machine for CLI features that execute PHP scripts.
 
 ### PowerShell Wrapper Setup
@@ -118,6 +156,24 @@ Note:
 ```
 
 This installs wrappers to `%USERPROFILE%\bin` and updates your PowerShell profile/PATH behavior.
+
+## Platform Paths
+
+| Purpose | Windows | macOS/Linux |
+|--------|---------|-------------|
+| CLI runtime | `C:\ML CLI\Tools` | `~/.ml-cli` for local developer installs, or wherever `ml` is placed on PATH |
+| Project root | `C:\xampp\htdocs` | `ML_HTDOCS`, `~/xampp/htdocs`, `/Applications/XAMPP/htdocs`, `/opt/lampp/htdocs`, then `/var/www/html` |
+| Backup config | `C:\ML CLI\Tools\mlcli-config.json` | `~/.ml-cli/mlcli-config.json` |
+| Backup output | `C:\ML CLI\Backup` | `~/ML CLI/Backup` |
+| Workbench export output | `C:\ML CLI\Exports` | `~/ML CLI/Exports` |
+| Free Claude Code | `C:\free-claude-code\free-claude-code` | `~/.free-claude-code/free-claude-code` |
+
+You can override paths with environment variables:
+
+- `ML_HTDOCS` for project lookup
+- `ML_CLI_TOOLS` for config/runtime helper files
+- `ML_CLI_BACKUP` for backup output
+- `ML_CLI_EXPORTS` for Workbench export output
 
 ## Quick Start
 
@@ -177,13 +233,13 @@ ml serve -o       (share via ngrok tunnel)
 ### Project / Workflow
 
 - `ml create <project_name>` : scaffold a new project
-- `ml nav` : interactive navigation under `C:\xampp\htdocs`
+- `ml nav` : interactive navigation under your configured `htdocs`
 - `ml nav --<project_name>` : jump directly to project
-- `ml nav --new` : jump to `C:\xampp\htdocs`
+- `ml nav --new` : jump to your configured `htdocs`
 - `ml serve [project_name]` : open project URL in browser
 - `ml serve -o` / `ml serve --online` : open via ngrok tunnel (public URL)
 - `ml serve -stop` / `ml serve --stop` : stop active ngrok tunnel
-- `ml rev` / `ml reveal [project_name_or_path]` : open folder in File Explorer
+- `ml rev` / `ml reveal [project_name_or_path]` : open folder in File Explorer, Finder, or file manager
 
 ### Database / UserDB
 
@@ -206,12 +262,19 @@ ml serve -o       (share via ngrok tunnel)
 
 ### AI Integration
 
-- `ml install ai` : install Free Claude Code stack to `C:\free-claude-code\free-claude-code`
+- `ml install ai` : install Free Claude Code stack (`C:\free-claude-code\free-claude-code` on Windows, `~/.free-claude-code/free-claude-code` on macOS/Linux)
 - `ml --ai` : start uvicorn + Claude Code (visible terminals)
 - `ml --ai claude` : start uvicorn in background, Claude Code visible
 - `ml --ai bg` : start both processes in the background
 - `ml --ai stop` : stop all Free Claude Code processes
 - `ml --ai restart` : stop and restart both in the background
+
+`ml install ai` follows the upstream Free Claude Code requirements:
+
+- Windows: installs `uv` through Astral's PowerShell installer
+- macOS/Linux: installs `uv` through `curl -LsSf https://astral.sh/uv/install.sh | sh`
+- then runs `uv self update` and `uv python install 3.14`
+- installs Claude Code globally with `npm install -g @anthropic-ai/claude-code`
 
 ### Menu / UI Scaffolding
 
@@ -309,7 +372,8 @@ ml create --config
 
 This writes:
 
-- `C:\ML CLI\Tools\mlcli-config.json`
+- Windows: `C:\ML CLI\Tools\mlcli-config.json`
+- macOS/Linux: `~/.ml-cli/mlcli-config.json`
 
 2. Run backup:
 
@@ -321,7 +385,8 @@ ml --b all
 
 Backups are written under:
 
-- `C:\ML CLI\Backup\BACKUP_MM-DD-YY\<schema>\<schema>.sql`
+- Windows: `C:\ML CLI\Backup\BACKUP_MM-DD-YY\<schema>\<schema>.sql`
+- macOS/Linux: `~/ML CLI/Backup/BACKUP_MM-DD-YY/<schema>/<schema>.sql`
 
 ## Workbench Export
 
@@ -343,7 +408,10 @@ ml wb --export -db userdb -tb users -m 6 -fn backup1
 ml wb --export -db userdb,gledb -tb * -tb users -m 6 -fn mydump
 ```
 
-Output: `C:\ML CLI\Exports\<MM-DD-YYYY>\<FOLDER_NAME>\<database>.sql`
+Output:
+
+- Windows: `C:\ML CLI\Exports\<MM-DD-YYYY>\<FOLDER_NAME>\<database>.sql`
+- macOS/Linux: `~/ML CLI/Exports/<MM-DD-YYYY>/<FOLDER_NAME>/<database>.sql`
 
 ## Migration Workflow
 
@@ -357,7 +425,7 @@ This migrates `userdb` table structures and data to a target database, rewrites 
 ml migrate global
 ```
 
-Restores the project back to centralized `userdb` — copies tables from the project's current (decentralized) database back and resets `.env` to use `userdb`.
+Restores the project back to centralized `userdb` by copying tables from the project's current decentralized database back and resetting `.env` to use `userdb`.
 
 ## Online Sharing
 
@@ -374,7 +442,7 @@ Falls back to port 8080 if port 80 is unavailable.
 ## Update and Versioning
 
 - Local version source: `VERSION`
-- CLI constant in `ml.bat`: `ML_VERSION`
+- CLI constants: `ML_VERSION` in `ml.bat` and `ml`
 - Check remote: `ml --c` (shows release highlights from version history)
 - Apply update: `ml update`
 - Display changelog: `ml --h --c`
@@ -387,17 +455,27 @@ php v.php <new-version>
 `v.php` updates:
 
 - `ml.bat`
+- `ml`
 - `install-ml.bat`
 - `uninstall-ml.bat`
 - `VERSION`
 
 ## Uninstall
 
+Windows:
+
 ```bat
 uninstall-ml.bat
 ```
 
 Uninstaller removes installed runtime (`C:\ML CLI\Tools`), PATH entries, and wrapper/profile artifacts.
+
+macOS/Linux:
+
+```bash
+rm -f /usr/local/bin/ml
+rm -rf ~/.ml-cli
+```
 
 ## Documentation Site
 
@@ -426,14 +504,14 @@ Open docs page:
 
 ## Repository Structure
 
-- `ml.bat`, `ml.cmd`, `ml.ps1` : command entry points/wrappers
+- `ml.bat`, `ml.cmd`, `ml.ps1`, `ml` : command entry points/wrappers
 - `generate-file-structure.php` : main scaffolder
 - `generate-file-remote.php` : remote loader stub
 - `ml-nav.php`, `ml-serve.php`, `ml-update.php` : workflow helpers
 - `ai-commands.php`, `ai-installer.php` : Free Claude Code lifecycle management
 - `account-insert.php`, `userdb-import.php`, `userdb-con-test.php` : DB/account utilities
 - `sidebar-add-menu.php`, `script/user-migrate.php` : menu and migration tools
-- `reveal-in-folder/` : File Explorer opener
+- `reveal-in-folder/` : folder opener for File Explorer, Finder, and Linux desktop file managers
 - `rbac/`, `pbac/` : access-control table generators
 - `workbench/`, `backup-cli/`, `db-config/` : database tooling
 - `migration/` : SQL sources
@@ -449,15 +527,15 @@ Open docs page:
 - use least-privilege DB users where possible
 - rotate and protect SQL backup files
 - review generated auth/permission logic before production use
-- NVIDIA NIM API key is stored in project `.env` — protect it like any credential
+- NVIDIA NIM API key is stored in project `.env`; protect it like any credential
 
 ## Troubleshooting
 
 ### `ml` command not recognized
 
 - reopen terminal after install
-- verify PATH contains `C:\ML CLI\Tools` and/or `%USERPROFILE%\bin`
-- re-run `install-ml.bat`
+- Windows: verify PATH contains `C:\ML CLI\Tools` and/or `%USERPROFILE%\bin`, then re-run `install-ml.bat`
+- macOS/Linux: verify `ml` is executable and available in PATH, for example `/usr/local/bin/ml`
 
 ### DB connection failures
 
@@ -468,7 +546,7 @@ Open docs page:
 ### Backup errors (`mysqldump not found`)
 
 - run `ml create --config`
-- set valid full path to `mysqldump.exe`
+- set a valid full path to `mysqldump` / `mysqldump.exe`
 
 ### Remote fetch/update errors
 
@@ -486,7 +564,7 @@ Open docs page:
 
 ## Notes
 
-- This toolchain is primarily Windows-oriented.
+- Windows, macOS, and Linux are supported through platform-specific wrappers and helper behavior.
 - Many helper flows fetch the latest scripts from GitHub at runtime.
 - For stable offline behavior, keep local script copies and avoid remote dependency paths where needed.
 - Free Claude Code requires Python and Node.js for the uvicorn API server component.

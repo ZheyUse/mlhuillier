@@ -1,9 +1,41 @@
 <?php
 // reveal-folder.php
-// Opens a folder in Windows File Explorer.
+// Opens a folder in File Explorer, Finder, or the Linux desktop file manager.
 // Usage: php reveal-folder.php [project_name_or_path]
 
 $arg = isset($argv[1]) ? trim($argv[1]) : '';
+
+function isWindows() {
+    return stripos(PHP_OS, 'WIN') === 0;
+}
+
+function isMac() {
+    return stripos(PHP_OS, 'DAR') === 0;
+}
+
+function htdocsPath() {
+    $override = getenv('ML_HTDOCS');
+    if (is_string($override) && trim($override) !== '') {
+        return rtrim($override, "\\/");
+    }
+    if (isWindows()) {
+        return 'C:' . DIRECTORY_SEPARATOR . 'xampp' . DIRECTORY_SEPARATOR . 'htdocs';
+    }
+    $home = getenv('HOME') ?: '';
+    if ($home !== '') {
+        $xampp = $home . DIRECTORY_SEPARATOR . 'xampp' . DIRECTORY_SEPARATOR . 'htdocs';
+        if (is_dir($xampp)) {
+            return $xampp;
+        }
+    }
+    if (is_dir('/Applications/XAMPP/htdocs')) {
+        return '/Applications/XAMPP/htdocs';
+    }
+    if (is_dir('/opt/lampp/htdocs')) {
+        return '/opt/lampp/htdocs';
+    }
+    return '/var/www/html';
+}
 
 function openFolder($path) {
     $path = rtrim($path, "\\/");
@@ -11,8 +43,13 @@ function openFolder($path) {
         echo "Folder not found: $path\n";
         return 2;
     }
-    $escaped = str_replace('"', '\\"', $path);
-    $cmd = 'explorer "' . $escaped . '"';
+    if (isWindows()) {
+        $cmd = 'explorer "' . str_replace('"', '\\"', $path) . '"';
+    } elseif (isMac()) {
+        $cmd = 'open ' . escapeshellarg($path);
+    } else {
+        $cmd = 'xdg-open ' . escapeshellarg($path) . ' >/dev/null 2>&1';
+    }
     exec($cmd, $out, $rc);
     if ($rc === 0) {
         echo "Opened: $path\n";
@@ -32,13 +69,13 @@ if ($arg === '') {
 // Normalize slashes
 $input = str_replace('/', DIRECTORY_SEPARATOR, $arg);
 
-// If looks absolute (C:\ or \server\), use directly
-if (preg_match('/^[A-Za-z]:\\\\|^\\\\/', $input)) {
+// If looks absolute, use directly.
+if (preg_match('/^[A-Za-z]:\\\\|^\\\\|^\//', $input)) {
     exit(openFolder($input));
 }
 
 // Try under XAMPP htdocs
-$candidate = 'C:' . DIRECTORY_SEPARATOR . 'xampp' . DIRECTORY_SEPARATOR . 'htdocs' . DIRECTORY_SEPARATOR . ltrim($input, DIRECTORY_SEPARATOR);
+$candidate = htdocsPath() . DIRECTORY_SEPARATOR . ltrim($input, DIRECTORY_SEPARATOR);
 if (is_dir($candidate)) {
     exit(openFolder($candidate));
 }

@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-04-30T10:51:40.527Z",
+  "generatedAt": "2026-04-30T13:31:10.696Z",
   "latestVersion": "1.1.14",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 228
+    "commitCount": 229
   },
   "releases": [
     {
       "version": "1.1.14",
       "isLatest": true,
-      "commitCount": 10,
+      "commitCount": 11,
       "dateRange": {
         "from": "2026-04-30",
         "to": "2026-04-30"
       },
       "stats": {
         "release": 2,
-        "feature": 5,
+        "feature": 6,
         "fix": 3,
         "docs": 0,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "docs(readme): update README to include AI integration features and enhance installation instructions docs(version-history): update version history with latest release details and commit count",
         "feat(ai): add ai-commands.php for managing AI processes and scripts feat(installer): introduce ai-installer.php for setting up Free-Claude-Code environment fix(version): update version history to 1.1.14 and increment commit count",
         "fix(version): update version to 1.1.14 Added ml install ai command",
         "feat(icons): add validation and fallback for Material Icons in sidebar menu",
         "feat(nim): add diagnostic scripts for NVIDIA NIM API connectivity and performance testing",
         "fix(sidebar): enhance JSON response handling and validation in NVIDIA NIM AI integration",
         "feat(sidebar): integrate NVIDIA NIM AI for dynamic menu and submenu metadata generation",
-        "feat(menu): add command to create sidebar menu and submenus with scaffolding",
-        "fix(commands): update migrate command description and tutorial details for centralized database workflow fix(version): update generatedAt timestamp and increment commit count in version history"
+        "feat(menu): add command to create sidebar menu and submenus with scaffolding"
       ],
       "commits": [
+        {
+          "hash": "81a6253ce17687dec3bf9913020e4e91a8eee4f5",
+          "shortHash": "81a6253",
+          "date": "2026-04-30",
+          "title": "docs(readme): update README to include AI integration features and enhance installation instructions docs(version-history): update version history with latest release details and commit count",
+          "type": "feature"
+        },
         {
           "hash": "66591cc7d2aa11d8441e9ac99592efdd1142be3b",
           "shortHash": "66591cc",

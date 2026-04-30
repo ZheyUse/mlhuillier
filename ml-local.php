@@ -6,7 +6,14 @@
 declare(strict_types=1);
 
 $sourceDir = __DIR__;
-$dest = 'C:\\ML CLI\\Tools';
+function isWindows(): bool
+{
+    return stripos(PHP_OS, 'WIN') === 0;
+}
+
+$dest = isWindows()
+    ? 'C:\\ML CLI\\Tools'
+    : ((getenv('HOME') ?: sys_get_temp_dir()) . DIRECTORY_SEPARATOR . '.ml-cli');
 if (isset($argv[1]) && !empty($argv[1])) {
     $dest = $argv[1];
 }
@@ -28,6 +35,7 @@ $want = [
     // generator stub (installer downloads generate-file-remote.php and saves as generate-file-structure.php)
     'generate-file-structure.php',
     'ml.bat',
+    'ml',
     'uninstall-ml.bat',
     // CLI wrappers for different shells
     'ml.cmd',
@@ -60,6 +68,9 @@ foreach ($want as $f) {
     }
 
     if (@copy($src, $dst)) {
+        if (!isWindows() && $f === 'ml') {
+            @chmod($dst, 0755);
+        }
         echo "Copied: " . basename($src) . " -> $dst\n";
     } else {
         fwrite(STDERR, "[ERROR] Failed to copy: " . basename($src) . "\n");
@@ -83,6 +94,18 @@ if ($localVersion !== null && $localVersion !== '') {
             if ($new !== null) {
                 file_put_contents($installedBat, $new);
                 echo "Set ML_VERSION in installed ml.bat to: $localVersion\n";
+            }
+        }
+    }
+    $installedUnix = rtrim($dest, "\\\\\/") . DIRECTORY_SEPARATOR . 'ml';
+    if (file_exists($installedUnix)) {
+        $unix = file_get_contents($installedUnix);
+        if ($unix !== false) {
+            $new = preg_replace('/ML_VERSION="[^"]*"/', 'ML_VERSION="' . addcslashes($localVersion, '\\\\"') . '"', $unix, 1);
+            if ($new !== null) {
+                file_put_contents($installedUnix, $new);
+                @chmod($installedUnix, 0755);
+                echo "Set ML_VERSION in installed ml to: $localVersion\n";
             }
         }
     }

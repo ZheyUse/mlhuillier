@@ -7,12 +7,40 @@
  *  php backup-db.php               # interactive (type schema name or 'all')
  *  php backup-db.php <schema>      # non-interactive
  *
- * Reads config from: C:\\ML CLI\\Tools\\mlcli-config.json
+ * Reads config from the ML CLI tools directory.
  */
 // Set timezone to avoid warnings when using date()
 date_default_timezone_set(@date_default_timezone_get() ?: 'UTC');
 
-$CONFIG_PATH = 'C:\\ML CLI\\Tools\\mlcli-config.json';
+function is_windows(): bool {
+    return stripos(PHP_OS, 'WIN') === 0;
+}
+
+function ml_tools_dir(): string {
+    $override = getenv('ML_CLI_TOOLS');
+    if (is_string($override) && trim($override) !== '') {
+        return rtrim($override, "\\/");
+    }
+    if (is_windows()) {
+        return 'C:\\ML CLI\\Tools';
+    }
+    $home = getenv('HOME') ?: sys_get_temp_dir();
+    return $home . DIRECTORY_SEPARATOR . '.ml-cli';
+}
+
+function ml_backup_dir(): string {
+    $override = getenv('ML_CLI_BACKUP');
+    if (is_string($override) && trim($override) !== '') {
+        return rtrim($override, "\\/");
+    }
+    if (is_windows()) {
+        return 'C:\\ML CLI\\Backup';
+    }
+    $home = getenv('HOME') ?: sys_get_temp_dir();
+    return $home . DIRECTORY_SEPARATOR . 'ML CLI' . DIRECTORY_SEPARATOR . 'Backup';
+}
+
+$CONFIG_PATH = ml_tools_dir() . DIRECTORY_SEPARATOR . 'mlcli-config.json';
 
 if (!file_exists($CONFIG_PATH)) {
     fwrite(STDERR, "Error: missing config file\n");
@@ -32,7 +60,7 @@ $port = isset($config['port']) ? intval($config['port']) : 3306;
 $user = $config['user'] ?? 'root';
 $password = $config['password'] ?? '';
 $mysqldumpPath = $config['mysqldumpPath'] ?? '';
-$backupRoot = rtrim($config['backupPath'] ?? 'C:\\ML CLI\\Backup', "\\/");
+$backupRoot = rtrim($config['backupPath'] ?? ml_backup_dir(), "\\/");
 
 // Connect to MySQL server to discover databases
 $mysqli = @new mysqli($host, $user, $password, '', $port);
@@ -144,6 +172,8 @@ if (!$mysqldump) {
         $patterns = [
             '/opt/lampp/bin/mysqldump',
             '/opt/*/bin/mysqldump',
+            '/opt/homebrew/bin/mysqldump',
+            '/usr/local/bin/mysqldump',
             '/usr/local/mysql/bin/mysqldump',
             '/usr/bin/mysqldump',
         ];

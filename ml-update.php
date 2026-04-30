@@ -3,8 +3,8 @@
  * ml-update.php
  *
  * Remote updater for ML CLI. When executed locally (php streamed), it will
- * download the latest `ml.bat`, `VERSION`, and `version.txt` from the
- * repository and write them into the installer target `C:\\ML CLI\\Tools`.
+ * download the latest CLI files from the repository and write them into the
+ * installer target directory.
  *
  * This script is intended to be streamed from the repository via the `ml update`
  * command and executed by PHP on the user's machine.
@@ -14,10 +14,29 @@ $baseRaw = 'https://raw.githubusercontent.com/ZheyUse/mlhuillier/main';
 $cacheToken = '?t=' . time() . rand(1000,9999);
 $files = [
     'ml.bat' => $baseRaw . '/ml.bat' . $cacheToken,
+    'ml' => $baseRaw . '/ml' . $cacheToken,
     'VERSION' => $baseRaw . '/VERSION' . $cacheToken,
 ];
 
-$targetDir = 'C:\\ML CLI\\Tools';
+function isWindows(): bool
+{
+    return stripos(PHP_OS, 'WIN') === 0;
+}
+
+function targetDir(): string
+{
+    $override = getenv('ML_CLI_TOOLS');
+    if (is_string($override) && trim($override) !== '') {
+        return rtrim($override, "\\/");
+    }
+    if (isWindows()) {
+        return 'C:\\ML CLI\\Tools';
+    }
+    $home = getenv('HOME') ?: sys_get_temp_dir();
+    return $home . DIRECTORY_SEPARATOR . '.ml-cli';
+}
+
+$targetDir = targetDir();
 
 function fetchUrl($url)
 {
@@ -90,6 +109,9 @@ foreach ($files as $name => $url) {
         safeEcho('ML Updater: Failed to write ' . $dest . '. Check permissions.');
         exit(2);
     }
+    if (!isWindows() && $name === 'ml') {
+        @chmod($dest, 0755);
+    }
 }
 
 // Ensure installed ml.bat reports the downloaded VERSION value
@@ -111,6 +133,21 @@ if ($installedVersion) {
             if ($newData !== null && $newData !== $mlBatData) {
                 if (file_put_contents($mlBatPath, $newData) === false) {
                     safeEcho('ML Updater: Failed to update ML_VERSION in ' . $mlBatPath);
+                }
+            }
+        }
+    }
+    $mlUnixPath = $targetDir . DIRECTORY_SEPARATOR . 'ml';
+    if (is_file($mlUnixPath)) {
+        safeEcho('ML Updater: Enforcing ML_VERSION=' . $installedVersion . ' in ' . $mlUnixPath . ' ...');
+        $mlUnixData = @file_get_contents($mlUnixPath);
+        if ($mlUnixData !== false) {
+            $newData = preg_replace('/ML_VERSION="[^"]*"/', 'ML_VERSION="' . addslashes($installedVersion) . '"', $mlUnixData, 1);
+            if ($newData !== null && $newData !== $mlUnixData) {
+                if (file_put_contents($mlUnixPath, $newData) === false) {
+                    safeEcho('ML Updater: Failed to update ML_VERSION in ' . $mlUnixPath);
+                } else {
+                    @chmod($mlUnixPath, 0755);
                 }
             }
         }
