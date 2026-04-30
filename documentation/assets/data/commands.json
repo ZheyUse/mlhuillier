@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-30T03:56:21.060Z",
+  "generatedAt": "2026-04-30T05:30:26.525Z",
   "source": "ml.bat",
   "cliVersion": "1.1.13",
   "commands": [
@@ -108,6 +108,24 @@
         "scenario": "Typical general workflow using ml -h.",
         "steps": [
           "Run: ml -h",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml add menu",
+      "description": "Add sidebar menu and submenu scaffold (ml add menu)",
+      "syntax": "ml add menu",
+      "params": [],
+      "example": "ml add menu",
+      "category": "database",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical database workflow using ml add menu.",
+        "steps": [
+          "Run: ml add menu",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
@@ -343,19 +361,18 @@
     },
     {
       "name": "ml migrate global",
-      "description": "Centralize a decentralized project back to userdb — rewrites all DB references in project files and updates .env to use userdb.",
+      "description": "Run this CLI command to execute its linked workflow.",
       "syntax": "ml migrate global",
       "params": [],
       "example": "ml migrate global",
       "category": "database",
-      "expectedResult": "Project: <project_name> userdb has been centralized.",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
       "tutorial": {
-        "whenToUse": "When a project was decentralized with `ml migrate -db <DATABASE>` and you want to revert it to use the shared userdb.",
+        "whenToUse": "When this workflow matches your current task.",
         "scenario": "Typical database workflow using ml migrate global.",
         "steps": [
           "Run: ml migrate global",
-          "Confirm the centralization warning prompt with Y",
-          "Review output and confirm: Project: <project_name> userdb has been centralized.",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
       }
@@ -886,6 +903,16 @@
         "scenario": "Typical general workflow using ml -h.",
         "steps": [
           "Run: ml -h",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml add menu",
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical database workflow using ml add menu.",
+        "steps": [
+          "Run: ml add menu",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]

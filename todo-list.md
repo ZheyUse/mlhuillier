@@ -18,7 +18,35 @@
                 Creating src/pages/<Menu>/<submenu>/<submenu>.php ... OK
                 Creating src/pages/<Menu>/<submenu>/<submenu>.css ... OK
 
-Purpose: It creates a folder in the /src/pages/<Menu> and its necessary <submenu>.php and css in /src/pages /<Menu>/<Submenu> folder with an already made includes of header_ui.php and sidebar.php and other necessary guards.
+Purpose: It creates a folder in the /src/pages/<Menu> and its necessary <submenu>.php and css in /src/pages /<Menu>/<Submenu> folder with an already made includes of header_ui.php and sidebar.php and other necessary guards. 
+
+require_once __DIR__ . '/../../../config/session.php';
+require_once __DIR__ . '/../../../config/middleware.php';
+require_once __DIR__ . '/../../../controllers/usercontroller.php';
+require_once __DIR__ . '/../../../templates/header_ui.php';
+
+requireAuth();
+
+$userController = new UserController();
+$user = $userController->profile();
+
+$displayName = trim((string) (($user['firstname'] ?? '') . ' ' . ($user['lastname'] ?? '')));
+if ($displayName === '') {
+  $displayName = (string) ($user['username'] ?? 'User');
+}
+
+$scriptName = (string) ($_SERVER['SCRIPT_NAME'] ?? '');
+$appBaseUrl = preg_replace('#/src/.*$#', '', $scriptName);
+$appBaseUrl = rtrim((string) $appBaseUrl, '/');
+
+$isEntry = (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === realpath(__FILE__));
+if ($isEntry) 
+
+and for the header_ui ex. in the main-content <?php bp_section_header_html('person','Account Management','Manage user accounts and statuses'); ?>
+
+just default it like <?php bp_section_header_html('question_mark','Title Here','Edit this part later'); ?>
+
+and then just put a large text header that says this is for <submenu>.
 
 3. Add a command for submenu instantly for an existing Menu while in the root path: ml add submenu
 -> CLI Return: List of Menu:
