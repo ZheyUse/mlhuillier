@@ -1,6 +1,6 @@
 <?php
 // ai-commands.php
-// Usage: php ai-commands.php [claude|bg|stop|restart]
+// Usage: php ai-commands.php [claude|bg|stop|restart|cm]
 // Works on Windows (PowerShell), macOS, and Linux (bash/sh).
 
 function isWindows(): bool
@@ -69,6 +69,102 @@ function runCommand(string $cmd): int
 {
     passthru($cmd, $rc);
     return $rc;
+}
+
+function promptInput(string $label): string
+{
+    fwrite(STDOUT, $label);
+    $line = fgets(STDIN);
+    return trim((string)$line);
+}
+
+function aiEnvPath(): string
+{
+    return aiInstallDir() . DIRECTORY_SEPARATOR . '.env';
+}
+
+function setEnvValue(string $envPath, string $key, string $value): void
+{
+    $lines = is_file($envPath) ? file($envPath, FILE_IGNORE_NEW_LINES) : [];
+    if ($lines === false) {
+        $lines = [];
+    }
+
+    $newLine = $key . '="' . str_replace('"', '\\"', $value) . '"';
+    $found = false;
+    foreach ($lines as $idx => $line) {
+        if (preg_match('/^\s*' . preg_quote($key, '/') . '\s*=/', (string)$line) === 1) {
+            $lines[$idx] = $newLine;
+            $found = true;
+            break;
+        }
+    }
+
+    if (!$found) {
+        $lines[] = $newLine;
+    }
+
+    file_put_contents($envPath, implode(PHP_EOL, $lines) . PHP_EOL);
+}
+
+function normalizeNvidiaModel(string $input): string
+{
+    $model = trim($input);
+    $model = trim($model, "\"'");
+    $model = preg_replace('#^nvidia_nim/+#i', '', $model) ?? $model;
+    $model = trim($model, '/');
+    return 'nvidia_nim/' . $model;
+}
+
+function modelDisplayName(string $fullModel): string
+{
+    $model = preg_replace('#^nvidia_nim/+#i', '', $fullModel) ?? $fullModel;
+    $parts = array_values(array_filter(explode('/', $model), 'strlen'));
+    return end($parts) ?: $model;
+}
+
+function changeModel(): void
+{
+    ensureInstalled();
+
+    $envPath = aiEnvPath();
+    if (!is_file($envPath)) {
+        fwrite(STDERR, 'Free Claude Code .env file was not found: ' . $envPath . PHP_EOL);
+        fwrite(STDERR, 'Run: ml install ai' . PHP_EOL);
+        exit(2);
+    }
+
+    echo 'Select Model to change:' . PHP_EOL;
+    echo '1. Opus' . PHP_EOL;
+    echo '2. Sonnet' . PHP_EOL;
+    echo '3. Haiku' . PHP_EOL;
+    echo '4. Default' . PHP_EOL;
+    echo PHP_EOL;
+
+    $choice = promptInput('Model: ');
+    $map = [
+        '1' => ['Opus', 'MODEL_OPUS'],
+        '2' => ['Sonnet', 'MODEL_SONNET'],
+        '3' => ['Haiku', 'MODEL_HAIKU'],
+        '4' => ['Default', 'MODEL'],
+    ];
+
+    if (!isset($map[$choice])) {
+        fwrite(STDERR, 'Invalid model selection.' . PHP_EOL);
+        exit(2);
+    }
+
+    [$label, $key] = $map[$choice];
+    $input = promptInput($label . ' nvidia_nim/: ');
+    if ($input === '') {
+        fwrite(STDERR, 'Model value cannot be empty.' . PHP_EOL);
+        exit(2);
+    }
+
+    $fullModel = normalizeNvidiaModel($input);
+    setEnvValue($envPath, $key, $fullModel);
+
+    echo $label . ' is now using ' . modelDisplayName($fullModel) . PHP_EOL;
 }
 
 // ── Windows implementation ─────────────────────────────────────────────────────
@@ -429,8 +525,12 @@ switch ($subcommand) {
         }
         exit(0);
 
+    case 'cm':
+        changeModel();
+        exit(0);
+
     default:
         fwrite(STDERR, 'Unknown ml --ai subcommand: ' . $subcommand . PHP_EOL);
-        fwrite(STDERR, 'Use: ml --ai [claude|bg|stop|restart]' . PHP_EOL);
+        fwrite(STDERR, 'Use: ml --ai [claude|bg|stop|restart|cm]' . PHP_EOL);
         exit(2);
 }

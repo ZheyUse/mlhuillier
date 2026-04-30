@@ -278,6 +278,7 @@ show_top_help() {
     echo "  --ai             Start uvicorn + Claude Code"
     echo "  --ai bg          Start both in background"
     echo "  --ai stop        Stop all processes"
+    echo "  --ai cm          Change configured model"
     echo ""
     echo "Docs: ml doc"
     echo ""
@@ -296,6 +297,8 @@ show_help_command() {
                     echo "  claude    Start Claude Code with bg uvicorn"
                     echo "  bg        Start both in background"
                     echo "  stop      Stop all processes"
+                    echo "  restart   Stop then start both in background"
+                    echo "  cm        Change Opus, Sonnet, Haiku, or default model"
                     ;;
         install)    if [[ "$sub" == "ai" ]]; then
                         echo "Usage: ml install ai"
