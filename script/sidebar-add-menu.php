@@ -125,6 +125,153 @@ function promptAndSaveApiKey(string $configPath): string
     return $apiKey;
 }
 
+// ── Valid Material Icons list ─────────────────────────────────────────────────
+
+const VALID_MATERIAL_ICONS = [
+    'home', 'dashboard', 'menu', 'settings', 'person', 'people', 'manage_accounts',
+    'account_circle', 'badge', 'category', 'inventory', 'storage', 'backup',
+    'cloud_upload', 'cloud_download', 'upload', 'download', 'file_upload',
+    'description', 'assignment', 'fact_check', 'task', 'checklist', 'rule',
+    'build', 'construction', 'engineering', 'handyman', 'cleaning_services',
+    'terminal', 'code', 'dns', 'api', 'integration_instructions',
+    'security', 'lock', 'lock_open', 'shield', 'verified_user', 'vpn_key',
+    'visibility', 'visibility_off', 'preview', 'monitor_heart', 'sensors',
+    'analytics', 'bar_chart', 'pie_chart', 'show_chart', 'timeline',
+    'campaign', 'notifications', 'notifications_active', 'mail', 'sms',
+    'chat', 'comment', 'forum', 'message', 'send', 'inbox',
+    'schedule', 'calendar_month', 'event', 'today', 'date_range',
+    'business', 'store', 'point_of_sale', 'receipt_long', 'payments',
+    'attach_money', 'price_check', 'currency_exchange', 'account_balance',
+    'trending_up', 'trending_down', 'insights', 'monitoring', 'speed',
+    'support_agent', 'help', 'help_center', 'contact_support', 'language',
+    'translate', 'globe', 'public', 'location_on', 'my_location',
+    'map', 'explore', 'pin_drop', 'travel_explore', 'restaurant',
+    'local_shipping', 'flight', 'train', 'directions_car', 'two_wheeler',
+    'medical_services', 'health_and_safety', 'vaccines', 'healing', 'psychology',
+    'school', 'library_books', 'auto_stories', 'history_edu', 'science',
+    'computer', 'devices', 'laptop', 'smartphone', 'tablet', 'tv',
+    'video_library', 'photo_library', 'music_note', 'audiotrack', 'mic',
+    'movie', 'live_tv', 'videocam', 'camera_alt', 'image',
+    'edit', 'edit_note', 'draw', 'brush', 'format_paint',
+    'print', 'print_disabled', 'content_copy', 'content_cut', 'content_paste',
+    'delete', 'delete_forever', 'restore_from_trash', 'archive', 'unarchive',
+    'mark_email_unread', 'mark_email_read', 'filter_list', 'search', 'find_in_page',
+    'sort', 'swap_vert', 'filter_alt', 'tune', 'settings_applications',
+    'app_settings_alt', 'admin_panel_settings', 'experiment',
+    'extension', 'widgets', 'add_box', 'add_circle', 'remove_circle',
+    'refresh', 'sync', 'loop', 'autorenew', 'update',
+    'power', 'power_settings_new', 'restart_alt', 'download_for_offline',
+    'upload_file', 'cloud_sync', 'save', 'save_alt',
+    'file_present', 'folder', 'folder_open', 'drive_file_move',
+    'share', 'ios_share', 'link', 'link_off', 'qr_code',
+    'qr_code_2', 'fingerprint', 'id_card', 'badge_certified',
+    'workspace_premium', 'verified', 'stars', 'star', 'star_border',
+    'favorite', 'favorite_border', 'thumb_up', 'thumb_down', 'feedback',
+    'flag', 'report', 'gavel', 'policy', 'privacy_tip',
+    'warning', 'error', 'error_outline', 'info', 'lightbulb',
+    'tips_and_updates', 'auto_fix', 'auto_awesome', 'palette', 'color_lens',
+    'texture', 'style', 'gradient',
+    'notifications_none', 'addon', 'pending', 'pending_actions', 'hourglass_empty',
+    'timer', 'watch_later', 'wifi', 'wifi_off', 'signal_cellular_4_bar',
+    'router', 'settings_ethernet', 'memory', 'sd_storage', 'data_usage',
+    'battery_full', 'battery_charging_full',
+    'dark_mode', 'light_mode', 'contrast', 'invert_colors', 'brightness_6',
+    'pinch', 'zoom_in', 'zoom_out', 'fullscreen', 'fullscreen_exit',
+    'cancel', 'close', 'check', 'check_circle', 'add_task',
+    'radio_button_checked', 'radio_button_unchecked', 'toggle_on', 'toggle_off',
+    'alt_route', 'commute', 'local_offer', 'sell',
+    'shopping_cart', 'shopping_bag', 'redeem', 'card_giftcard', 'loyalty',
+    'contact_page', 'perm_identity', 'supervisor_account', 'manage_search', 'app_shortcut',
+    'webhook', 'hub', 'account_tree', 'rule_folder', 'commit',
+    'call_merge', 'center_focus_strong', 'filter_center_focus', 'camera', 'videocam_off',
+    'mic_off', 'volume_up', 'stop', 'play_arrow', 'pause',
+    'skip_next', 'skip_previous', 'fast_forward', 'fast_rewind',
+    'replay', 'shuffle', 'repeat', 'repeat_one', 'queue_music',
+    'playlist_add', 'add_to_queue', 'remove_from_queue', 'queue', 'hevc',
+];
+
+// Map of keyword -> default icon for hallucinated values
+const ICON_FALLBACK_MAP = [
+    'food' => 'restaurant', 'pizza' => 'restaurant', 'meal' => 'restaurant', 'eat' => 'restaurant',
+    'user' => 'person', 'profile' => 'account_circle', 'account' => 'manage_accounts',
+    'setting' => 'settings', 'config' => 'settings_applications', 'preference' => 'tune',
+    'report' => 'description', 'summary' => 'summarize', 'document' => 'description',
+    'analytics' => 'analytics', 'chart' => 'bar_chart', 'graph' => 'show_chart',
+    'money' => 'attach_money', 'payment' => 'payments', 'transaction' => 'receipt_long',
+    'inventory' => 'inventory', 'stock' => 'inventory', 'product' => 'inventory',
+    'employee' => 'badge', 'staff' => 'supervisor_account',
+    'order' => 'point_of_sale', 'sales' => 'trending_up', 'purchase' => 'sell',
+    'log' => 'fact_check', 'audit' => 'rule', 'history' => 'history_edu',
+    'database' => 'storage', 'server' => 'dns', 'api' => 'api',
+    'backup' => 'backup', 'restore' => 'restore_from_trash', 'export' => 'upload_file',
+    'import' => 'download_for_offline', 'upload' => 'cloud_upload', 'download' => 'cloud_download',
+    'security' => 'security', 'permission' => 'lock', 'access' => 'vpn_key',
+    'notification' => 'notifications', 'alert' => 'notifications_active', 'bell' => 'notifications',
+    'customer' => 'support_agent', 'client' => 'contact_page',
+    'calendar' => 'calendar_month', 'schedule' => 'schedule', 'event' => 'event',
+    'map' => 'map', 'location' => 'location_on', 'address' => 'pin_drop',
+    'image' => 'image', 'photo' => 'photo_library', 'gallery' => 'photo_library',
+    'video' => 'videocam', 'camera' => 'camera_alt', 'media' => 'video_library',
+    'music' => 'music_note', 'audio' => 'audiotrack',
+    'edit' => 'edit', 'note' => 'edit_note', 'write' => 'draw',
+    'trash' => 'delete', 'delete' => 'delete_forever', 'remove' => 'remove_circle',
+    'search' => 'search', 'find' => 'find_in_page', 'filter' => 'filter_list',
+    'sort' => 'sort', 'arrange' => 'swap_vert',
+    'mail' => 'mail', 'email' => 'mail', 'inbox' => 'inbox', 'message' => 'message',
+    'chat' => 'chat', 'comment' => 'comment', 'feedback' => 'feedback',
+    'approve' => 'check_circle', 'verify' => 'verified', 'done' => 'check',
+    'reject' => 'cancel', 'block' => 'block', 'deny' => 'close',
+    'add' => 'add_box', 'create' => 'add_circle', 'new' => 'add_task',
+    'help' => 'help', 'question' => 'help_center', 'faq' => 'contact_support',
+    'print' => 'print', 'copy' => 'content_copy', 'paste' => 'content_paste',
+    'refresh' => 'refresh', 'reload' => 'sync', 'update' => 'update',
+    'home' => 'home', 'dashboard' => 'dashboard', 'menu' => 'menu',
+    'maintenance' => 'build', 'repair' => 'construction', 'tools' => 'handyman',
+];
+
+/**
+ * Clamps every icon in AI metadata to a valid Material Icon.
+ * Unknown names are matched by keyword against ICON_FALLBACK_MAP, then 'question_mark'.
+ */
+function validateAndFixIcons(array $aiData): array
+{
+    $menuIcon = $aiData['menu']['icon'] ?? '';
+    $menuName = $aiData['menu']['name'] ?? '';
+
+    // Validate menu icon
+    if (!in_array($menuIcon, VALID_MATERIAL_ICONS, true)) {
+        $aiData['menu']['icon'] = iconFallback($menuIcon, $menuName);
+    }
+
+    // Validate submenu icons
+    foreach ($aiData['submenus'] as &$sub) {
+        $subIcon = $sub['icon'] ?? '';
+        $subName = $sub['name'] ?? '';
+        if (!in_array($subIcon, VALID_MATERIAL_ICONS, true)) {
+            $sub['icon'] = iconFallback($subIcon, $subName);
+        }
+    }
+    unset($sub);
+
+    return $aiData;
+}
+
+function iconFallback(string $rawIcon, string $relatedName): string
+{
+    $raw = strtolower(preg_replace('/[-_\s]+/', '', $rawIcon));
+    $rel = strtolower(preg_replace('/[-_\s]+/', '', $relatedName));
+
+    // Direct match from fallback map by scanning both the icon name and the related name
+    foreach (ICON_FALLBACK_MAP as $keyword => $icon) {
+        if (str_contains($raw, $keyword) || str_contains($rel, $keyword)) {
+            return $icon;
+        }
+    }
+
+    // Last resort
+    return 'question_mark';
+}
+
 // ── NVIDIA NIM — AI call ──────────────────────────────────────────────────────
 
 /**
@@ -142,15 +289,86 @@ function callNvidiaNim(string $apiKey, string $menuName, array $submenuNames): a
 
     $submenuList = implode(', ', $submenuNames);
 
+    // Curated list of real Google Material Icons (snake_case, no spaces, no variants)
+    // Full list: https://fonts.google.com/icons
+    $validIcons = implode(', ', [
+        'home', 'dashboard', 'menu', 'settings', 'person', 'people', 'manage_accounts',
+        'account_circle', 'badge', 'category', 'inventory', 'storage', 'backup',
+        'cloud_upload', 'cloud_download', 'upload', 'download', 'file_upload',
+        'description', 'assignment', 'fact_check', 'task', 'checklist', 'rule',
+        'build', 'construction', 'engineering', 'handyman', 'cleaning_services',
+        'engineering', 'terminal', 'code', 'dns', 'api', 'integration_instructions',
+        'security', 'lock', 'lock_open', 'shield', 'verified_user', 'vpn_key',
+        'visibility', 'visibility_off', 'preview', 'monitor_heart', 'sensors',
+        'analytics', 'bar_chart', 'pie_chart', 'show_chart', 'timeline',
+        'campaign', 'notifications', 'notifications_active', 'mail', 'sms',
+        'chat', 'comment', 'forum', 'message', 'send', 'inbox',
+        'schedule', 'calendar_month', 'event', 'today', 'date_range',
+        'business', 'store', 'point_of_sale', 'receipt_long', 'payments',
+        'attach_money', 'price_check', 'currency_exchange', 'account_balance',
+        'trending_up', 'trending_down', 'insights', 'monitoring', 'speed',
+        'support_agent', 'help', 'help_center', 'contact_support', 'language',
+        'translate', 'globe', 'public', 'location_on', 'my_location',
+        'map', 'explore', 'pin_drop', 'travel_explore', 'restaurant',
+        'local_shipping', 'flight', 'train', 'directions_car', 'two_wheeler',
+        'medical_services', 'health_and_safety', 'vaccines', 'healing', 'psychology',
+        'school', 'library_books', 'auto_stories', 'history_edu', 'science',
+        'computer', 'devices', 'laptop', 'smartphone', 'tablet', 'tv',
+        'video_library', 'photo_library', 'music_note', 'audiotrack', 'mic',
+        'movie', 'live_tv', 'videocam', 'camera_alt', 'image',
+        'edit', 'edit_note', 'draw', 'brush', 'format_paint',
+        'print', 'print_disabled', 'content_copy', 'content_cut', 'content_paste',
+        'delete', 'delete_forever', 'restore_from_trash', 'archive', 'unarchive',
+        'mark_email_unread', 'mark_email_read', 'filter_list', 'search', 'find_in_page',
+        'sort', 'swap_vert', 'filter_alt', 'tune', 'settings_applications',
+        'app_settings_alt', 'admin_panel_settings', 'tune', 'experiment',
+        'extension', 'widgets', 'add_box', 'add_circle', 'remove_circle',
+        'refresh', 'sync', 'loop', 'autorenew', 'update',
+        'power', 'power_settings_new', 'restart_alt', 'download_for_offline',
+        'upload_file', 'cloud_sync', 'backup', 'save', 'save_alt',
+        'file_present', 'folder', 'folder_open', 'drive_file_move',
+        'share', 'ios_share', 'link', 'link_off', 'qr_code',
+        'qr_code_2', 'barcode_reader', 'fingerprint', 'id_card', 'badge_certified',
+        'workspace_premium', 'verified', 'stars', 'star', 'star_border',
+        'favorite', 'favorite_border', 'thumb_up', 'thumb_down', 'feedback',
+        'flag', 'report', 'gavel', 'policy', 'privacy_tip',
+        'warning', 'error', 'error_outline', 'info', 'lightbulb',
+        'tips_and_updates', 'auto_fix', 'auto_awesome', 'psychology', 'translate',
+        'palette', 'color_lens', 'texture', 'style', 'gradient',
+        'notifications_none', 'addon', 'pending', 'pending_actions', 'hourglass_empty',
+        'timer', 'watch_later', 'schedule', 'flash_on', 'bolt',
+        'wifi', 'wifi_off', 'signal_cellular_4_bar', 'router', 'settings_ethernet',
+        'memory', 'sd_storage', 'data_usage', 'battery_full', 'battery_charging_full',
+        'dark_mode', 'light_mode', 'contrast', 'invert_colors', 'brightness_6',
+        'pinch', 'zoom_in', 'zoom_out', 'fullscreen', 'fullscreen_exit',
+        'cancel', 'close', 'check', 'check_circle', 'add_task',
+        'radio_button_checked', 'radio_button_unchecked', 'toggle_on', 'toggle_off',
+        'switch_access_shortcut', 'alt_route', 'commute', 'local_offer', 'sell',
+        'shopping_cart', 'shopping_bag', 'redeem', 'card_giftcard', 'loyalty',
+        'contact_page', 'perm_identity', 'supervisor_account', 'manage_search', 'app_shortcut',
+        'webhook', 'hub', 'account_tree', 'rule_folder', 'commit',
+        'call_merge', 'center_focus_strong', 'filter_center_focus', 'camera', 'videocam_off',
+        'mic_off', 'volume_off', 'stop', 'play_arrow', 'pause',
+        'skip_next', 'skip_previous', 'skip_previous', 'fast_forward', 'fast_rewind',
+        'replay', 'shuffle', 'repeat', 'repeat_one', 'queue_music',
+        'playlist_add', 'add_to_queue', 'remove_from_queue', 'queue', 'hevc',
+        'subscript', 'superscript', 'format_bold', 'format_italic', 'format_underlined',
+        'format_list_bulleted', 'format_list_numbered', 'format_align_left', 'format_align_center',
+        'format_align_right', 'strikethrough_s', 'clear', 'summarize', 'short_text',
+    ]);
+
     $systemPrompt = 'You are a UI naming assistant for a PHP web application sidebar. '
         . 'Given a menu name and submenus, return ONLY valid JSON — no explanations, '
-        . 'no markdown, no backticks, no extra text before or after.';
+        . 'no markdown, no backticks, no extra text.';
 
     $userPrompt = <<<PROMPT
+Available Material Icon names (use EXACTLY these, snake_case, no spaces):
+{$validIcons}
+
 Menu: {$menuName}
 Submenus: {$submenuList}
 
-Return ONLY this JSON. No extra text. Fill every field based on the menu/submenu names above.
+Return ONLY this JSON. Icon name MUST be from the list above exactly.
 
 {
   "menu": {
@@ -285,6 +503,9 @@ PROMPT;
     ) {
         return ['error' => 'MISSING_FIELDS', 'raw' => $raw];
     }
+
+    // Clamp all icon names to real Material Icons (safety net for AI hallucinations)
+    $aiData = validateAndFixIcons($aiData);
 
     return $aiData;
 }
