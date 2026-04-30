@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-04-30T04:05:08.978Z",
+  "generatedAt": "2026-04-30T05:42:47.310Z",
   "latestVersion": "1.1.13",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 221
+    "commitCount": 222
   },
   "releases": [
     {
       "version": "1.1.13",
       "isLatest": true,
-      "commitCount": 11,
+      "commitCount": 12,
       "dateRange": {
         "from": "2026-04-25",
         "to": "2026-04-30"
       },
       "stats": {
         "release": 1,
-        "feature": 6,
+        "feature": 7,
         "fix": 4,
         "docs": 0,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "feat(menu): add command to create sidebar menu and submenus with scaffolding",
         "fix(commands): update migrate command description and tutorial details for centralized database workflow fix(version): update generatedAt timestamp and increment commit count in version history",
         "fix(version): update generatedAt timestamp and increment commit count in version history",
         "fix(version): update generatedAt timestamp and latest version in version history; increment commit count",
         "fix(version): update version to 1.1.13; enhance commands and documentation for centralized database migration",
         "fix(workbench): enhance table and database selection logic; add support for numbered selections and improve prompts",
         "fix(migration): enhance resolveMigrationSql function to support multiple root directories; improve file resolution logic",
-        "fix(user-migrate): add skipRelativePrefixes to rewriteDbReferences function; improve path handling",
-        "fix(user-migrate): remove unnecessary skip prefixes in rewriteDbReferences function; streamline path handling"
+        "fix(user-migrate): add skipRelativePrefixes to rewriteDbReferences function; improve path handling"
       ],
       "commits": [
+        {
+          "hash": "656776834a44e5ec4c84b00dcafd9270eb2acd4f",
+          "shortHash": "6567768",
+          "date": "2026-04-30",
+          "title": "feat(menu): add command to create sidebar menu and submenus with scaffolding",
+          "type": "feature"
+        },
         {
           "hash": "5dc7091fe15699441f2097f070f5bbc0138fe550",
           "shortHash": "5dc7091",
