@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-05-04T04:26:38.284Z",
+  "generatedAt": "2026-05-04T04:34:04.369Z",
   "latestVersion": "1.1.14",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 234
+    "commitCount": 235
   },
   "releases": [
     {
       "version": "1.1.14",
       "isLatest": true,
-      "commitCount": 16,
+      "commitCount": 17,
       "dateRange": {
         "from": "2026-04-30",
         "to": "2026-05-04"
       },
       "stats": {
         "release": 2,
-        "feature": 10,
+        "feature": 11,
         "fix": 3,
         "docs": 1,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "feat(ai): update command categories and add new AI commands for Claude Code",
         "feat(ai): update AI command descriptions and add new commands in CLI and documentation",
         "feat(ai): add command to update NVIDIA_NIM_API_KEY in Free Claude Code",
         "feat(ai): add command to change configured model in Free Claude Code",
         "feat: Add ML CLI Bash script for cross-platform usage",
         "docs(readme): update README to include AI integration features and enhance installation instructions docs(version-history): update version history with latest release details and commit count",
         "feat(ai): add ai-commands.php for managing AI processes and scripts feat(installer): introduce ai-installer.php for setting up Free-Claude-Code environment fix(version): update version history to 1.1.14 and increment commit count",
-        "fix(version): update version to 1.1.14 Added ml install ai command",
-        "feat(icons): add validation and fallback for Material Icons in sidebar menu"
+        "fix(version): update version to 1.1.14 Added ml install ai command"
       ],
       "commits": [
+        {
+          "hash": "07e72d3d96e90ba66d4b33fc9d6280aaac1e75e8",
+          "shortHash": "07e72d3",
+          "date": "2026-05-04",
+          "title": "feat(ai): update command categories and add new AI commands for Claude Code",
+          "type": "feature"
+        },
         {
           "hash": "7310f6947274bbadb29a99be1d83ec4b382e64f1",
           "shortHash": "7310f69",
