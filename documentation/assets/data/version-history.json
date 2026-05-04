@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-04-30T14:39:27.837Z",
+  "generatedAt": "2026-05-04T04:25:23.163Z",
   "latestVersion": "1.1.14",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 232
+    "commitCount": 233
   },
   "releases": [
     {
       "version": "1.1.14",
       "isLatest": true,
-      "commitCount": 14,
+      "commitCount": 15,
       "dateRange": {
         "from": "2026-04-30",
-        "to": "2026-04-30"
+        "to": "2026-05-04"
       },
       "stats": {
         "release": 2,
-        "feature": 9,
+        "feature": 10,
         "fix": 3,
         "docs": 0,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "feat(ai): update AI command descriptions and add new commands in CLI and documentation",
         "feat(ai): add command to update NVIDIA_NIM_API_KEY in Free Claude Code",
         "feat(ai): add command to change configured model in Free Claude Code",
         "feat: Add ML CLI Bash script for cross-platform usage",
         "docs(readme): update README to include AI integration features and enhance installation instructions docs(version-history): update version history with latest release details and commit count",
         "feat(ai): add ai-commands.php for managing AI processes and scripts feat(installer): introduce ai-installer.php for setting up Free-Claude-Code environment fix(version): update version history to 1.1.14 and increment commit count",
         "fix(version): update version to 1.1.14 Added ml install ai command",
-        "feat(icons): add validation and fallback for Material Icons in sidebar menu",
-        "feat(nim): add diagnostic scripts for NVIDIA NIM API connectivity and performance testing"
+        "feat(icons): add validation and fallback for Material Icons in sidebar menu"
       ],
       "commits": [
+        {
+          "hash": "4881db92758095c817775ca73e0d8002fa6451c0",
+          "shortHash": "4881db9",
+          "date": "2026-05-04",
+          "title": "feat(ai): update AI command descriptions and add new commands in CLI and documentation",
+          "type": "feature"
+        },
         {
           "hash": "4da3e1c28cd525b4841c5956f4a0d066c80cd5e1",
           "shortHash": "4da3e1c",
