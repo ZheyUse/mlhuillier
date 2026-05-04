@@ -275,10 +275,12 @@ show_top_help() {
     echo ""
     echo "AI:"
     echo "  install ai       Install Free Claude Code"
-    echo "  --ai             Start uvicorn + Claude Code"
+    echo "  --ai             Start uvicorn + Claude Code (visible)"
+    echo "  --ai claude      Start Claude Code in current directory (bg uvicorn)"
     echo "  --ai bg          Start both in background"
     echo "  --ai stop        Stop all processes"
-    echo "  --ai cm          Change configured model"
+    echo "  --ai restart     Stop and start both in background"
+    echo "  --ai cm          Change model (Opus/Sonnet/Haiku/Default)"
     echo "  --ai key         Update NVIDIA_NIM_API_KEY"
     echo ""
     echo "Docs: ml doc"
@@ -294,12 +296,12 @@ show_help_command() {
         add)        show_help_add ;;
         wb)         show_help_wb ;;
         --ai)       echo "Usage: ml --ai [subcommand]"
-                    echo "  (no arg)  Start uvicorn + Claude Code"
-                    echo "  claude    Start Claude Code with bg uvicorn"
+                    echo "  (no arg)  Start uvicorn + Claude Code (both visible)"
+                    echo "  claude    Start bg uvicorn, Claude Code in current working directory"
                     echo "  bg        Start both in background"
                     echo "  stop      Stop all processes"
-                    echo "  restart   Stop then start both in background"
-                    echo "  cm        Change Opus, Sonnet, Haiku, or default model"
+                    echo "  restart   Stop and start both in background"
+                    echo "  cm        Change Opus, Sonnet, Haiku, or default model in .env"
                     echo "  key       Update NVIDIA_NIM_API_KEY in .env"
                     ;;
         install)    if [[ "$sub" == "ai" ]]; then

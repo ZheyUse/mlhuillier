@@ -387,10 +387,10 @@ if ($key !== '') {
 echo 'CLI: Adding proper models...' . PHP_EOL;
 setEnvValues($envPath, [
     'ANTHROPIC_AUTH_TOKEN' => 'freecc',
-    'MODEL_OPUS'           => 'nvidia_nim/moonshotai/kimi-k2.5',
-    'MODEL_SONNET'         => 'nvidia_nim/minimaxai/minimax-m2.5',
-    'MODEL_HAIKU'          => 'nvidia_nim/z-ai/glm4.7',
-    'MODEL'                => 'nvidia_nim/z-ai/glm4.7',
+    'MODEL_OPUS'           => 'nvidia_nim/deepseek-ai/deepseek-v4-pro',
+    'MODEL_SONNET'        => 'nvidia_nim/minimaxai/minimax-m2.7',
+    'MODEL_HAIKU'        => 'nvidia_nim/z-ai/glm4.7',
+    'MODEL'               => 'nvidia_nim/z-ai/glm-5.1',
 ]);
 echo 'CLI: Models has been added ...ok' . PHP_EOL;
 

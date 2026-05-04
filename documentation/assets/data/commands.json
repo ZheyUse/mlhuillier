@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-04-30T10:50:41.071Z",
+  "generatedAt": "2026-05-04T04:23:45.598Z",
   "source": "ml.bat",
   "cliVersion": "1.1.14",
   "commands": [
     {
       "name": "ml --ai",
-      "description": "Start Free Claude Code servers",
+      "description": "Start uvicorn + Claude Code (visible)",
       "syntax": "ml --ai",
       "params": [],
       "example": "ml --ai",
@@ -22,20 +22,110 @@
       }
     },
     {
+      "name": "ml --ai bg",
+      "description": "Start both in background",
+      "syntax": "ml --ai bg",
+      "params": [],
+      "example": "ml --ai bg",
+      "category": "general",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml --ai bg.",
+        "steps": [
+          "Run: ml --ai bg",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml --ai claude",
+      "description": "Start Claude Code in current directory (bg uvicorn)",
+      "syntax": "ml --ai claude",
+      "params": [],
+      "example": "ml --ai claude",
+      "category": "general",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml --ai claude.",
+        "steps": [
+          "Run: ml --ai claude",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml --ai cm",
+      "description": "Change model (Opus/Sonnet/Haiku/Default)",
+      "syntax": "ml --ai cm",
+      "params": [],
+      "example": "ml --ai cm",
+      "category": "general",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml --ai cm.",
+        "steps": [
+          "Run: ml --ai cm",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
       "name": "ml --ai key",
-      "description": "Update or rotate the NVIDIA NIM API key used by Free Claude Code.",
+      "description": "Update NVIDIA_NIM_API_KEY",
       "syntax": "ml --ai key",
       "params": [],
       "example": "ml --ai key",
       "category": "general",
-      "expectedResult": "Prompts for NVIDIA_NIM_API_KEY and writes the new value to the Free Claude Code .env file.",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
       "tutorial": {
-        "whenToUse": "When you need to update, change, or rotate the NVIDIA NIM API key.",
-        "scenario": "Rotate the Free Claude Code NVIDIA NIM API key.",
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml --ai key.",
         "steps": [
           "Run: ml --ai key",
-          "Enter the new NVIDIA_NIM_API_KEY when prompted.",
-          "Confirm the CLI reports that NVIDIA_NIM_API_KEY has been set."
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml --ai restart",
+      "description": "Stop and start both in background",
+      "syntax": "ml --ai restart",
+      "params": [],
+      "example": "ml --ai restart",
+      "category": "general",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml --ai restart.",
+        "steps": [
+          "Run: ml --ai restart",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml --ai stop",
+      "description": "Stop all processes",
+      "syntax": "ml --ai stop",
+      "params": [],
+      "example": "ml --ai stop",
+      "category": "general",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml --ai stop.",
+        "steps": [
+          "Run: ml --ai stop",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
         ]
       }
     },
@@ -907,6 +997,66 @@
         "scenario": "Typical general workflow using ml --ai.",
         "steps": [
           "Run: ml --ai",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml --ai bg",
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml --ai bg.",
+        "steps": [
+          "Run: ml --ai bg",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml --ai claude",
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml --ai claude.",
+        "steps": [
+          "Run: ml --ai claude",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml --ai cm",
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml --ai cm.",
+        "steps": [
+          "Run: ml --ai cm",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml --ai key",
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml --ai key.",
+        "steps": [
+          "Run: ml --ai key",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml --ai restart",
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml --ai restart.",
+        "steps": [
+          "Run: ml --ai restart",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml --ai stop",
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical general workflow using ml --ai stop.",
+        "steps": [
+          "Run: ml --ai stop",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]

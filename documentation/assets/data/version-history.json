@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-04-30T14:28:46.439Z",
+  "generatedAt": "2026-04-30T14:39:27.837Z",
   "latestVersion": "1.1.14",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 231
+    "commitCount": 232
   },
   "releases": [
     {
       "version": "1.1.14",
       "isLatest": true,
-      "commitCount": 13,
+      "commitCount": 14,
       "dateRange": {
         "from": "2026-04-30",
         "to": "2026-04-30"
       },
       "stats": {
         "release": 2,
-        "feature": 8,
+        "feature": 9,
         "fix": 3,
         "docs": 0,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "feat(ai): add command to update NVIDIA_NIM_API_KEY in Free Claude Code",
         "feat(ai): add command to change configured model in Free Claude Code",
         "feat: Add ML CLI Bash script for cross-platform usage",
         "docs(readme): update README to include AI integration features and enhance installation instructions docs(version-history): update version history with latest release details and commit count",
         "feat(ai): add ai-commands.php for managing AI processes and scripts feat(installer): introduce ai-installer.php for setting up Free-Claude-Code environment fix(version): update version history to 1.1.14 and increment commit count",
         "fix(version): update version to 1.1.14 Added ml install ai command",
         "feat(icons): add validation and fallback for Material Icons in sidebar menu",
-        "feat(nim): add diagnostic scripts for NVIDIA NIM API connectivity and performance testing",
-        "fix(sidebar): enhance JSON response handling and validation in NVIDIA NIM AI integration"
+        "feat(nim): add diagnostic scripts for NVIDIA NIM API connectivity and performance testing"
       ],
       "commits": [
+        {
+          "hash": "4da3e1c28cd525b4841c5956f4a0d066c80cd5e1",
+          "shortHash": "4da3e1c",
+          "date": "2026-04-30",
+          "title": "feat(ai): add command to update NVIDIA_NIM_API_KEY in Free Claude Code",
+          "type": "feature"
+        },
         {
           "hash": "8f4d5782a1db7449bf016c4705f4fa62f127c5a6",
           "shortHash": "8f4d578",

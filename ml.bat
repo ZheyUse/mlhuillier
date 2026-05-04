@@ -117,7 +117,13 @@ echo   create --pbac      Create PBAC table and apply PBAC scaffold
 echo   create --rbac      Create RBAC table in userdb
 echo   gen                Generate local PBAC access map (ml gen)
 echo   update             Update ML CLI from remote
-echo   --ai               Start Free Claude Code servers
+echo   --ai               Start uvicorn + Claude Code (visible)
+echo   --ai claude        Start Claude Code in current directory (bg uvicorn)
+echo   --ai bg            Start both in background
+echo   --ai stop          Stop all processes
+echo   --ai restart       Stop and start both in background
+echo   --ai cm            Change model (Opus/Sonnet/Haiku/Default)
+echo   --ai key           Update NVIDIA_NIM_API_KEY
 echo   --d                Download remote installer
 echo   --c                Check remote ML CLI version
 echo   rev / reveal       Reveal current project folder in File Explorer
@@ -250,13 +256,19 @@ echo HELP: Free Claude Code
 echo Usage: ml --ai [subcommand]
 echo.
 echo Subcommands:
-echo   ml --ai          Start uvicorn and Claude Code in visible terminals
-echo   ml --ai claude   Start uvicorn in the background and Claude Code visibly
-echo   ml --ai bg       Start both processes in the background
-echo   ml --ai stop     Stop Free Claude Code processes started by ml --ai
-echo   ml --ai restart  Stop then start both processes in the background
-echo   ml --ai cm       Change Opus, Sonnet, Haiku, or default model in .env
-echo   ml --ai key      Update NVIDIA_NIM_API_KEY in .env
+echo   ml --ai           Start uvicorn and Claude Code in visible terminals
+echo   ml --ai claude    Start uvicorn in bg, Claude Code visibly (runs in current working directory)
+echo   ml --ai bg        Start both processes in background
+echo   ml --ai stop       Stop Free Claude Code processes
+echo   ml --ai restart    Stop then start both processes in background
+echo   ml --ai cm         Change Opus, Sonnet, Haiku, or default model in .env
+echo   ml --ai key        Update NVIDIA_NIM_API_KEY in .env
+echo.
+echo Models auto-configured on install:
+echo   MODEL_OPUS     - nvidia_nim/deepseek-ai/deepseek-v4-pro
+echo   MODEL_SONNET   - nvidia_nim/minimaxai/minimax-m2.7
+echo   MODEL_HAIKU    - nvidia_nim/z-ai/glm4.7
+echo   MODEL          - nvidia_nim/z-ai/glm-5.1
 exit /b 0
 
 :help_wb

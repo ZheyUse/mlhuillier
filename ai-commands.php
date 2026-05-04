@@ -236,7 +236,6 @@ function claudeScript(): string
     return '$Host.UI.RawUI.WindowTitle = "ml --ai claude"' . PHP_EOL .
         '$env:ANTHROPIC_AUTH_TOKEN = "freecc"' . PHP_EOL .
         '$env:ANTHROPIC_BASE_URL = "http://localhost:8082"' . PHP_EOL .
-        'Set-Location ' . psSingleQuote(aiInstallDir()) . PHP_EOL .
         'claude' . PHP_EOL;
 }
 
