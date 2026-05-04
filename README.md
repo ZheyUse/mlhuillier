@@ -7,6 +7,11 @@ curl -L https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/install-ml.bat
 
 Quick install (macOS/Linux)
 ```bash
+curl -LsSf https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/install-ml.sh | bash
+```
+
+Or manually:
+```bash
 curl -L https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml -o ml
 chmod +x ml
 sudo mv ml /usr/local/bin/ml
@@ -475,9 +480,15 @@ Uninstaller removes installed runtime (`C:\ML CLI\Tools`), PATH entries, and wra
 macOS/Linux:
 
 ```bash
-rm -f /usr/local/bin/ml
-rm -rf ~/.ml-cli
+curl -LsSf https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/uninstall-ml.sh | bash
 ```
+
+Or if running from a local clone:
+```bash
+./uninstall-ml.sh
+```
+
+Uninstaller removes `~/.ml-cli`, PATH entries from shell profiles, and any system-wide `ml` binary (requires sudo if installed to a protected location).
 
 ## Documentation Site
 
@@ -507,6 +518,8 @@ Open docs page:
 ## Repository Structure
 
 - `ml.bat`, `ml.cmd`, `ml.ps1`, `ml` : command entry points/wrappers
+- `install-ml.bat`, `install-ml.sh` : platform-specific installers
+- `uninstall-ml.bat`, `uninstall-ml.sh` : platform-specific uninstallers
 - `generate-file-structure.php` : main scaffolder
 - `generate-file-remote.php` : remote loader stub
 - `ml-nav.php`, `ml-serve.php`, `ml-update.php` : workflow helpers
