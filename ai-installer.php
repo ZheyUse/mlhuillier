@@ -307,22 +307,226 @@ function configureVsCodeSettings(): void
 
 // ── Prerequisite checks ────────────────────────────────────────────────────────
 
-function checkPrerequisites(): bool
-{
-    if (!commandExists('git')) {
-        fwrite(STDERR, 'CLI: git is required. Install it with Git for Windows, Homebrew, or your package manager.' . PHP_EOL);
-        return false;
-    }
-    if (!commandExists('npm')) {
-        fwrite(STDERR, 'CLI: npm is required. Install Node.js from nodejs.org or via your package manager.' . PHP_EOL);
-        return false;
-    }
-    return true;
-}
-
 function commandExists(string $cmd): bool
 {
     return commandPath($cmd) !== '';
+}
+
+function openBrowserTabs(array $urls): void
+{
+    if (isWindows()) {
+        foreach ($urls as $url) {
+            pclose(popen('start "" "' . $url . '"', 'r'));
+        }
+    } elseif (isMac()) {
+        foreach ($urls as $url) {
+            pclose(popen('open "' . $url . '"', 'r'));
+        }
+    } else {
+        // Linux
+        foreach ($urls as $url) {
+            pclose(popen('xdg-open "' . $url . '"', 'r'));
+        }
+    }
+}
+
+function promptBrowserFallback(bool $gitMissing, bool $nodeMissing): bool
+{
+    echo PHP_EOL . '========================================' . PHP_EOL;
+    echo 'MANUAL INSTALL REQUIRED' . PHP_EOL;
+    echo '========================================' . PHP_EOL;
+    if ($gitMissing) {
+        echo '  - Git (https://git-scm.com)' . PHP_EOL;
+    }
+    if ($nodeMissing) {
+        echo '  - Node.js/npm (https://nodejs.org/)' . PHP_EOL;
+    }
+    echo PHP_EOL;
+    echo 'After installation, restart your Terminal.' . PHP_EOL;
+    echo 'Then run: ml install ai' . PHP_EOL;
+    echo PHP_EOL;
+    echo 'Press ENTER to open the download pages...';
+
+    $input = trim(fgets(STDIN));
+
+    $gitUrl  = 'https://git-scm.com/download/mac';
+    $nodeUrl = 'https://nodejs.org/';
+
+    if (isMac()) {
+        echo 'Tip: You can also run in Terminal:' . PHP_EOL;
+        echo '  brew install git node' . PHP_EOL;
+        echo PHP_EOL;
+    } elseif (!isWindows()) {
+        echo 'Tip: You can also run in Terminal:' . PHP_EOL;
+        echo '  sudo apt install git nodejs npm' . PHP_EOL;
+        echo PHP_EOL;
+    }
+
+    openBrowserTabs($gitMissing ? [$gitUrl, $nodeUrl] : [$nodeUrl]);
+
+    return false;
+}
+
+function checkNodeAndNpm(): bool
+{
+    $nodeMissing = !commandExists('node') || !commandExists('npm');
+    $gitMissing = !commandExists('git');
+
+    if (!$nodeMissing && !$gitMissing) {
+        return true;
+    }
+
+    // ── Windows ──
+    if (isWindows()) {
+        $wingetAvailable = commandExists('winget');
+
+        if (!$wingetAvailable) {
+            echo PHP_EOL . 'CLI: winget is not available on this Windows version.' . PHP_EOL;
+            return promptBrowserFallback($gitMissing, $nodeMissing);
+        }
+
+        echo PHP_EOL . 'CLI: Installing missing components via winget...' . PHP_EOL;
+
+        if ($gitMissing) {
+            echo 'CLI: Installing Git...' . PHP_EOL;
+            $rc = runCommandRaw('winget install Git.Git --accept-source-agreements --accept-package-agreements');
+            if ($rc !== 0) {
+                echo 'CLI: winget failed to install Git.' . PHP_EOL;
+                $gitMissing = true;
+            } else {
+                echo 'CLI: Git installed.' . PHP_EOL;
+            }
+        }
+
+        if ($nodeMissing) {
+            echo 'CLI: Installing Node.js...' . PHP_EOL;
+            $rc = runCommandRaw('winget install OpenJS.NodeJS.LTS --accept-source-agreements --accept-package-agreements');
+            if ($rc !== 0) {
+                echo 'CLI: winget failed to install Node.js.' . PHP_EOL;
+                $nodeMissing = true;
+            } else {
+                echo 'CLI: Node.js installed.' . PHP_EOL;
+            }
+        }
+
+        // Re-verify
+        $nodeMissingNow = !commandExists('node') || !commandExists('npm');
+        $gitMissingNow = !commandExists('git');
+
+        if (!$nodeMissingNow && !$gitMissingNow) {
+            return true;
+        }
+
+        echo PHP_EOL . '========================================' . PHP_EOL;
+        echo 'RESTART YOUR TERMINAL!' . PHP_EOL;
+        echo '========================================' . PHP_EOL;
+        $missing = [];
+        if ($gitMissingNow)  { $missing[] = 'Git'; }
+        if ($nodeMissingNow)  { $missing[] = 'Node.js/npm'; }
+        echo 'Still missing: ' . implode(', ', $missing) . PHP_EOL;
+        echo PHP_EOL;
+        echo 'Restart your Terminal, then run: ml install ai' . PHP_EOL;
+
+        return promptBrowserFallback($gitMissingNow, $nodeMissingNow);
+    }
+
+    // ── macOS ──
+    if (isMac()) {
+        $brewAvailable = commandExists('brew');
+
+        if (!$brewAvailable) {
+            echo PHP_EOL . 'CLI: Homebrew is not installed. Install it from https://brew.sh/' . PHP_EOL;
+            return promptBrowserFallback($gitMissing, $nodeMissing);
+        }
+
+        echo PHP_EOL . 'CLI: Installing missing components via Homebrew...' . PHP_EOL;
+
+        if ($gitMissing) {
+            echo 'CLI: Installing Git...' . PHP_EOL;
+            $rc = runCommandRaw('brew install git');
+            if ($rc !== 0) { $gitMissing = true; } else { echo 'CLI: Git installed.' . PHP_EOL; }
+        }
+
+        if ($nodeMissing) {
+            echo 'CLI: Installing Node.js...' . PHP_EOL;
+            $rc = runCommandRaw('brew install node');
+            if ($rc !== 0) { $nodeMissing = true; } else { echo 'CLI: Node.js installed.' . PHP_EOL; }
+        }
+
+        $nodeMissingNow = !commandExists('node') || !commandExists('npm');
+        $gitMissingNow = !commandExists('git');
+
+        if (!$nodeMissingNow && !$gitMissingNow) {
+            return true;
+        }
+
+        echo PHP_EOL . '========================================' . PHP_EOL;
+        echo 'RESTART YOUR TERMINAL!' . PHP_EOL;
+        echo '========================================' . PHP_EOL;
+        $missing = [];
+        if ($gitMissingNow)  { $missing[] = 'Git'; }
+        if ($nodeMissingNow)  { $missing[] = 'Node.js/npm'; }
+        echo 'Still missing: ' . implode(', ', $missing) . PHP_EOL;
+        echo PHP_EOL;
+        echo 'Restart your Terminal, then run: ml install ai' . PHP_EOL;
+
+        return promptBrowserFallback($gitMissingNow, $nodeMissingNow);
+    }
+
+    // ── Linux ──
+    echo PHP_EOL . 'CLI: Installing missing components via apt...' . PHP_EOL;
+
+    if ($gitMissing) {
+        echo 'CLI: Installing Git...' . PHP_EOL;
+        $rc = runCommandRaw('sudo apt install -y git');
+        if ($rc !== 0) { $gitMissing = true; } else { echo 'CLI: Git installed.' . PHP_EOL; }
+    }
+
+    if ($nodeMissing) {
+        echo 'CLI: Installing Node.js...' . PHP_EOL;
+        // Try nodejs package first; if it installs npm alongside, great
+        $rc = runCommandRaw('sudo apt install -y nodejs npm');
+        if ($rc !== 0) {
+            // Fallback: NodeSource for newer Node.js
+            echo 'CLI: apt failed. Trying NodeSource for Node.js LTS...' . PHP_EOL;
+            $rc2 = runCommandRaw('curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash - && sudo apt install -y nodejs');
+            if ($rc2 === 0) {
+                echo 'CLI: Node.js installed via NodeSource.' . PHP_EOL;
+                $nodeMissing = false;
+            } else {
+                echo 'CLI: Node.js install failed.' . PHP_EOL;
+                $nodeMissing = true;
+            }
+        } else {
+            echo 'CLI: Node.js installed.' . PHP_EOL;
+        }
+    }
+
+    $nodeMissingNow = !commandExists('node') || !commandExists('npm');
+    $gitMissingNow = !commandExists('git');
+
+    if (!$nodeMissingNow && !$gitMissingNow) {
+        return true;
+    }
+
+    echo PHP_EOL . '========================================' . PHP_EOL;
+    echo 'RESTART YOUR TERMINAL!' . PHP_EOL;
+    echo '========================================' . PHP_EOL;
+    $missing = [];
+    if ($gitMissingNow)  { $missing[] = 'Git'; }
+    if ($nodeMissingNow)  { $missing[] = 'Node.js/npm'; }
+    echo 'Still missing: ' . implode(', ', $missing) . PHP_EOL;
+    echo PHP_EOL;
+    echo 'Restart your Terminal, then run: ml install ai' . PHP_EOL;
+
+    return promptBrowserFallback($gitMissingNow, $nodeMissingNow);
+}
+
+function checkPrerequisites(): bool
+{
+    // git and npm/npm are checked and auto-installed by checkNodeAndNpm() above.
+    // This is kept as a placeholder for future additional checks.
+    return true;
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────────
@@ -334,6 +538,11 @@ if (is_dir($installDir)) {
     echo 'Free-Claude-Code is already installed at: ' . $installDir . PHP_EOL;
     echo 'Run: ml --ai' . PHP_EOL;
     exit(0);
+}
+
+// Check Node.js/npm and Git early — install via winget if missing on Windows, then prompt restart
+if (!checkNodeAndNpm()) {
+    exit(1);
 }
 
 if (!checkPrerequisites()) {

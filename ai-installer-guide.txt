@@ -1,0 +1,99 @@
+AI INSTALLER GUIDE (Free Claude Code)
+======================================
+
+WHAT THIS INSTALLS:
+-------------------
+Free Claude Code - a local AI coding assistant using NVIDIA NIM models.
+It sets up an API server (uvicorn) and Claude Code agent.
+
+BEFORE YOU START - MAKE SURE YOU HAVE:
+---------------------------------------
+✅ curl (to install ml first, run this command FIRST:)
+   Windows: curl -L https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/install-ml.bat -o install-ml.bat && install-ml.bat
+   Mac/Linux: curl -LsSf https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/install-ml.sh | bash
+
+✅ Git
+✅ Node.js / npm
+✅ PHP CLI
+✅ Internet connection
+
+HOW TO CHECK IF YOU HAVE CURL:
+-------------------------------
+Just open terminal and type:
+  curl --version
+
+If it says "not recognized":
+  - Windows: Install Git for Windows (includes curl)
+  - macOS: brew install curl
+  - Linux: sudo apt install curl
+
+INSTALLATION STEPS:
+--------------------
+1. Open terminal (Command Prompt, PowerShell, or Terminal)
+2. Run: ml install ai
+3. Follow the prompts
+4. When asked for NVIDIA NIM API key, go to https://build.nvidia.com/ to get one
+   - Click "Get API Key" button after signing up/login
+   - Copy and paste the key (looks like: nvapi-xxxxxxxxxxxxxxxxxxxxxxxx)
+5. Wait for installation to finish
+
+AFTER INSTALLATION:
+-------------------
+Start AI:
+  ml --ai          → Shows both windows (recommended)
+  ml --ai claude   → Background uvicorn, visible Claude Code
+  ml --ai bg       → Both in background
+
+Stop AI:
+  ml --ai stop
+
+Restart:
+  ml --ai restart
+
+Update API key:
+  ml --ai key
+
+Change model:
+  ml --ai cm       → Choose Opus, Sonnet, or Haiku
+
+COMMON PROBLEMS:
+----------------
+"git is not recognized"
+  → Install Git: https://git-scm.com/download/win
+
+"npm is not recognized"
+  → Install Node.js: https://nodejs.org/
+
+"curl is not recognized"
+  → Install Git for Windows or update Windows
+
+"Failed cloning repo"
+  → Check internet connection, restart terminal, try again
+
+"Invalid API Key"
+  → Make sure to copy the whole key from https://build.nvidia.com/
+  → Key should start with "nvapi-"
+
+Claude Code install failed
+  → Run this:
+    npm install -g npm@latest
+    npm install -g @anthropic-ai/claude-code
+
+WHERE IT'S INSTALLED:
+---------------------
+Windows: C:\free-claude-code\free-claude-code
+Mac/Linux: ~/.free-claude-code/free-claude-code
+
+QUICK COMMANDS:
+---------------
+ml install ai       → Install Free Claude Code
+ml --ai             → Start AI (recommended)
+ml --ai stop        → Stop AI
+ml --ai key         → Update API key
+ml --ai cm          → Change model
+
+NEED HELP?
+----------
+ML CLI: ml --h
+NVIDIA API: https://build.nvidia.com/
+Claude Code Docs: https://docs.anthropic.com/en/docs/claude-code
