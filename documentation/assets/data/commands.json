@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-04T04:26:18.037Z",
+  "generatedAt": "2026-05-04T04:32:48.243Z",
   "source": "ml.bat",
   "cliVersion": "1.1.14",
   "commands": [
@@ -9,11 +9,11 @@
       "syntax": "ml --ai",
       "params": [],
       "example": "ml --ai",
-      "category": "general",
+      "category": "ai",
       "expectedResult": "Runs the command workflow and returns success or actionable error output.",
       "tutorial": {
         "whenToUse": "When this workflow matches your current task.",
-        "scenario": "Typical general workflow using ml --ai.",
+        "scenario": "Typical ai workflow using ml --ai.",
         "steps": [
           "Run: ml --ai",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
@@ -27,11 +27,11 @@
       "syntax": "ml --ai bg",
       "params": [],
       "example": "ml --ai bg",
-      "category": "general",
+      "category": "ai",
       "expectedResult": "Runs the command workflow and returns success or actionable error output.",
       "tutorial": {
         "whenToUse": "When this workflow matches your current task.",
-        "scenario": "Typical general workflow using ml --ai bg.",
+        "scenario": "Typical ai workflow using ml --ai bg.",
         "steps": [
           "Run: ml --ai bg",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
@@ -45,11 +45,11 @@
       "syntax": "ml --ai claude",
       "params": [],
       "example": "ml --ai claude",
-      "category": "general",
+      "category": "ai",
       "expectedResult": "Runs the command workflow and returns success or actionable error output.",
       "tutorial": {
         "whenToUse": "When this workflow matches your current task.",
-        "scenario": "Typical general workflow using ml --ai claude.",
+        "scenario": "Typical ai workflow using ml --ai claude.",
         "steps": [
           "Run: ml --ai claude",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
@@ -63,11 +63,11 @@
       "syntax": "ml --ai cm",
       "params": [],
       "example": "ml --ai cm",
-      "category": "general",
+      "category": "ai",
       "expectedResult": "Runs the command workflow and returns success or actionable error output.",
       "tutorial": {
         "whenToUse": "When this workflow matches your current task.",
-        "scenario": "Typical general workflow using ml --ai cm.",
+        "scenario": "Typical ai workflow using ml --ai cm.",
         "steps": [
           "Run: ml --ai cm",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
@@ -81,11 +81,11 @@
       "syntax": "ml --ai key",
       "params": [],
       "example": "ml --ai key",
-      "category": "general",
+      "category": "ai",
       "expectedResult": "Runs the command workflow and returns success or actionable error output.",
       "tutorial": {
         "whenToUse": "When this workflow matches your current task.",
-        "scenario": "Typical general workflow using ml --ai key.",
+        "scenario": "Typical ai workflow using ml --ai key.",
         "steps": [
           "Run: ml --ai key",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
@@ -99,11 +99,11 @@
       "syntax": "ml --ai restart",
       "params": [],
       "example": "ml --ai restart",
-      "category": "general",
+      "category": "ai",
       "expectedResult": "Runs the command workflow and returns success or actionable error output.",
       "tutorial": {
         "whenToUse": "When this workflow matches your current task.",
-        "scenario": "Typical general workflow using ml --ai restart.",
+        "scenario": "Typical ai workflow using ml --ai restart.",
         "steps": [
           "Run: ml --ai restart",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
@@ -117,11 +117,11 @@
       "syntax": "ml --ai stop",
       "params": [],
       "example": "ml --ai stop",
-      "category": "general",
+      "category": "ai",
       "expectedResult": "Runs the command workflow and returns success or actionable error output.",
       "tutorial": {
         "whenToUse": "When this workflow matches your current task.",
-        "scenario": "Typical general workflow using ml --ai stop.",
+        "scenario": "Typical ai workflow using ml --ai stop.",
         "steps": [
           "Run: ml --ai stop",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
@@ -959,6 +959,78 @@
         "expectedResult": "Opens http://localhost/<project_name> in your browser."
       }
     ],
+    "installAndUseClaudeCode": [
+      {
+        "step": 1,
+        "command": "ml install ai",
+        "explanation": "Install Free Claude Code: clones free-claude-code repo, installs uv + Python 3.14, configures .env with default models, prompts for NVIDIA NIM API key, installs Claude Code via npm, and patches VS Code settings.",
+        "expectedResult": "Free Claude Code installed to C:\\free-claude-code\\free-claude-code with everything configured."
+      },
+      {
+        "step": 2,
+        "command": "Get NVIDIA NIM API key",
+        "explanation": "Sign up / log in at https://build.nvidia.com/ and copy your API key. During install you will be prompted to enter it.",
+        "expectedResult": "NVIDIA NIM API key is stored in C:\\free-claude-code\\free-claude-code\\.env."
+      },
+      {
+        "step": 3,
+        "command": "ml --ai",
+        "explanation": "Start uvicorn (API server on port 8082) and Claude Code in visible terminal windows. Uvicorn runs in free-claude-code directory; Claude Code inherits your current working directory.",
+        "expectedResult": "Two PowerShell windows open — one for uvicorn, one for Claude Code."
+      },
+      {
+        "step": 4,
+        "command": "ml --ai claude",
+        "explanation": "Start uvicorn in background and Claude Code visibly in your project directory. Use this when you are already inside your project folder and want Claude Code to start there instead of free-claude-code.",
+        "expectedResult": "Uvicorn runs silently in background on port 8082; Claude Code window opens in your current directory."
+      },
+      {
+        "step": 5,
+        "command": "ml --ai cm",
+        "explanation": "Change the active AI model. Select Opus, Sonnet, Haiku, or the default model tier and enter a nvidia_nim model slug.",
+        "expectedResult": ".env updated with the new model. Restart with ml --ai restart to load it."
+      },
+      {
+        "step": 6,
+        "command": "ml --ai restart",
+        "explanation": "Stop and restart both processes (e.g., after changing models or API key in .env).",
+        "expectedResult": "Fresh uvicorn + Claude Code processes running with updated configuration."
+      }
+    ],
+    "installAndUseClaudeCodeGuide": {
+      "buttonLabel": "HOW TO USE CLAUDE CODE?",
+      "title": "How to Use Free Claude Code with ML CLI",
+      "intro": "Free Claude Code is a full-stack setup: a uvicorn API server on port 8082 acts as the proxy to NVIDIA NIM models, while Claude Code connects to it as the AI engine. Use ml --ai commands to manage the stack.",
+      "steps": [
+        "Run ml install ai to set up the entire stack: uv, Python 3.14, free-claude-code repo, Claude Code npm package, and VS Code configuration.",
+        "Get an NVIDIA NIM API key from https://build.nvidia.com/ — enter it when prompted by the installer or later with ml --ai key.",
+        "Default models are pre-configured on install: MODEL_OPUS=nvidia_nim/deepseek-ai/deepseek-v4-pro, MODEL_SONNET=nvidia_nim/minimaxai/minimax-m2.7, MODEL_HAIKU=nvidia_nim/z-ai/glm4.7, MODEL=nvidia_nim/z-ai/glm-5.1.",
+        "Run ml --ai to start uvicorn and Claude Code in visible terminal windows. Both processes must be running for Claude Code to work.",
+        "Run ml --ai claude from your project folder when you want Claude Code to start in that directory instead of free-claude-code. Uvicorn stays in the background.",
+        "Run ml --ai bg when you want both processes running silently with no open terminal windows.",
+        "To switch models: ml --ai cm, pick a tier, enter the model slug. Then ml --ai restart for changes to take effect.",
+        "To update your API key: ml --ai key, paste the new key. Then ml --ai restart.",
+        "Shut everything down with ml --ai stop when you are done. Use ml --ai restart to reload after any .env changes.",
+        "Claude Code runs in your terminal — you can ask it to read files, write code, explain functions, run commands, and more using natural language."
+      ],
+      "commands": [
+        "ml install ai",
+        "ml --ai",
+        "ml --ai claude",
+        "ml --ai bg",
+        "ml --ai stop",
+        "ml --ai restart",
+        "ml --ai cm",
+        "ml --ai key"
+      ],
+      "notes": [
+        "Uvicorn must be running before Claude Code — ml --ai starts uvicorn first, then Claude Code. ml --ai claude starts uvicorn in background first, then Claude Code.",
+        "Claude Code in ml --ai uses your current working directory. Navigate to your project first with ml nav --my-project before running ml --ai claude.",
+        "Models are stored in C:\\free-claude-code\\free-claude-code\\.env. You can edit this file directly or use ml --ai cm.",
+        "Get a fresh NVIDIA NIM API key at https://build.nvidia.com/ if yours expires or hits rate limits.",
+        "The VS Code extension for Claude Code connects to the same uvicorn server started by ml --ai."
+      ]
+    },
     "generalUsage": [
       {
         "step": 1,
@@ -994,7 +1066,7 @@
       {
         "command": "ml --ai",
         "whenToUse": "When this workflow matches your current task.",
-        "scenario": "Typical general workflow using ml --ai.",
+        "scenario": "Typical ai workflow using ml --ai.",
         "steps": [
           "Run: ml --ai",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
@@ -1004,7 +1076,7 @@
       {
         "command": "ml --ai bg",
         "whenToUse": "When this workflow matches your current task.",
-        "scenario": "Typical general workflow using ml --ai bg.",
+        "scenario": "Typical ai workflow using ml --ai bg.",
         "steps": [
           "Run: ml --ai bg",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
@@ -1014,7 +1086,7 @@
       {
         "command": "ml --ai claude",
         "whenToUse": "When this workflow matches your current task.",
-        "scenario": "Typical general workflow using ml --ai claude.",
+        "scenario": "Typical ai workflow using ml --ai claude.",
         "steps": [
           "Run: ml --ai claude",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
@@ -1024,7 +1096,7 @@
       {
         "command": "ml --ai cm",
         "whenToUse": "When this workflow matches your current task.",
-        "scenario": "Typical general workflow using ml --ai cm.",
+        "scenario": "Typical ai workflow using ml --ai cm.",
         "steps": [
           "Run: ml --ai cm",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
@@ -1034,7 +1106,7 @@
       {
         "command": "ml --ai key",
         "whenToUse": "When this workflow matches your current task.",
-        "scenario": "Typical general workflow using ml --ai key.",
+        "scenario": "Typical ai workflow using ml --ai key.",
         "steps": [
           "Run: ml --ai key",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
@@ -1044,7 +1116,7 @@
       {
         "command": "ml --ai restart",
         "whenToUse": "When this workflow matches your current task.",
-        "scenario": "Typical general workflow using ml --ai restart.",
+        "scenario": "Typical ai workflow using ml --ai restart.",
         "steps": [
           "Run: ml --ai restart",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
@@ -1054,7 +1126,7 @@
       {
         "command": "ml --ai stop",
         "whenToUse": "When this workflow matches your current task.",
-        "scenario": "Typical general workflow using ml --ai stop.",
+        "scenario": "Typical ai workflow using ml --ai stop.",
         "steps": [
           "Run: ml --ai stop",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
@@ -1555,6 +1627,50 @@
           "ml serve -o",
           "Share link is created via ngrok",
           "ml serve -stop"
+        ]
+      },
+      {
+        "title": "Install Free Claude Code",
+        "steps": [
+          "ml install ai",
+          "Enter your NVIDIA NIM API key when prompted (get from https://build.nvidia.com/)",
+          "Wait for prerequisites (uv, Python 3.14) to install",
+          "Claude Code installed via npm and VS Code settings configured"
+        ]
+      },
+      {
+        "title": "Claude Code Only — Run from Your Project Directory",
+        "steps": [
+          "ml nav --my-project",
+          "ml --ai claude",
+          "Uvicorn starts in background on port 8082",
+          "Claude Code window opens in your current project directory",
+          "Work on project files using natural language"
+        ]
+      },
+      {
+        "title": "Switch AI Model",
+        "steps": [
+          "ml --ai cm",
+          "Select model tier: 1=Opus, 2=Sonnet, 3=Haiku, 4=Default",
+          "Enter nvidia_nim model slug (e.g., minimaxai/minimax-m2.7)",
+          "ml --ai restart"
+        ]
+      },
+      {
+        "title": "Update NVIDIA API Key",
+        "steps": [
+          "Get new key from https://build.nvidia.com/",
+          "ml --ai key",
+          "Paste the new NVIDIA_NIM_API_KEY",
+          "ml --ai restart"
+        ]
+      },
+      {
+        "title": "Stop and Restart Free Claude Code",
+        "steps": [
+          "ml --ai stop",
+          "ml --ai restart"
         ]
       }
     ],

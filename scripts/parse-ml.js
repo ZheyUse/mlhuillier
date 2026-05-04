@@ -165,6 +165,7 @@ function inferCategory(name) {
   if (lower.includes('create') || lower.includes('clone')) return 'project';
   if (lower.includes('serve') || lower.includes('nav')) return 'workflow';
   if (lower.includes('update') || lower.includes('--c') || lower.includes('--v') || lower.includes('--d')) return 'maintenance';
+  if (lower.includes('--ai')) return 'ai';
   return 'general';
 }
 
@@ -377,6 +378,69 @@ function buildCommands(content) {
       params: [],
       expectedResult: 'Stops active ngrok tunnel process if running.',
     },
+    {
+      name: 'ml --ai claude',
+      top: '--ai',
+      sub: 'claude',
+      helpDescription: 'Start uvicorn in background and Claude Code visibly — Claude Code runs in the current working directory.',
+      syntax: 'ml --ai claude',
+      params: [],
+      expectedResult: 'Uvicorn runs in background on port 8082; Claude Code window opens in your current directory.',
+    },
+    {
+      name: 'ml --ai bg',
+      top: '--ai',
+      sub: 'bg',
+      helpDescription: 'Start both uvicorn and Claude Code entirely in the background (no visible terminal windows).',
+      syntax: 'ml --ai bg',
+      params: [],
+      expectedResult: 'Both processes start silently in the background. Process PIDs tracked in the ML CLI state file.',
+    },
+    {
+      name: 'ml --ai stop',
+      top: '--ai',
+      sub: 'stop',
+      helpDescription: 'Stop all Free Claude Code processes started by ml --ai and clean up the state file.',
+      syntax: 'ml --ai stop',
+      params: [],
+      expectedResult: 'Kill signal sent to all tracked uvicorn and claude processes. State file and temp scripts removed.',
+    },
+    {
+      name: 'ml --ai restart',
+      top: '--ai',
+      sub: 'restart',
+      helpDescription: 'Stop all running Free Claude Code processes, then start both uvicorn and Claude Code in the background.',
+      syntax: 'ml --ai restart',
+      params: [],
+      expectedResult: 'Existing processes stopped cleanly, then both servers restart in background mode.',
+    },
+    {
+      name: 'ml --ai cm',
+      top: '--ai',
+      sub: 'cm',
+      helpDescription: 'Interactively change the configured AI model for Opus, Sonnet, Haiku, or the default model tier.',
+      syntax: 'ml --ai cm',
+      params: [],
+      expectedResult: 'Interactive prompt lets you select a model tier and input a new nvidia_nim model path. .env updated. Restart required.',
+    },
+    {
+      name: 'ml --ai key',
+      top: '--ai',
+      sub: 'key',
+      helpDescription: 'Update the NVIDIA_NIM_API_KEY stored in the .env file for Free Claude Code authentication.',
+      syntax: 'ml --ai key',
+      params: [],
+      expectedResult: 'Interactive prompt for new key. Value written to .env. A restart is needed for the new key to take effect.',
+    },
+    {
+      name: 'ml install ai',
+      top: 'install',
+      sub: 'ai',
+      helpDescription: 'Install Free Claude Code stack: clones free-claude-code repo, installs prerequisites (uv, Python 3.14), configures .env with models and API key, installs Claude Code, and patches VS Code settings.',
+      syntax: 'ml install ai',
+      params: [],
+      expectedResult: 'Free Claude Code installed to C:\\free-claude-code\\free-claude-code with all prerequisites and config.',
+    },
   ];
 
   for (const entry of syntheticCommands) {
@@ -552,6 +616,78 @@ function buildTutorials(commands) {
         expectedResult: cmdServe ? cmdServe.expectedResult : 'Project opens and RBAC flow can be verified.',
       },
     ],
+    installAndUseClaudeCode: [
+      {
+        step: 1,
+        command: 'ml install ai',
+        explanation: 'Install Free Claude Code: clones free-claude-code repo, installs uv + Python 3.14, configures .env with default models, prompts for NVIDIA NIM API key, installs Claude Code via npm, and patches VS Code settings.',
+        expectedResult: 'Free Claude Code installed to C:\\free-claude-code\\free-claude-code with everything configured.',
+      },
+      {
+        step: 2,
+        command: 'Get NVIDIA NIM API key',
+        explanation: 'Sign up / log in at https://build.nvidia.com/ and copy your API key. During install you will be prompted to enter it.',
+        expectedResult: 'NVIDIA NIM API key is stored in C:\\free-claude-code\\free-claude-code\\.env.',
+      },
+      {
+        step: 3,
+        command: 'ml --ai',
+        explanation: 'Start uvicorn (API server on port 8082) and Claude Code in visible terminal windows. Uvicorn runs in free-claude-code directory; Claude Code inherits your current working directory.',
+        expectedResult: 'Two PowerShell windows open — one for uvicorn, one for Claude Code.',
+      },
+      {
+        step: 4,
+        command: 'ml --ai claude',
+        explanation: 'Start uvicorn in background and Claude Code visibly in your project directory. Use this when you are already inside your project folder and want Claude Code to start there instead of free-claude-code.',
+        expectedResult: 'Uvicorn runs silently in background on port 8082; Claude Code window opens in your current directory.',
+      },
+      {
+        step: 5,
+        command: 'ml --ai cm',
+        explanation: 'Change the active AI model. Select Opus, Sonnet, Haiku, or the default model tier and enter a nvidia_nim model slug.',
+        expectedResult: '.env updated with the new model. Restart with ml --ai restart to load it.',
+      },
+      {
+        step: 6,
+        command: 'ml --ai restart',
+        explanation: 'Stop and restart both processes (e.g., after changing models or API key in .env).',
+        expectedResult: 'Fresh uvicorn + Claude Code processes running with updated configuration.',
+      },
+    ],
+    installAndUseClaudeCodeGuide: {
+      buttonLabel: 'HOW TO USE CLAUDE CODE?',
+      title: 'How to Use Free Claude Code with ML CLI',
+      intro: 'Free Claude Code is a full-stack setup: a uvicorn API server on port 8082 acts as the proxy to NVIDIA NIM models, while Claude Code connects to it as the AI engine. Use ml --ai commands to manage the stack.',
+      steps: [
+        'Run ml install ai to set up the entire stack: uv, Python 3.14, free-claude-code repo, Claude Code npm package, and VS Code configuration.',
+        'Get an NVIDIA NIM API key from https://build.nvidia.com/ — enter it when prompted by the installer or later with ml --ai key.',
+        'Default models are pre-configured on install: MODEL_OPUS=nvidia_nim/deepseek-ai/deepseek-v4-pro, MODEL_SONNET=nvidia_nim/minimaxai/minimax-m2.7, MODEL_HAIKU=nvidia_nim/z-ai/glm4.7, MODEL=nvidia_nim/z-ai/glm-5.1.',
+        'Run ml --ai to start uvicorn and Claude Code in visible terminal windows. Both processes must be running for Claude Code to work.',
+        'Run ml --ai claude from your project folder when you want Claude Code to start in that directory instead of free-claude-code. Uvicorn stays in the background.',
+        'Run ml --ai bg when you want both processes running silently with no open terminal windows.',
+        'To switch models: ml --ai cm, pick a tier, enter the model slug. Then ml --ai restart for changes to take effect.',
+        'To update your API key: ml --ai key, paste the new key. Then ml --ai restart.',
+        'Shut everything down with ml --ai stop when you are done. Use ml --ai restart to reload after any .env changes.',
+        'Claude Code runs in your terminal — you can ask it to read files, write code, explain functions, run commands, and more using natural language.',
+      ],
+      commands: [
+        'ml install ai',
+        'ml --ai',
+        'ml --ai claude',
+        'ml --ai bg',
+        'ml --ai stop',
+        'ml --ai restart',
+        'ml --ai cm',
+        'ml --ai key',
+      ],
+      notes: [
+        'Uvicorn must be running before Claude Code — ml --ai starts uvicorn first, then Claude Code. ml --ai claude starts uvicorn in background first, then Claude Code.',
+        'Claude Code in ml --ai uses your current working directory. Navigate to your project first with ml nav --my-project before running ml --ai claude.',
+        'Models are stored in C:\\free-claude-code\\free-claude-code\\.env. You can edit this file directly or use ml --ai cm.',
+        'Get a fresh NVIDIA NIM API key at https://build.nvidia.com/ if yours expires or hits rate limits.',
+        'The VS Code extension for Claude Code connects to the same uvicorn server started by ml --ai.',
+      ],
+    },
     generalUsage: [
       {
         step: 1,
@@ -687,9 +823,54 @@ function buildTutorials(commands) {
         steps: [
           'ml serve -o',
           'Share link is created via ngrok',
-          'ml serve -stop'
-        ]
-      },],
+          'ml serve -stop',
+        ],
+      },
+      {
+        title: 'Install Free Claude Code',
+        steps: [
+          'ml install ai',
+          'Enter your NVIDIA NIM API key when prompted (get from https://build.nvidia.com/)',
+          'Wait for prerequisites (uv, Python 3.14) to install',
+          'Claude Code installed via npm and VS Code settings configured',
+        ],
+      },
+      {
+        title: 'Claude Code Only — Run from Your Project Directory',
+        steps: [
+          'ml nav --my-project',
+          'ml --ai claude',
+          'Uvicorn starts in background on port 8082',
+          'Claude Code window opens in your current project directory',
+          'Work on project files using natural language',
+        ],
+      },
+      {
+        title: 'Switch AI Model',
+        steps: [
+          'ml --ai cm',
+          'Select model tier: 1=Opus, 2=Sonnet, 3=Haiku, 4=Default',
+          'Enter nvidia_nim model slug (e.g., minimaxai/minimax-m2.7)',
+          'ml --ai restart',
+        ],
+      },
+      {
+        title: 'Update NVIDIA API Key',
+        steps: [
+          'Get new key from https://build.nvidia.com/',
+          'ml --ai key',
+          'Paste the new NVIDIA_NIM_API_KEY',
+          'ml --ai restart',
+        ],
+      },
+      {
+        title: 'Stop and Restart Free Claude Code',
+        steps: [
+          'ml --ai stop',
+          'ml --ai restart',
+        ],
+      },
+    ],
     errors: [
       {
         error: 'Command not recognized',
