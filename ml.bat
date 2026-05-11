@@ -853,10 +853,8 @@ call :maybe_show_update_notice
 exit /b %RC%
 
 :cmd_add_submenu
-echo [DEBUG] cmd_add_submenu reached
 set "LOCAL_PHP=%~dp0script\sidebar-add-menu.php"
 if not exist "!LOCAL_PHP!" set "LOCAL_PHP=C:\xampp\htdocs\mlhuillier\script\sidebar-add-menu.php"
-echo [DEBUG] Using PHP script: !LOCAL_PHP!
 if not exist "!LOCAL_PHP!" (
         echo sidebar-add-menu.php not found locally. Fetching remote...
         set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/script/sidebar-add-menu.php"
@@ -874,14 +872,12 @@ if not exist "!LOCAL_PHP!" (
                 echo Failed to fetch sidebar-add-menu.php
                 exit /b 2
         )
-        echo [DEBUG] Running downloaded temp script
         "!PHP_EXE!" -d display_errors=0 "!TMP_FILE!" --submenu-only
         set "RC=%ERRORLEVEL%"
         call :maybe_show_update_notice
         del /f /q "!TMP_FILE!" >nul 2>&1
         exit /b %RC%
 )
-echo [DEBUG] Running local script
 "%PHP_EXE%" -d display_errors=0 "!LOCAL_PHP!" --submenu-only
 set "RC=%ERRORLEVEL%"
 call :maybe_show_update_notice

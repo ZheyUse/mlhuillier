@@ -881,14 +881,20 @@ if ($isSubmenuOnly) {
 
     out('');
 
-    // Step: submenu name
-    $submenuName = ask('Enter Submenu name for ' . $selectedMenu . ':');
-    if ($submenuName === '') {
-        err('Submenu name cannot be empty.');
+    // Step: submenu name(s) - comma-separated like ml add menu
+    $rawSubmenus = ask('Enter Submenu(s) for ' . $selectedMenu . ' (comma-separated, e.g. Settings,Extensions,Passwords):');
+    if ($rawSubmenus === '') {
+        err('At least one submenu is required.');
         exit(1);
     }
 
-    $submenuNames = [$submenuName];
+    $submenuNames = array_values(array_filter(
+        array_map('trim', explode(',', $rawSubmenus))
+    ));
+    if (count($submenuNames) === 0) {
+        err('No valid submenus provided.');
+        exit(1);
+    }
 
     // Step: call NVIDIA NIM
     out('');
@@ -906,54 +912,98 @@ if ($isSubmenuOnly) {
         $aiData = buildFallbackMetadata($selectedMenu, $submenuNames);
     }
 
-    // Build normalized submenu
+    // Build normalized submenus
     $finalMenuName = $selectedMenu;
     $finalMenuIcon = !empty($aiData['menu']['icon']) ? (string) $aiData['menu']['icon'] : 'menu';
 
-    $aiSub = $aiData['submenus'][0] ?? [];
-    $finalName = !empty($aiSub['name']) ? (string) $aiSub['name'] : $submenuName;
-    $finalIcon = !empty($aiSub['icon']) ? (string) $aiSub['icon'] : 'question_mark';
-    $finalTitle = !empty($aiSub['title']) ? (string) $aiSub['title'] : $finalName;
-    $finalSub = !empty($aiSub['subtitle']) ? (string) $aiSub['subtitle'] : 'Edit this description later.';
+    $normSubmenus = [];
+    foreach ($submenuNames as $i => $rawName) {
+        $aiSub = $aiData['submenus'][$i] ?? [];
+        $finalName = !empty($aiSub['name']) ? (string) $aiSub['name'] : $rawName;
+        $finalIcon = !empty($aiSub['icon']) ? (string) $aiSub['icon'] : 'question_mark';
+        $finalTitle = !empty($aiSub['title']) ? (string) $aiSub['title'] : $finalName;
+        $finalSub = !empty($aiSub['subtitle']) ? (string) $aiSub['subtitle'] : 'Edit this description later.';
 
-    $submenuSlug = slug($finalName);
+        $submenuSlug = slug($finalName);
 
-    $normSubmenu = [
-        'name' => $finalName,
-        'slug' => $submenuSlug,
-        'permission' => $finalMenuName . ' ' . $finalName,
-        'path' => '/src/pages/' . noSpaceSlug($finalMenuName) . '/' . $submenuSlug . '/' . $submenuSlug . '.php',
-        'icon' => $finalIcon,
-        'title' => $finalTitle,
-        'subtitle' => $finalSub,
-    ];
+        $normSubmenus[] = [
+            'name' => $finalName,
+            'slug' => $submenuSlug,
+            'permission' => $finalMenuName . ' ' . $finalName,
+            'path' => '/src/pages/' . noSpaceSlug($finalMenuName) . '/' . $submenuSlug . '/' . $submenuSlug . '.php',
+            'icon' => $finalIcon,
+            'title' => $finalTitle,
+            'subtitle' => $finalSub,
+        ];
+    }
 
+    // Step: display creation report
     out('');
-    out($finalName . ' has been added as submenu under ' . $finalMenuName . '.');
+    out($finalMenuName . ' has been Created');
+    foreach ($normSubmenus as $sm) {
+        out('  -> ' . $sm['name'] . ' has been added');
+    }
+    out('');
 
-    // Generate submenu HTML and inject
-    $submenuPermission = $normSubmenu['permission'];
-    $submenuHtml = <<<PHP
+    // Generate and inject each submenu HTML
+    foreach ($normSubmenus as $sm) {
+        $submenuHtml = <<<PHP
 
-            <?php if (has_permission('{$submenuPermission}')): ?>
-            <li class="sidebar__submenu-item"><a href="<?= htmlspecialchars((\$appBaseUrl !== '' ? \$appBaseUrl : '') . '{$normSubmenu['path']}', ENT_QUOTES, 'UTF-8'); ?>" class="sidebar__submenu-link"><span class="sidebar__submenu-label">{$finalName}</span></a></li>
+            <?php if (has_permission('{$sm['permission']}')): ?>
+            <li class="sidebar__submenu-item"><a href="<?= htmlspecialchars((\$appBaseUrl !== '' ? \$appBaseUrl : '') . '{$sm['path']}', ENT_QUOTES, 'UTF-8'); ?>" class="sidebar__submenu-link"><span class="sidebar__submenu-label">{$sm['name']}</span></a></li>
             <?php endif; ?>
 PHP;
 
-    if (injectSubmenuIntoMenu($sidebarPath, $finalMenuName, $submenuHtml)) {
-        out('Sidebar updated successfully.');
-    } else {
-        out('Warning: Could not auto-inject into sidebar.php — please add manually.');
-        out('');
-        out('--- SUBMENU HTML ---');
-        out($submenuHtml);
-        out('--- END ---');
+        injectSubmenuIntoMenu($sidebarPath, $finalMenuName, $submenuHtml);
     }
+
+    out('Sidebar updated successfully.');
 
     out('');
     out('Done. Added to ' . $finalMenuName . ':');
-    out('  -> ' . $finalName);
-    out('     header: bp_section_header_html(\'' . $finalIcon . '\', \'' . $finalTitle . '\', \'' . $finalSub . '\')');
+    foreach ($normSubmenus as $sm) {
+        out('  -> ' . $sm['name']);
+        out('     header: bp_section_header_html(\'' . $sm['icon'] . '\', \'' . $sm['title'] . '\', \'' . $sm['subtitle'] . '\')');
+    }
+
+    // Ask for template creation
+    if (confirm("Do you want me to create the necessary template of the created Submenu(s)?")) {
+        $menuDir = $projectRoot
+            . DIRECTORY_SEPARATOR . 'src'
+            . DIRECTORY_SEPARATOR . 'pages'
+            . DIRECTORY_SEPARATOR . noSpaceSlug($finalMenuName);
+
+        if (!is_dir($menuDir)) {
+            @mkdir($menuDir, 0755, true);
+        }
+
+        foreach ($normSubmenus as $sm) {
+            $submenuDir = $menuDir . DIRECTORY_SEPARATOR . $sm['slug'];
+
+            if (!is_dir($submenuDir)) {
+                @mkdir($submenuDir, 0755, true);
+            }
+
+            writePhpFile(
+                $submenuDir . DIRECTORY_SEPARATOR . $sm['slug'] . '.php',
+                noSpaceSlug($finalMenuName),
+                $finalMenuName,
+                $sm['slug'],
+                $sm['name'],
+                $sm['icon'],
+                $sm['title'],
+                $sm['subtitle']
+            );
+
+            writeCssFile(
+                $submenuDir . DIRECTORY_SEPARATOR . $sm['slug'] . '.css',
+                $sm['slug']
+            );
+        }
+    } else {
+        out('Template creation cancelled.');
+    }
+
     out('');
     exit(0);
 }
