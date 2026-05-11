@@ -1345,8 +1345,28 @@ if not exist "!FREE_CC_DIR!\.git" (
         exit /b 1
 )
 echo Checking for updates in free-claude-code...
-git -C "!FREE_CC_DIR!" fetch origin 2^>nul
-for /f "delims=" %%i in ('git -C "!FREE_CC_DIR!" rev-list HEAD..origin/main --count 2^>nul') do set "UPDATE_COUNT=%%i"
+
+rem Check if git remote origin exists
+git -C "!FREE_CC_DIR!" remote get-url origin >nul 2>&1
+if %ERRORLEVEL% neq 0 (
+        echo No remote origin configured. Skipping update check.
+        exit /b 0
+)
+
+rem Fetch updates from remote
+git -C "!FREE_CC_DIR!" fetch origin main >nul 2>&1
+if %ERRORLEVEL% neq 0 (
+        echo Failed to fetch from remote. Make sure you have internet connection.
+        exit /b 1
+)
+
+rem Get commit count using git rev-list count
+git -C "!FREE_CC_DIR!" rev-list HEAD..origin/main --count >nul 2>&1
+if %ERRORLEVEL% neq 0 (
+        echo free-claude-code is up to date.
+        exit /b 0
+)
+for /f %%i in ('git -C "!FREE_CC_DIR!" rev-list HEAD..origin/main --count') do set "UPDATE_COUNT=%%i"
 if not defined UPDATE_COUNT set "UPDATE_COUNT=0"
 if "!UPDATE_COUNT!"=="0" (
         echo free-claude-code is up to date.

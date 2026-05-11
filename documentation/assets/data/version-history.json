@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-05-11T05:20:31.842Z",
+  "generatedAt": "2026-05-11T05:26:47.593Z",
   "latestVersion": "1.1.15",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 243
+    "commitCount": 244
   },
   "releases": [
     {
       "version": "1.1.15",
       "isLatest": true,
-      "commitCount": 15,
+      "commitCount": 16,
       "dateRange": {
         "from": "2026-04-30",
         "to": "2026-05-11"
       },
       "stats": {
         "release": 2,
-        "feature": 11,
+        "feature": 12,
         "fix": 0,
         "docs": 2,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "feat: update installation commands and enhance error handling for Free Claude Code",
         "feat: enhance installation commands and update documentation for Free Claude Code",
         "feat: add new database management commands and update documentation",
         "feat: update generatedAt timestamp and increment commit count in version history",
         "feat: update version to 1.1.15 and add new database commands with tutorials",
         "feat: update version to 1.1.15, feat: Added ml --ai update",
         "feat(docs): add comprehensive AI installer guide for Free Claude Code",
-        "feat(installation): add install and uninstall scripts for macOS/Linux docs: update README with installation instructions and uninstaller details chore: increment version and update generatedAt timestamp in version history",
-        "feat(ai): update command categories and add new AI commands for Claude Code"
+        "feat(installation): add install and uninstall scripts for macOS/Linux docs: update README with installation instructions and uninstaller details chore: increment version and update generatedAt timestamp in version history"
       ],
       "commits": [
+        {
+          "hash": "cc3fa24ee2047c9b09240d7cef659b4661075942",
+          "shortHash": "cc3fa24",
+          "date": "2026-05-11",
+          "title": "feat: update installation commands and enhance error handling for Free Claude Code",
+          "type": "feature"
+        },
         {
           "hash": "ee68355dcf28f79f208a98ab21c02cb616df9c8c",
           "shortHash": "ee68355",

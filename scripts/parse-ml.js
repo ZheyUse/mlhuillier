@@ -935,6 +935,16 @@ function buildTutorials(commands) {
         fix: 'Check internet, proxy, and retry. Then run ml --c to validate connectivity.',
       },
       {
+        error: 'Failed to fetch remote updater script',
+        meaning: 'Cannot download the updater from GitHub.',
+        fix: 'Check DNS settings, firewall, and internet connection.',
+      },
+      {
+        error: 'DNS resolution failed',
+        meaning: 'Cannot resolve GitHub hostname.',
+        fix: 'Check your internet and DNS settings.',
+      },
+      {
         error: 'Database test failed',
         meaning: 'Schema or credentials are not ready.',
         fix: 'Run ml add userdb then retry ml test userdb.',
@@ -949,6 +959,36 @@ function buildTutorials(commands) {
         meaning: 'mysqldump is not installed or not detected from PATH/XAMPP.',
         fix: 'Install MySQL client tools or set mysqldumpPath in ml create --config.',
       },
+      {
+        error: 'Free Claude Code not installed',
+        meaning: 'Tried to run ml --ai but free-claude-code directory does not exist.',
+        fix: 'Run ml install ai to install Free Claude Code.',
+      },
+      {
+        error: 'PHP not found',
+        meaning: 'PHP is not installed or not on PATH.',
+        fix: 'Install PHP and ensure it is accessible from command line.',
+      },
+      {
+        error: 'Failed to start Apache within timeout',
+        meaning: 'XAMPP Apache could not start automatically.',
+        fix: 'Start XAMPP Apache manually and retry ml serve.',
+      },
+      {
+        error: 'VSCode CLI (code) not found in PATH',
+        meaning: 'VS Code command line tools are not installed.',
+        fix: 'Install VS Code or add it to PATH. The CLI will still work without it.',
+      },
+      {
+        error: 'Project folder does not exist',
+        meaning: 'The project name specified does not exist in htdocs.',
+        fix: 'Check the project name or create it with ml create.',
+      },
+      {
+        error: 'MySQL Workbench not found',
+        meaning: 'MySQL Workbench is not installed.',
+        fix: 'Install MySQL Workbench from https://dev.mysql.com/downloads/workbench/',
+      },
     ],
     faq: [
       {
@@ -962,6 +1002,46 @@ function buildTutorials(commands) {
       {
         q: 'What is the fastest start command sequence?',
         a: 'ml nav --your-project then ml serve.',
+      },
+      {
+        q: 'How do I install Free Claude Code?',
+        a: 'First install ML CLI, then run ml install ai.',
+      },
+      {
+        q: 'Why should I use ml --ai instead of starting services manually?',
+        a: 'ml --ai automates starting uvicorn and Claude Code together, and manages them as a stack.',
+      },
+      {
+        q: 'What is the difference between ml --ai and ml --ai claude?',
+        a: 'ml --ai shows both windows. ml --ai claude starts uvicorn in background and Claude Code in your current directory.',
+      },
+      {
+        q: 'How do I update Free Claude Code?',
+        a: 'Run ml --ai update to pull the latest changes from the remote repository.',
+      },
+      {
+        q: 'Can I run ML CLI on Mac/Linux?',
+        a: 'Yes! Run: curl -LsSf https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/install-ml.sh | bash',
+      },
+      {
+        q: 'What does ml migrate -db do?',
+        a: 'Migrates userdb table structures and data to a decentralized target database.',
+      },
+      {
+        q: 'How do I change AI models?',
+        a: 'Run ml --ai cm, select a tier, enter a nvidia_nim model slug, then ml --ai restart.',
+      },
+      {
+        q: 'Why is Apache not starting?',
+        a: 'Check if another service is using port 80, or start XAMPP Apache manually.',
+      },
+      {
+        q: 'How do I backup my database schemas?',
+        a: 'First run ml create --config to set up credentials, then ml --b or ml --b <schema>.',
+      },
+      {
+        q: 'What is PBAC vs RBAC?',
+        a: 'PBAC uses permission-based access with access levels. RBAC uses role-based access with user roles. PBAC is typically used for menu visibility.',
       },
     ],
   };

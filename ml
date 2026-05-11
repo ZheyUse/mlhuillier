@@ -706,18 +706,36 @@ cmd_backup() {
 cmd_ai() {
     local sub="${1:-}"
 
+    # Check if Free Claude Code is installed first (for all subcommands)
+    local FREE_CC_DIR="$HOME/.free-claude-code/free-claude-code"
+    if [[ ! -d "$FREE_CC_DIR/.git" ]]; then
+        echo ""
+        echo "It seems you don't have Free Claude Code installed..."
+        echo "To install Free Claude Code run: ml install ai"
+        echo ""
+        exit 1
+    fi
+
     # Handle update subcommand locally (no PHP needed)
     if [[ "$sub" == "update" ]]; then
-        local FREE_CC_DIR="C:/free-claude-code/free-claude-code"
-        if [[ ! -d "$FREE_CC_DIR/.git" ]]; then
-            echo "free-claude-code directory not found at $FREE_CC_DIR"
+        echo "Checking for updates in free-claude-code..."
+
+        # Check if git remote origin exists
+        if ! git -C "$FREE_CC_DIR" remote get-url origin >/dev/null 2>&1; then
+            echo "No remote origin configured. Skipping update check."
+            exit 0
+        fi
+
+        # Fetch updates from remote
+        if ! git -C "$FREE_CC_DIR" fetch origin main >/dev/null 2>&1; then
+            echo "Failed to fetch from remote. Make sure you have internet connection."
             exit 1
         fi
-        echo "Checking for updates in free-claude-code..."
-        git -C "$FREE_CC_DIR" fetch origin 2>/dev/null
+
+        # Get commit count
         local count
-        count=$(git -C "$FREE_CC_DIR" rev-list HEAD..origin/main --count 2>/dev/null || echo "0")
-        if [[ "$count" == "0" ]]; then
+        count=$(git -C "$FREE_CC_DIR" rev-list HEAD..origin/main --count 2>/dev/null) || count="0"
+        if [[ -z "$count" || "$count" == "0" ]]; then
             echo "free-claude-code is up to date."
             exit 0
         fi
@@ -742,11 +760,14 @@ cmd_ai() {
 
 # ── Check for free-claude-code updates ─────────────────────────────────────────
 check_free_cc_updates() {
-    local FREE_CC_DIR="C:/free-claude-code/free-claude-code"
+    local FREE_CC_DIR="$HOME/.free-claude-code/free-claude-code"
     [[ ! -d "$FREE_CC_DIR/.git" ]] && return 0
-    git -C "$FREE_CC_DIR" fetch origin 2>/dev/null
+    if ! git -C "$FREE_CC_DIR" remote get-url origin >/dev/null 2>&1; then
+        return 0
+    fi
+    git -C "$FREE_CC_DIR" fetch origin main 2>/dev/null
     local count
-    count=$(git -C "$FREE_CC_DIR" rev-list HEAD..origin/main --count 2>/dev/null || echo "0")
+    count=$(git -C "$FREE_CC_DIR" rev-list HEAD..origin/main --count 2>/dev/null) || count="0"
     [[ "$count" != "0" ]] && echo -e "\nNew update is available! Run: ml --ai update"
 }
 
