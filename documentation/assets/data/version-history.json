@@ -1,22 +1,22 @@
 {
-  "generatedAt": "2026-05-11T04:14:24.190Z",
+  "generatedAt": "2026-05-11T04:37:48.666Z",
   "latestVersion": "1.1.15",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 239
+    "commitCount": 240
   },
   "releases": [
     {
       "version": "1.1.15",
       "isLatest": true,
-      "commitCount": 11,
+      "commitCount": 12,
       "dateRange": {
         "from": "2026-04-30",
         "to": "2026-05-11"
       },
       "stats": {
-        "release": 1,
+        "release": 2,
         "feature": 8,
         "fix": 0,
         "docs": 2,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "feat: update version to 1.1.15 and add new database commands with tutorials",
         "feat: update version to 1.1.15, feat: Added ml --ai update",
         "feat(docs): add comprehensive AI installer guide for Free Claude Code",
         "feat(installation): add install and uninstall scripts for macOS/Linux docs: update README with installation instructions and uninstaller details chore: increment version and update generatedAt timestamp in version history",
         "feat(ai): update command categories and add new AI commands for Claude Code",
         "feat(ai): update AI command descriptions and add new commands in CLI and documentation",
         "feat(ai): add command to update NVIDIA_NIM_API_KEY in Free Claude Code",
-        "feat(ai): add command to change configured model in Free Claude Code",
-        "feat: Add ML CLI Bash script for cross-platform usage"
+        "feat(ai): add command to change configured model in Free Claude Code"
       ],
       "commits": [
+        {
+          "hash": "930fd3806000dfe2e218f543a0d154a84b9cba3c",
+          "shortHash": "930fd38",
+          "date": "2026-05-11",
+          "title": "feat: update version to 1.1.15 and add new database commands with tutorials",
+          "type": "release"
+        },
         {
           "hash": "b31ac7712f074085c75481f101ae3c1276c9ebeb",
           "shortHash": "b31ac77",
