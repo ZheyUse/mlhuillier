@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-05-11T05:53:26.906Z",
+  "generatedAt": "2026-05-11T06:55:23.055Z",
   "latestVersion": "1.1.15",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 245
+    "commitCount": 246
   },
   "releases": [
     {
       "version": "1.1.15",
       "isLatest": true,
-      "commitCount": 17,
+      "commitCount": 18,
       "dateRange": {
         "from": "2026-04-30",
         "to": "2026-05-11"
       },
       "stats": {
         "release": 2,
-        "feature": 13,
+        "feature": 14,
         "fix": 0,
         "docs": 2,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "feat: enhance installation commands and error handling for Free Claude Code; update documentation and version history",
         "feat: enhance Free Claude Code installation and update commands with error handling",
         "feat: update installation commands and enhance error handling for Free Claude Code",
         "feat: enhance installation commands and update documentation for Free Claude Code",
         "feat: add new database management commands and update documentation",
         "feat: update generatedAt timestamp and increment commit count in version history",
         "feat: update version to 1.1.15 and add new database commands with tutorials",
-        "feat: update version to 1.1.15, feat: Added ml --ai update",
-        "feat(docs): add comprehensive AI installer guide for Free Claude Code"
+        "feat: update version to 1.1.15, feat: Added ml --ai update"
       ],
       "commits": [
+        {
+          "hash": "d54f5800e140c42d67e648e00d8fd95507b698bc",
+          "shortHash": "d54f580",
+          "date": "2026-05-11",
+          "title": "feat: enhance installation commands and error handling for Free Claude Code; update documentation and version history",
+          "type": "feature"
+        },
         {
           "hash": "01ed571e8e72ce2db66d541979c81a7914b59f07",
           "shortHash": "01ed571",

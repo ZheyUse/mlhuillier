@@ -1326,8 +1326,11 @@ exit /b %RC%
 :check_free_cc_updates
 set "FREE_CC_DIR=C:\free-claude-code\free-claude-code"
 if not exist "!FREE_CC_DIR!\.git" exit /b 0
-git -C "!FREE_CC_DIR!" fetch origin 2^>nul
-for /f "delims=" %%i in ('git -C "!FREE_CC_DIR!" rev-list HEAD..origin/main --count 2^>nul') do set "UPDATE_COUNT=%%i"
+rem Check if remote origin exists first
+git -C "!FREE_CC_DIR!" remote get-url origin >nul 2>&1
+if %ERRORLEVEL% neq 0 exit /b 0
+git -C "!FREE_CC_DIR!" fetch origin main 2>nul
+for /f %%i in ('git -C "!FREE_CC_DIR!" rev-list HEAD..origin/main --count 2^>nul') do set "UPDATE_COUNT=%%i"
 if not defined UPDATE_COUNT set "UPDATE_COUNT=0"
 if not "!UPDATE_COUNT!"=="0" (
         echo.
