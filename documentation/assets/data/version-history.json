@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-05-11T08:40:09.374Z",
+  "generatedAt": "2026-05-11T08:54:16.787Z",
   "latestVersion": "1.1.15",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 248
+    "commitCount": 249
   },
   "releases": [
     {
       "version": "1.1.15",
       "isLatest": true,
-      "commitCount": 20,
+      "commitCount": 21,
       "dateRange": {
         "from": "2026-04-30",
         "to": "2026-05-11"
       },
       "stats": {
         "release": 2,
-        "feature": 16,
+        "feature": 17,
         "fix": 0,
         "docs": 2,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "feat: enhance sidebar template generation prompt to conditionally request submenu creation",
         "feat: update command syntax for database management; add submenu functionality and enhance sidebar integration",
         "feat: update timestamps and commit counts in version history; enhance git fetch logic in ml.bat",
         "feat: enhance installation commands and error handling for Free Claude Code; update documentation and version history",
         "feat: enhance Free Claude Code installation and update commands with error handling",
         "feat: update installation commands and enhance error handling for Free Claude Code",
         "feat: enhance installation commands and update documentation for Free Claude Code",
-        "feat: add new database management commands and update documentation",
-        "feat: update generatedAt timestamp and increment commit count in version history"
+        "feat: add new database management commands and update documentation"
       ],
       "commits": [
+        {
+          "hash": "45efdfad1f7dacf650b8dd8a78f07daf5389bebc",
+          "shortHash": "45efdfa",
+          "date": "2026-05-11",
+          "title": "feat: enhance sidebar template generation prompt to conditionally request submenu creation",
+          "type": "feature"
+        },
         {
           "hash": "34d89e958a7d8e1668e591a35865f34b2b4332a7",
           "shortHash": "34d89e9",

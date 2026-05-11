@@ -12,7 +12,10 @@
       "Bash(Get-Content *)",
       "Bash(php *)",
       "Bash(Select-String -Path \"C:\\\\xampp\\\\htdocs\\\\mlhuillier\\\\ml.bat\" -Pattern \"cmd_add_submenu\")",
-      "Bash(Select-Object -ExpandProperty Line)"
+      "Bash(Select-Object -ExpandProperty Line)",
+      "Bash(cmd /c \"ml.bat add submenu 2>&1\")",
+      "Bash(awk *)",
+      "Bash(powershell -Command \"& '.\\\\ml.bat' add submenu 2>&1\")"
     ]
   }
 }
