@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-05-11T05:26:47.593Z",
+  "generatedAt": "2026-05-11T05:53:26.906Z",
   "latestVersion": "1.1.15",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 244
+    "commitCount": 245
   },
   "releases": [
     {
       "version": "1.1.15",
       "isLatest": true,
-      "commitCount": 16,
+      "commitCount": 17,
       "dateRange": {
         "from": "2026-04-30",
         "to": "2026-05-11"
       },
       "stats": {
         "release": 2,
-        "feature": 12,
+        "feature": 13,
         "fix": 0,
         "docs": 2,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "feat: enhance Free Claude Code installation and update commands with error handling",
         "feat: update installation commands and enhance error handling for Free Claude Code",
         "feat: enhance installation commands and update documentation for Free Claude Code",
         "feat: add new database management commands and update documentation",
         "feat: update generatedAt timestamp and increment commit count in version history",
         "feat: update version to 1.1.15 and add new database commands with tutorials",
         "feat: update version to 1.1.15, feat: Added ml --ai update",
-        "feat(docs): add comprehensive AI installer guide for Free Claude Code",
-        "feat(installation): add install and uninstall scripts for macOS/Linux docs: update README with installation instructions and uninstaller details chore: increment version and update generatedAt timestamp in version history"
+        "feat(docs): add comprehensive AI installer guide for Free Claude Code"
       ],
       "commits": [
+        {
+          "hash": "01ed571e8e72ce2db66d541979c81a7914b59f07",
+          "shortHash": "01ed571",
+          "date": "2026-05-11",
+          "title": "feat: enhance Free Claude Code installation and update commands with error handling",
+          "type": "feature"
+        },
         {
           "hash": "cc3fa24ee2047c9b09240d7cef659b4661075942",
           "shortHash": "cc3fa24",

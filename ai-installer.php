@@ -387,12 +387,16 @@ function checkNodeAndNpm(): bool
 
         echo PHP_EOL . 'CLI: Installing missing components via winget...' . PHP_EOL;
 
+        // Track which winget installs actually failed (rc !== 0)
+        $gitInstallFailed = false;
+        $nodeInstallFailed = false;
+
         if ($gitMissing) {
             echo 'CLI: Installing Git...' . PHP_EOL;
             $rc = runCommandRaw('winget install Git.Git --accept-source-agreements --accept-package-agreements');
             if ($rc !== 0) {
                 echo 'CLI: winget failed to install Git.' . PHP_EOL;
-                $gitMissing = true;
+                $gitInstallFailed = true;
             } else {
                 echo 'CLI: Git installed.' . PHP_EOL;
             }
@@ -403,7 +407,7 @@ function checkNodeAndNpm(): bool
             $rc = runCommandRaw('winget install OpenJS.NodeJS.LTS --accept-source-agreements --accept-package-agreements');
             if ($rc !== 0) {
                 echo 'CLI: winget failed to install Node.js.' . PHP_EOL;
-                $nodeMissing = true;
+                $nodeInstallFailed = true;
             } else {
                 echo 'CLI: Node.js installed.' . PHP_EOL;
             }
@@ -413,21 +417,23 @@ function checkNodeAndNpm(): bool
         $nodeMissingNow = !commandExists('node') || !commandExists('npm');
         $gitMissingNow = !commandExists('git');
 
+        // If winget installs succeeded, return and let user restart — no manual web install needed
         if (!$nodeMissingNow && !$gitMissingNow) {
             return true;
         }
 
+        // If winget itself failed, offer manual browser fallback
+        if ($gitInstallFailed || $nodeInstallFailed) {
+            return promptBrowserFallback($gitInstallFailed, $nodeInstallFailed);
+        }
+
+        // Winget succeeded but PATH not updated in current session — just prompt restart
         echo PHP_EOL . '========================================' . PHP_EOL;
         echo 'RESTART YOUR TERMINAL!' . PHP_EOL;
         echo '========================================' . PHP_EOL;
-        $missing = [];
-        if ($gitMissingNow)  { $missing[] = 'Git'; }
-        if ($nodeMissingNow)  { $missing[] = 'Node.js/npm'; }
-        echo 'Still missing: ' . implode(', ', $missing) . PHP_EOL;
-        echo PHP_EOL;
+        echo 'Winget installed the tools, but your current session needs a restart to find them.' . PHP_EOL;
         echo 'Restart your Terminal, then run: ml install ai' . PHP_EOL;
-
-        return promptBrowserFallback($gitMissingNow, $nodeMissingNow);
+        return false;
     }
 
     // ── macOS ──
@@ -540,8 +546,17 @@ if (is_dir($installDir)) {
     exit(0);
 }
 
-// Check Node.js/npm and Git early — install via winget if missing on Windows, then prompt restart
+// Check Node.js/npm and Git early — install via winget if missing on Windows, then auto-restart if needed
 if (!checkNodeAndNpm()) {
+    if (isWindows()) {
+        echo PHP_EOL . 'CLI: Re-launching installer in new terminal (PATH updated)...' . PHP_EOL;
+        echo '      This terminal will close automatically.' . PHP_EOL;
+        // Re-run this script in a fresh CMD window so PATH updates take effect
+        $scriptPath = __FILE__;
+        $restartCmd = 'start cmd /k "php \\"' . $scriptPath . '\\" && exit"';
+        pclose(popen($restartCmd, 'w'));
+        sleep(2);
+    }
     exit(1);
 }
 
@@ -552,6 +567,15 @@ if (!checkPrerequisites()) {
 echo 'CLI: Installing pre-requisites...' . PHP_EOL;
 
 if (!ensureUvAndPython()) {
+    if (isWindows()) {
+        echo PHP_EOL . 'CLI: Re-launching installer in new terminal (PATH updated)...' . PHP_EOL;
+        echo '      This terminal will close automatically.' . PHP_EOL;
+        // Re-run this script in a fresh CMD window so PATH updates take effect
+        $scriptPath = __FILE__;
+        $restartCmd = 'start cmd /k "php \\"' . $scriptPath . '\\" && exit"';
+        pclose(popen($restartCmd, 'w'));
+        sleep(2);
+    }
     exit(2);
 }
 echo 'CLI: pre-requisites ...ok' . PHP_EOL;
@@ -632,8 +656,57 @@ echo 'CLI: Configuring settings.json...' . PHP_EOL;
 configureVsCodeSettings();
 echo 'CLI: Settings.json has been configured ...ok' . PHP_EOL;
 
-echo PHP_EOL . 'CLI: All set! Run the following:' . PHP_EOL;
-echo '  ml --ai          Start uvicorn + Claude Code' . PHP_EOL;
-echo '  ml --ai key      Update NVIDIA_NIM_API_KEY' . PHP_EOL;
-echo PHP_EOL;
+// ── Final Step: Auto-run ml --ai to complete first-time package installation ─
+if (isWindows()) {
+    echo PHP_EOL . 'CLI: Running final setup (installing packages)...' . PHP_EOL;
+
+    $startTime = time();
+    $timeoutSec = 600; // 10 minutes max
+
+    echo 'CLI: Launching ml --ai for first-time package installation...' . PHP_EOL;
+    echo '      (This will install ~77 packages in the uvicorn terminal)' . PHP_EOL;
+    echo '      Waiting for uvicorn to start...' . PHP_EOL;
+
+    // Launch ml --ai in a new visible PowerShell window (non-blocking)
+    $psCmd = "powershell -NoProfile -Command \"Start-Process powershell -ArgumentList '-NoExit','-Command','ml --ai' -WindowStyle Normal\"";
+    exec($psCmd . " >NUL 2>&1");
+
+    // Monitor for uvicorn readiness by checking port 8082
+    $dotCount = 0;
+    while ((time() - $startTime) < $timeoutSec) {
+        $sock = @fsockopen('127.0.0.1', 8082, $errCode, $errMsg, 1);
+        if ($sock !== false) {
+            fclose($sock);
+            $elapsed = time() - $startTime;
+            echo PHP_EOL . 'CLI: uvicorn is ready! (took ' . $elapsed . 's)' . PHP_EOL;
+            break;
+        }
+        // Progress indicator
+        echo '.';
+        $dotCount++;
+        if ($dotCount % 20 === 0) {
+            echo PHP_EOL . '      Still waiting...';
+        }
+        sleep(3);
+    }
+
+    // Give it a moment to fully start, then close terminals
+    sleep(3);
+
+    echo 'CLI: Closing installation terminals...' . PHP_EOL;
+
+    // Stop the ml --ai PowerShell processes
+    $killPs1 = "powershell -NoProfile -Command \"Get-Process powershell | Where-Object { \$_.MainWindowTitle -like '*ml --ai*' } | Stop-Process -Force -ErrorAction SilentlyContinue\"";
+    exec($killPs1 . " >NUL 2>&1");
+    exec('taskkill /F /T /IM powershell.exe 2>NUL');
+
+    echo PHP_EOL . '========================================' . PHP_EOL;
+    echo 'ML AI Feature has been Installed Successfully' . PHP_EOL;
+    echo 'You can now run: ml --ai' . PHP_EOL;
+    echo '========================================' . PHP_EOL;
+} else {
+    echo PHP_EOL . 'CLI: ML AI installed successfully!' . PHP_EOL;
+    echo 'CLI: Please run `ml --ai` manually on first run to install packages.' . PHP_EOL;
+}
+
 exit(0);

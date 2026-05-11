@@ -8,7 +8,9 @@
       "Bash(uipro init *)",
       "Bash(python3 .claude/skills/ui-ux-pro-max/scripts/search.py \"developer tools CLI documentation dashboard modern clean professional\" --design-system -p \"ML CLI Documentation\" -f markdown)",
       "WebFetch(domain:vuetifyjs.com)",
-      "PowerShell(node scripts/parse-ml.js)"
+      "PowerShell(node scripts/parse-ml.js)",
+      "Bash(Get-Content *)",
+      "Bash(php *)"
     ]
   }
 }
