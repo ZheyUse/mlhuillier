@@ -1087,11 +1087,8 @@ if (injectIntoSidebar($sidebarPath, $sidebarBlock)) {
 
 out('');
 
-// Step 7 — template generation prompt
-$confirmMsg = $hasSubmenus
-    ? "Do you want me to create the necessary template of the created {$finalMenuName} and Submenu(s)?"
-    : "Do you want me to create the template for {$finalMenuName}?";
-if (!confirm($confirmMsg)) {
+// Step 7 — template generation prompt (only if there are submenus)
+if ($hasSubmenus && !confirm("Do you want me to create the necessary template of the created {$finalMenuName} and Submenu(s)?")) {
     out('Template creation cancelled.');
     exit(0);
 }

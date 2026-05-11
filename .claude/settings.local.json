@@ -10,7 +10,9 @@
       "WebFetch(domain:vuetifyjs.com)",
       "PowerShell(node scripts/parse-ml.js)",
       "Bash(Get-Content *)",
-      "Bash(php *)"
+      "Bash(php *)",
+      "Bash(Select-String -Path \"C:\\\\xampp\\\\htdocs\\\\mlhuillier\\\\ml.bat\" -Pattern \"cmd_add_submenu\")",
+      "Bash(Select-Object -ExpandProperty Line)"
     ]
   }
 }
