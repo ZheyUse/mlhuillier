@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-11T04:13:02.544Z",
+  "generatedAt": "2026-05-11T04:34:38.102Z",
   "source": "ml.bat",
   "cliVersion": "1.1.15",
   "commands": [
@@ -252,6 +252,60 @@
         "scenario": "Typical general workflow using ml -h.",
         "steps": [
           "Run: ml -h",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml add --tb",
+      "description": "Run this CLI command to execute its linked workflow.",
+      "syntax": "ml add --tb",
+      "params": [],
+      "example": "ml add --tb",
+      "category": "database",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical database workflow using ml add --tb.",
+        "steps": [
+          "Run: ml add --tb",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml add -db",
+      "description": "Run this CLI command to execute its linked workflow.",
+      "syntax": "ml add -db",
+      "params": [],
+      "example": "ml add -db",
+      "category": "database",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical database workflow using ml add -db.",
+        "steps": [
+          "Run: ml add -db",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml add -db <db>",
+      "description": "Create new database and optionally add tables",
+      "syntax": "ml add -db <db>",
+      "params": [],
+      "example": "ml add -db <db>",
+      "category": "database",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical database workflow using ml add -db <db>.",
+        "steps": [
+          "Run: ml add -db <db>",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
@@ -1217,6 +1271,36 @@
         "scenario": "Typical general workflow using ml -h.",
         "steps": [
           "Run: ml -h",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml add --tb",
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical database workflow using ml add --tb.",
+        "steps": [
+          "Run: ml add --tb",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml add -db",
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical database workflow using ml add -db.",
+        "steps": [
+          "Run: ml add -db",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml add -db <db>",
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical database workflow using ml add -db <db>.",
+        "steps": [
+          "Run: ml add -db <db>",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
