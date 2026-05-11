@@ -1287,6 +1287,14 @@ exit /b %RC%
 :cmd_ai
 rem Check for update subcommand first
 if /I "%ARG2%"=="update" goto :cmd_ai_update
+set "FREE_CC_DIR=C:\free-claude-code\free-claude-code"
+if not exist "!FREE_CC_DIR!\.git" (
+        echo.
+        echo It seems you don^t't have Free Claude Code installed...
+        echo To install Free Claude Code run: ml install ai
+        echo.
+        exit /b 1
+)
 set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ai-commands.php"
 set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
 set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
@@ -1330,7 +1338,10 @@ exit /b 0
 :cmd_ai_update
 set "FREE_CC_DIR=C:\free-claude-code\free-claude-code"
 if not exist "!FREE_CC_DIR!\.git" (
-        echo free-claude-code directory not found at !FREE_CC_DIR!
+        echo.
+        echo It seems you don^t't have Free Claude Code installed...
+        echo To install Free Claude Code run: ml install ai
+        echo.
         exit /b 1
 )
 echo Checking for updates in free-claude-code...
