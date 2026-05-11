@@ -37,6 +37,8 @@ if /I "%~1"=="test" if "%~2"=="" goto :cmd_test_list
 if /I "%~1"=="test" if /I "%~2"=="userdb" goto :cmd_test_userdb
 if /I "%~1"=="test" goto :cmd_test_db
 if /I "%~1"=="add" if /I "%~2"=="userdb" goto :cmd_add_userdb
+if /I "%~1"=="add" if /I "%~2"=="-db" goto :cmd_add_db
+if /I "%~1"=="add" if /I "%~2"=="--tb" goto :cmd_add_tb
 if /I "%~1"=="add" if /I "%~2"=="menu" goto :cmd_add_menu
 if /I "%~1"=="install" if /I "%~2"=="ai" goto :cmd_install_ai
 if /I "%~1"=="create" if /I "%~2"=="--a" goto :cmd_create_account
@@ -98,6 +100,9 @@ echo.
 echo Commands:
 echo   test ^<database^>     Run DB connection test for a specified database (e.g., userdb, gledb)
 echo   add userdb         Import userdb SQL (migration/userdb)
+echo   add -db ^<db^>     Create new database and optionally add tables
+echo   add -db ^<db^> -tb Add tables to existing database
+echo   add --tb          Add tables to existing database (prompts selection)
 echo   add menu           Add sidebar menu and submenu scaffold (ml add menu)
 echo   install ai         Install Free Claude Code stack
 echo   nav                Navigate or open a project (ml nav)
@@ -507,14 +512,34 @@ exit /b 0
 
 :help_add
 if /I "%SUB%"=="menu" goto :help_add_menu
+if /I "%SUB%"=="-db" goto :help_add_db
 echo.
 echo HELP: Add commands
 echo Usage: ml add userdb
 echo Description: Imports the userdb SQL dump into your server (downloads if not present locally).
 echo
+echo Usage: ml add -db ^<database^>
+echo Description: Creates a new MySQL database and optionally adds tables.
+echo
 echo Usage: ml add menu
 echo Description: Interactively adds a sidebar menu and one or more submenus,
 echo   optionally generating scaffold PHP and CSS files for each submenu.
+exit /b 0
+
+:help_add_db
+echo.
+echo HELP: Add database
+echo Usage:
+echo   ml add -db [^<database^>]     Create new database and optionally add tables
+echo   ml add -db ^<database^> -tb   Add tables to existing database
+echo   ml add --tb                   Select database then add tables
+echo Description: Creates databases or adds tables to existing ones.
+echo.
+echo Examples:
+echo   ml add -db                Create database (prompts for name)
+echo   ml add -db ^<database^>   Create database
+echo   ml add -db ^<database^> -tb   Add tables to existing database
+echo   ml add --tb               Select database and add tables
 exit /b 0
 
 :help_add_menu
@@ -825,6 +850,92 @@ if not exist "!LOCAL_PHP!" (
 set "RC=%ERRORLEVEL%"
 call :maybe_show_update_notice
 exit /b %RC%
+
+:cmd_add_db
+set "DB_NAME=%~3"
+set "DB_FLAGS=%~4"
+set "LOCAL_PHP=%~dp0script\ml-add-db.php"
+if not exist "!LOCAL_PHP!" set "LOCAL_PHP=C:\xampp\htdocs\mlhuillier\script\ml-add-db.php"
+if not exist "!LOCAL_PHP!" (
+        echo ml-add-db.php not found locally. Fetching remote...
+        set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/script/ml-add-db.php"
+        set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
+        set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
+        set "TMP_FILE=%TEMP%\ml-add-db.php"
+        call :strip_query "!RAW_URL!"
+        where curl >nul 2>&1
+        if %ERRORLEVEL%==0 (
+                curl -s -f -o "!TMP_FILE!" "!RAW_URL!"
+        ) else (
+                powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!RAW_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
+        )
+        if %ERRORLEVEL% neq 0 (
+                echo Failed to fetch ml-add-db.php
+                exit /b 2
+        )
+        if "!DB_NAME!"=="" (
+                if not defined DB_FLAGS (
+                        "!PHP_EXE!" -d display_errors=0 "!TMP_FILE!"
+                ) else (
+                        "!PHP_EXE!" -d display_errors=0 "!TMP_FILE!" !DB_FLAGS!
+                )
+        ) else (
+                if not defined DB_FLAGS (
+                        "!PHP_EXE!" -d display_errors=0 "!TMP_FILE!" "!DB_NAME!"
+                ) else (
+                        "!PHP_EXE!" -d display_errors=0 "!TMP_FILE!" "!DB_NAME!" !DB_FLAGS!
+                )
+        )
+        set "RC=%ERRORLEVEL%"
+        del /f /q "!TMP_FILE!" >nul 2>&1
+        exit /b !RC!
+)
+if "!DB_NAME!"=="" (
+        if not defined DB_FLAGS (
+                "%PHP_EXE%" -d display_errors=0 "!LOCAL_PHP!"
+        ) else (
+                "%PHP_EXE%" -d display_errors=0 "!LOCAL_PHP!" !DB_FLAGS!
+        )
+) else (
+        if not defined DB_FLAGS (
+                "%PHP_EXE%" -d display_errors=0 "!LOCAL_PHP!" "!DB_NAME!"
+        ) else (
+                "%PHP_EXE%" -d display_errors=0 "!LOCAL_PHP!" "!DB_NAME!" !DB_FLAGS!
+        )
+)
+set "RC=%ERRORLEVEL%"
+call :maybe_show_update_notice
+exit /b !RC!
+
+:cmd_add_tb
+set "LOCAL_PHP=%~dp0script\ml-add-db.php"
+if not exist "!LOCAL_PHP!" set "LOCAL_PHP=C:\xampp\htdocs\mlhuillier\script\ml-add-db.php"
+if not exist "!LOCAL_PHP!" (
+        echo ml-add-db.php not found locally. Fetching remote...
+        set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/script/ml-add-db.php"
+        set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
+        set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
+        set "TMP_FILE=%TEMP%\ml-add-db.php"
+        call :strip_query "!RAW_URL!"
+        where curl >nul 2>&1
+        if %ERRORLEVEL%==0 (
+                curl -s -f -o "!TMP_FILE!" "!RAW_URL!"
+        ) else (
+                powershell -NoProfile -Command "Try { (New-Object Net.WebClient).DownloadFile('!RAW_URL!','!TMP_FILE!'); exit 0 } Catch { exit 2 }"
+        )
+        if %ERRORLEVEL% neq 0 (
+                echo Failed to fetch ml-add-db.php
+                exit /b 2
+        )
+        "!PHP_EXE!" -d display_errors=0 "!TMP_FILE!" --tb
+        set "RC=%ERRORLEVEL%"
+        del /f /q "!TMP_FILE!" >nul 2>&1
+        exit /b !RC!
+)
+"%PHP_EXE%" -d display_errors=0 "!LOCAL_PHP!" --tb
+set "RC=%ERRORLEVEL%"
+call :maybe_show_update_notice
+exit /b !RC!
 
 :cmd_check_version
 set "TMP_FILE=%TEMP%\ml_remote_version.txt"

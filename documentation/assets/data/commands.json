@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-11T04:38:13.210Z",
+  "generatedAt": "2026-05-11T04:41:05.050Z",
   "source": "ml.bat",
   "cliVersion": "1.1.15",
   "commands": [
@@ -259,7 +259,7 @@
     },
     {
       "name": "ml add --tb",
-      "description": "Run this CLI command to execute its linked workflow.",
+      "description": "Add tables to existing database (prompts selection)",
       "syntax": "ml add --tb",
       "params": [],
       "example": "ml add --tb",

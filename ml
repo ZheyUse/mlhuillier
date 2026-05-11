@@ -263,6 +263,9 @@ show_top_help() {
     echo ""
     echo "Database / UserDB:"
     echo "  add userdb       Import userdb SQL"
+    echo "  add -db [name]   Create new database and optionally add tables"
+    echo "  add -db <name> -tb  Add tables to existing database"
+    echo "  add --tb         Select database then add tables"
     echo "  add menu         Add sidebar menu with AI"
     echo "  test <database>  Test DB connection"
     echo "  create --a       Create user account"
@@ -337,6 +340,9 @@ show_help_create() {
 show_help_add() {
     echo "Usage: ml add userdb   Import userdb schema SQL"
     echo "       ml add menu     Add sidebar menu with AI metadata"
+    echo "       ml add -db      Create new database and optionally add tables"
+    echo "       ml add -db <name> -tb  Add tables to existing database"
+    echo "       ml add --tb     Select database then add tables"
 }
 
 show_help_serve() {
@@ -551,6 +557,69 @@ cmd_serve() {
 # ── Add ─────────────────────────────────────────────────────────────────────────
 cmd_add() {
     case "${1:-}" in
+        --tb)
+            local script="$REPO_ROOT/script/ml-add-db.php"
+            if [[ -f "$script" ]]; then
+                "$PHP_EXE" "$script" --tb
+            else
+                local tmp_file
+                tmp_file="$(ml_tmp "add-db")"
+                ml_fetch "${GH_RAW}/script/ml-add-db.php" "$tmp_file"
+                if [[ $ML_FETCH_RC -ne 0 ]]; then
+                    echo "ml: failed to fetch add-db helper" >&2
+                    exit 1
+                fi
+                "$PHP_EXE" "$tmp_file" --tb
+                rm -f "$tmp_file"
+            fi
+            ;;
+        -db)
+            shift
+            local db_name="${1:-}"
+            local db_flags=""
+            # Check if -tb flag is present (4th argument total: add, -db, name, -tb)
+            if [[ "${2:-}" == "-tb" || "${4:-}" == "-tb" ]]; then
+                db_flags="-tb"
+            fi
+            local script="$REPO_ROOT/script/ml-add-db.php"
+            if [[ -f "$script" ]]; then
+                if [[ -z "$db_name" ]]; then
+                    if [[ -n "$db_flags" ]]; then
+                        "$PHP_EXE" "$script" "$db_flags"
+                    else
+                        "$PHP_EXE" "$script"
+                    fi
+                else
+                    if [[ -n "$db_flags" ]]; then
+                        "$PHP_EXE" "$script" "$db_name" "$db_flags"
+                    else
+                        "$PHP_EXE" "$script" "$db_name"
+                    fi
+                fi
+            else
+                local tmp_file
+                tmp_file="$(ml_tmp "add-db")"
+                ml_fetch "${GH_RAW}/script/ml-add-db.php" "$tmp_file"
+                if [[ $ML_FETCH_RC -ne 0 ]]; then
+                    echo "ml: failed to fetch add-db helper" >&2
+                    exit 1
+                fi
+                if [[ -z "$db_name" ]]; then
+                    if [[ -n "$db_flags" ]]; then
+                        "$PHP_EXE" "$tmp_file" "$db_flags"
+                    else
+                        "$PHP_EXE" "$tmp_file"
+                    fi
+                else
+                    if [[ -n "$db_flags" ]]; then
+                        "$PHP_EXE" "$tmp_file" "$db_name" "$db_flags"
+                    else
+                        "$PHP_EXE" "$tmp_file" "$db_name"
+                    fi
+                fi
+                rm -f "$tmp_file"
+            fi
+            ;;
         userdb)
             shift
             remote_run "${GH_RAW}/userdb-import.php" "$@"
@@ -574,8 +643,9 @@ cmd_add() {
             fi
             ;;
         "")
-            echo "Usage: ml add userdb   Import userdb schema"
+            echo "ml add userdb   Import userdb schema"
             echo "       ml add menu     Add sidebar menu with AI"
+            echo "       ml add --tb             Select database then add tables"
             exit 2
             ;;
         *)

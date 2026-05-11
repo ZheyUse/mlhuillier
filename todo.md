@@ -1,23 +1,24 @@
-❯ perfect, then I want you to add a new command called ml add -db <database>
+then add together with it, ml add -db <database> -tb
 
-add a new file called ml-add-db.php in /script folder
+cli will say
+Input tablename separated by command:
 
-so the purpose for this is to add new schema/Database using cli instead of doin it manually in the workbench
+<table> has been added to <database>
 
-when user run ml add -db sample_db
-CLI will return a message
-Do you want to add Table? (Y/N):
-if Y then 
-Add Table for <database> separated by comma:
-ex. food, people, cars
+if two or more:
+<table>
+<table>
+<table>
+<table>
+has been added to <database>
 
-else if no then just create the the <database> without the table.
+ml add --tb
+Select Database to be inserted with the new table:
+1. <database>
+2. <database>
+3. <database>
 
-if Y:
-<database> has been created with table:
-1. <table>
-2. <table>
-3. <table>
+Database:
+(can be numeric or words)
 
-if N:
-<database> has been created
+then proceed with the Input tablename separated by command:

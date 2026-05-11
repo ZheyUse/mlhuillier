@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-05-11T04:37:48.666Z",
+  "generatedAt": "2026-05-11T04:38:31.125Z",
   "latestVersion": "1.1.15",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 240
+    "commitCount": 241
   },
   "releases": [
     {
       "version": "1.1.15",
       "isLatest": true,
-      "commitCount": 12,
+      "commitCount": 13,
       "dateRange": {
         "from": "2026-04-30",
         "to": "2026-05-11"
       },
       "stats": {
         "release": 2,
-        "feature": 8,
+        "feature": 9,
         "fix": 0,
         "docs": 2,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "feat: update generatedAt timestamp and increment commit count in version history",
         "feat: update version to 1.1.15 and add new database commands with tutorials",
         "feat: update version to 1.1.15, feat: Added ml --ai update",
         "feat(docs): add comprehensive AI installer guide for Free Claude Code",
         "feat(installation): add install and uninstall scripts for macOS/Linux docs: update README with installation instructions and uninstaller details chore: increment version and update generatedAt timestamp in version history",
         "feat(ai): update command categories and add new AI commands for Claude Code",
         "feat(ai): update AI command descriptions and add new commands in CLI and documentation",
-        "feat(ai): add command to update NVIDIA_NIM_API_KEY in Free Claude Code",
-        "feat(ai): add command to change configured model in Free Claude Code"
+        "feat(ai): add command to update NVIDIA_NIM_API_KEY in Free Claude Code"
       ],
       "commits": [
+        {
+          "hash": "6031557d57f38c83a830513be531d792a8d2be2f",
+          "shortHash": "6031557",
+          "date": "2026-05-11",
+          "title": "feat: update generatedAt timestamp and increment commit count in version history",
+          "type": "feature"
+        },
         {
           "hash": "930fd3806000dfe2e218f543a0d154a84b9cba3c",
           "shortHash": "930fd38",
