@@ -49,6 +49,88 @@ function createCopyBlock(command) {
   return wrap;
 }
 
+function createLinkBlock(command, url) {
+  const wrap = document.createElement('div');
+  wrap.className = 'code-line';
+
+  const code = document.createElement('code');
+  code.textContent = command;
+
+  const btn = document.createElement('a');
+  btn.className = 'copy-btn';
+  btn.href = url;
+  btn.target = '_blank';
+  btn.rel = 'noopener noreferrer';
+  btn.textContent = 'Get';
+
+  wrap.append(code, btn);
+  return wrap;
+}
+
+function createInstallBlock(commands) {
+  const wrap = document.createElement('div');
+  wrap.className = 'install-commands';
+
+  // Windows
+  const winRow = document.createElement('div');
+  winRow.className = 'install-row';
+
+  const winLabel = document.createElement('span');
+  winLabel.className = 'install-os';
+  winLabel.textContent = 'Windows';
+
+  const winCode = document.createElement('code');
+  winCode.textContent = commands.windows;
+
+  const winBtn = document.createElement('button');
+  winBtn.className = 'copy-btn';
+  winBtn.type = 'button';
+  winBtn.textContent = 'Copy';
+  winBtn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(commands.windows);
+      winBtn.textContent = 'Copied';
+      setTimeout(() => { winBtn.textContent = 'Copy'; }, 800);
+    } catch {
+      winBtn.textContent = 'Failed';
+      setTimeout(() => { winBtn.textContent = 'Copy'; }, 800);
+    }
+  });
+
+  winRow.append(winLabel, winCode, winBtn);
+
+  // Mac
+  const macRow = document.createElement('div');
+  macRow.className = 'install-row';
+
+  const macLabel = document.createElement('span');
+  macLabel.className = 'install-os';
+  macLabel.textContent = 'Mac';
+
+  const macCode = document.createElement('code');
+  macCode.textContent = commands.mac;
+
+  const macBtn = document.createElement('button');
+  macBtn.className = 'copy-btn';
+  macBtn.type = 'button';
+  macBtn.textContent = 'Copy';
+  macBtn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(commands.mac);
+      macBtn.textContent = 'Copied';
+      setTimeout(() => { macBtn.textContent = 'Copy'; }, 800);
+    } catch {
+      macBtn.textContent = 'Failed';
+      setTimeout(() => { macBtn.textContent = 'Copy'; }, 800);
+    }
+  });
+
+  macRow.append(macLabel, macCode, macBtn);
+
+  wrap.append(winRow, macRow);
+  return wrap;
+}
+
 function createCopyPreBlock(text) {
   const wrap = document.createElement('div');
   wrap.className = 'guide-code-block';
@@ -145,7 +227,16 @@ function renderTutorialSection(root, title, subtitle, steps) {
     expected.className = 'section-sub';
     expected.textContent = `Expected: ${step.expectedResult}`;
 
-    card.append(idx, createCopyBlock(step.command), explain, expected);
+    const commandBlock = step.command === 'Get NVIDIA NIM API key'
+      ? createLinkBlock(step.command, 'https://build.nvidia.com/')
+      : step.command === 'Install ML CLI'
+        ? createInstallBlock({
+            windows: 'curl -L https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/install-ml.bat -o install-ml.bat && install-ml.bat',
+            mac: 'curl -LsSf https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/install-ml.sh | bash',
+          })
+        : createCopyBlock(step.command);
+
+    card.append(idx, commandBlock, explain, expected);
     cards.append(card);
   });
 
@@ -612,6 +703,7 @@ function buildNav() {
     ['First Time Setup', 'first-time-setup'],
     ['PBAC Conversion', 'convertion-pbac'],
     ['RBAC Setup', 'convertion-rbac'],
+    ['Free Claude Code', 'free-claude-code'],
     ['General Usage', 'general-usage'],
     ['Commands', 'commands-reference'],
     ['Scenarios', 'scenarios'],
@@ -691,6 +783,17 @@ async function init() {
     'Role Based Access Control setup flow. This is separate from PBAC and should be selected as an alternative path.',
     tutorials.convertionRbac || []
   );
+  const freeClaudeCodeRoot = document.getElementById('free-claude-code');
+  renderTutorialSection(
+    freeClaudeCodeRoot,
+    'Free Claude Code',
+    'Install and use Free Claude Code with ML CLI for AI-powered development.',
+    tutorials.installAndUseClaudeCode || []
+  );
+  const claudeCodeGuideSearchText = renderPbacHowToGuide(freeClaudeCodeRoot, tutorials.installAndUseClaudeCodeGuide);
+  if (claudeCodeGuideSearchText) {
+    freeClaudeCodeRoot.dataset.searchText = `${freeClaudeCodeRoot.dataset.searchText || ''} ${claudeCodeGuideSearchText}`.trim().toLowerCase();
+  }
   renderTutorialSection(
     document.getElementById('general-usage'),
     'General Usage',

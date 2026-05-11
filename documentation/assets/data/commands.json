@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-11T04:41:05.050Z",
+  "generatedAt": "2026-05-11T05:17:58.210Z",
   "source": "ml.bat",
   "cliVersion": "1.1.15",
   "commands": [
@@ -891,60 +891,66 @@
     "firstTimeSetup": [
       {
         "step": 1,
+        "command": "Install ML CLI",
+        "explanation": "Install ML CLI first (main requirement). Use the command for your operating system.",
+        "expectedResult": "ML CLI installed and available in PATH."
+      },
+      {
+        "step": 2,
         "command": "ml --v",
         "explanation": "Verify CLI is installed and available in PATH.",
         "expectedResult": "Current version is printed, e.g. ML CLI version X.Y.Z."
       },
       {
-        "step": 2,
+        "step": 3,
         "command": "ml nav",
         "explanation": "Jump directly to C:\\xampp\\htdocs before creating projects.",
         "expectedResult": "Terminal path changes to C:\\xampp\\htdocs."
       },
       {
-        "step": 3,
+        "step": 4,
         "command": "ml create <project_name>",
         "explanation": "Generate your first project scaffold.",
         "expectedResult": "Project structure and starter files are created."
       },
       {
-        "step": 4,
+        "step": 5,
         "command": "ml nav --<project_name>",
         "explanation": "Enter your new project directory and optionally open VS Code.",
         "expectedResult": "Terminal is inside your project folder."
       },
       {
-        "step": 5,
+        "step": 6,
         "command": "Y",
         "explanation": "Accept VS Code prompt when asked by nav helper.",
         "expectedResult": "Project opens in VS Code."
       },
       {
-        "step": 6,
+        "step": 7,
         "command": "Continue in terminal",
         "explanation": "Keep using CLI from the project directory.",
         "expectedResult": "You are ready for checks and serve flow."
       },
       {
-        "step": 7,
+        "step": 8,
         "command": "ml test userdb",
         "explanation": "Validate DB connection and schema.",
         "expectedResult": "Connection test passes."
       },
       {
-        "step": 8,
+        "step": 9,
         "command": "ml add userdb",
         "explanation": "Run this only if test fails to install missing schema.",
         "expectedResult": "Database objects are imported."
       },
       {
-        "step": 9,
+        "step": 10,
         "command": "ml test userdb",
         "explanation": "Retry verification after import.",
         "expectedResult": "Connection test now succeeds."
       },
       {
-        "step": 10,
+        "step": 11,
         "command": "ml serve",
         "explanation": "Open project in browser and begin development.",
         "expectedResult": "Browser launches local project URL."
@@ -1034,45 +1040,63 @@
     "installAndUseClaudeCode": [
       {
         "step": 1,
-        "command": "ml install ai",
-        "explanation": "Install Free Claude Code: clones free-claude-code repo, installs uv + Python 3.14, configures .env with default models, prompts for NVIDIA NIM API key, installs Claude Code via npm, and patches VS Code settings.",
-        "expectedResult": "Free Claude Code installed to C:\\free-claude-code\\free-claude-code with everything configured."
+        "command": "Install ML CLI",
+        "explanation": "Install ML CLI first (main requirement for everything else). Use the command for your operating system.",
+        "expectedResult": "ML CLI installed and available in PATH."
       },
       {
         "step": 2,
+        "command": "ml install ai",
+        "explanation": "Install Free Claude Code with ML CLI. Run ml install ai to clone free-claude-code repo, install uv + Python 3.14, configure .env with default models, prompt for NVIDIA NIM API key, install Claude Code via npm, and patch VS Code settings.",
+        "expectedResult": "Free Claude Code installed to C:\\free-claude-code\\free-claude-code with everything configured."
+      },
+      {
+        "step": 3,
         "command": "Get NVIDIA NIM API key",
         "explanation": "Sign up / log in at https://build.nvidia.com/ and copy your API key. During install you will be prompted to enter it.",
         "expectedResult": "NVIDIA NIM API key is stored in C:\\free-claude-code\\free-claude-code\\.env."
       },
       {
-        "step": 3,
+        "step": 4,
         "command": "ml --ai",
         "explanation": "Start uvicorn (API server on port 8082) and Claude Code in visible terminal windows. Uvicorn runs in free-claude-code directory; Claude Code inherits your current working directory.",
         "expectedResult": "Two PowerShell windows open — one for uvicorn, one for Claude Code."
       },
       {
-        "step": 4,
+        "step": 5,
         "command": "ml --ai claude",
         "explanation": "Start uvicorn in background and Claude Code visibly in your project directory. Use this when you are already inside your project folder and want Claude Code to start there instead of free-claude-code.",
         "expectedResult": "Uvicorn runs silently in background on port 8082; Claude Code window opens in your current directory."
       },
       {
-        "step": 5,
+        "step": 6,
         "command": "ml --ai cm",
         "explanation": "Change the active AI model. Select Opus, Sonnet, Haiku, or the default model tier and enter a nvidia_nim model slug.",
         "expectedResult": ".env updated with the new model. Restart with ml --ai restart to load it."
       },
       {
-        "step": 6,
+        "step": 7,
         "command": "ml --ai restart",
         "explanation": "Stop and restart both processes (e.g., after changing models or API key in .env).",
         "expectedResult": "Fresh uvicorn + Claude Code processes running with updated configuration."
+      },
+      {
+        "step": 8,
+        "command": "ml --ai update",
+        "explanation": "Check for and pull the latest updates in the free-claude-code installation from the remote repository.",
+        "expectedResult": "Git pull fetches latest changes from the remote repository."
+      },
+      {
+        "step": 9,
+        "command": "ml --ai key",
+        "explanation": "Update the NVIDIA NIM API key stored in .env for Free Claude Code authentication.",
+        "expectedResult": "Interactive prompt for new API key. Value written to .env. Restart with ml --ai restart."
       }
     ],
     "installAndUseClaudeCodeGuide": {
       "buttonLabel": "HOW TO USE CLAUDE CODE?",
       "title": "How to Use Free Claude Code with ML CLI",
-      "intro": "Free Claude Code is a full-stack setup: a uvicorn API server on port 8082 acts as the proxy to NVIDIA NIM models, while Claude Code connects to it as the AI engine. Use ml --ai commands to manage the stack.",
+      "intro": "Free Claude Code is a full-stack AI setup powered by NVIDIA NIM models. ML CLI is the main requirement — install ML CLI first, then use it to run ml install ai. The stack includes a uvicorn API server on port 8082 as the proxy to NVIDIA NIM models, while Claude Code connects to it as the AI engine. Use ml --ai commands to manage the stack.",
       "steps": [
         "Run ml install ai to set up the entire stack: uv, Python 3.14, free-claude-code repo, Claude Code npm package, and VS Code configuration.",
         "Get an NVIDIA NIM API key from https://build.nvidia.com/ — enter it when prompted by the installer or later with ml --ai key.",
@@ -1080,6 +1104,7 @@
         "Run ml --ai to start uvicorn and Claude Code in visible terminal windows. Both processes must be running for Claude Code to work.",
         "Run ml --ai claude from your project folder when you want Claude Code to start in that directory instead of free-claude-code. Uvicorn stays in the background.",
         "Run ml --ai bg when you want both processes running silently with no open terminal windows.",
+        "To update free-claude-code to the latest version: ml --ai update, which pulls changes from the remote repository.",
         "To switch models: ml --ai cm, pick a tier, enter the model slug. Then ml --ai restart for changes to take effect.",
         "To update your API key: ml --ai key, paste the new key. Then ml --ai restart.",
         "Shut everything down with ml --ai stop when you are done. Use ml --ai restart to reload after any .env changes.",
@@ -1090,6 +1115,7 @@
         "ml --ai",
         "ml --ai claude",
         "ml --ai bg",
+        "ml --ai update",
         "ml --ai stop",
         "ml --ai restart",
         "ml --ai cm",
@@ -1767,6 +1793,14 @@
           "Select model tier: 1=Opus, 2=Sonnet, 3=Haiku, 4=Default",
           "Enter nvidia_nim model slug (e.g., minimaxai/minimax-m2.7)",
           "ml --ai restart"
+        ]
+      },
+      {
+        "title": "Update Free Claude Code",
+        "steps": [
+          "ml --ai update",
+          "Git pull fetches and merges latest changes from remote repository",
+          "Restart services with ml --ai restart if needed"
         ]
       },
       {

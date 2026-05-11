@@ -448,6 +448,52 @@ body {
   margin-top: 8px;
 }
 
+.install-commands {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.install-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid var(--stroke);
+  border-radius: 10px;
+}
+
+.install-row code {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.78rem;
+  color: #0b4a6f;
+  word-break: break-all;
+  line-height: 1.5;
+  padding: 8px 10px;
+  background: #fff;
+  border-radius: 6px;
+  border: 1px solid var(--stroke);
+}
+
+.install-os {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+  color: var(--accent);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--accent-bg);
+  padding: 4px 10px;
+  border-radius: 6px;
+  align-self: flex-start;
+}
+
+.install-row .copy-btn {
+  align-self: flex-end;
+}
+
 code {
   font-family: "IBM Plex Mono", monospace;
   font-size: 0.84rem;
