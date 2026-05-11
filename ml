@@ -280,6 +280,7 @@ show_top_help() {
     echo "  --ai bg          Start both in background"
     echo "  --ai stop        Stop all processes"
     echo "  --ai restart     Stop and start both in background"
+    echo "  --ai update      Check for and pull updates in free-claude-code"
     echo "  --ai cm          Change model (Opus/Sonnet/Haiku/Default)"
     echo "  --ai key         Update NVIDIA_NIM_API_KEY"
     echo ""
@@ -301,6 +302,7 @@ show_help_command() {
                     echo "  bg        Start both in background"
                     echo "  stop      Stop all processes"
                     echo "  restart   Stop and start both in background"
+                    echo "  update    Check for and pull updates in free-claude-code"
                     echo "  cm        Change Opus, Sonnet, Haiku, or default model in .env"
                     echo "  key       Update NVIDIA_NIM_API_KEY in .env"
                     ;;
@@ -633,6 +635,27 @@ cmd_backup() {
 # ── AI commands ────────────────────────────────────────────────────────────────
 cmd_ai() {
     local sub="${1:-}"
+
+    # Handle update subcommand locally (no PHP needed)
+    if [[ "$sub" == "update" ]]; then
+        local FREE_CC_DIR="C:/free-claude-code/free-claude-code"
+        if [[ ! -d "$FREE_CC_DIR/.git" ]]; then
+            echo "free-claude-code directory not found at $FREE_CC_DIR"
+            exit 1
+        fi
+        echo "Checking for updates in free-claude-code..."
+        git -C "$FREE_CC_DIR" fetch origin 2>/dev/null
+        local count
+        count=$(git -C "$FREE_CC_DIR" rev-list HEAD..origin/main --count 2>/dev/null || echo "0")
+        if [[ "$count" == "0" ]]; then
+            echo "free-claude-code is up to date."
+            exit 0
+        fi
+        echo "Found $count update(s). Pulling..."
+        git -C "$FREE_CC_DIR" pull origin main
+        exit $?
+    fi
+
     local tmp_file
     tmp_file="$(ml_tmp "ai")"
     ml_fetch "${GH_RAW}/ai-commands.php" "$tmp_file"
@@ -643,7 +666,18 @@ cmd_ai() {
     "$PHP_EXE" "$tmp_file" "$sub"
     local rc=$?
     rm -f "$tmp_file"
+    check_free_cc_updates
     exit $rc
+}
+
+# ── Check for free-claude-code updates ─────────────────────────────────────────
+check_free_cc_updates() {
+    local FREE_CC_DIR="C:/free-claude-code/free-claude-code"
+    [[ ! -d "$FREE_CC_DIR/.git" ]] && return 0
+    git -C "$FREE_CC_DIR" fetch origin 2>/dev/null
+    local count
+    count=$(git -C "$FREE_CC_DIR" rev-list HEAD..origin/main --count 2>/dev/null || echo "0")
+    [[ "$count" != "0" ]] && echo -e "\nNew update is available! Run: ml --ai update"
 }
 
 cmd_install_ai() {

@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.1.14"
+set "ML_VERSION=1.1.15"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -23,6 +23,7 @@ if /I "%~1"=="--d" goto :cmd_download_installer
 if /I "%~1"=="doc" goto :cmd_docs
 if /I "%~1"=="docs" goto :cmd_docs
 if /I "%~1"=="--b" goto :cmd_backup
+if /I "%~1"=="--ai" if /I "%~2"=="update" goto :cmd_ai_update
 if /I "%~1"=="--ai" goto :cmd_ai
 
 echo.
@@ -120,6 +121,7 @@ echo   update             Update ML CLI from remote
 echo   --ai               Start uvicorn + Claude Code (visible)
 echo   --ai claude        Start Claude Code in current directory (bg uvicorn)
 echo   --ai bg            Start both in background
+echo   --ai update       Check for updates in free-claude-code
 echo   --ai stop          Stop all processes
 echo   --ai restart       Stop and start both in background
 echo   --ai cm            Change model (Opus/Sonnet/Haiku/Default)
@@ -261,6 +263,7 @@ echo   ml --ai claude    Start uvicorn in bg, Claude Code visibly (runs in curre
 echo   ml --ai bg        Start both processes in background
 echo   ml --ai stop       Stop Free Claude Code processes
 echo   ml --ai restart    Stop then start both processes in background
+echo   ml --ai update     Check for and pull updates in free-claude-code
 echo   ml --ai cm         Change Opus, Sonnet, Haiku, or default model in .env
 echo   ml --ai key        Update NVIDIA_NIM_API_KEY in .env
 echo.
@@ -1171,6 +1174,8 @@ del /f /q "!TMP_FILE!" >nul 2>&1
 exit /b %RC%
 
 :cmd_ai
+rem Check for update subcommand first
+if /I "%ARG2%"=="update" goto :cmd_ai_update
 set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ai-commands.php"
 set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
 set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"
@@ -1196,7 +1201,38 @@ if %ERRORLEVEL% neq 0 (
 set "RC=%ERRORLEVEL%"
 call :maybe_show_update_notice
 del /f /q "!TMP_FILE!" >nul 2>&1
+if /I "%ARG2%" neq "update" call :check_free_cc_updates
 exit /b %RC%
+
+:check_free_cc_updates
+set "FREE_CC_DIR=C:\free-claude-code\free-claude-code"
+if not exist "!FREE_CC_DIR!\.git" exit /b 0
+git -C "!FREE_CC_DIR!" fetch origin 2^>nul
+for /f "delims=" %%i in ('git -C "!FREE_CC_DIR!" rev-list HEAD..origin/main --count 2^>nul') do set "UPDATE_COUNT=%%i"
+if not defined UPDATE_COUNT set "UPDATE_COUNT=0"
+if not "!UPDATE_COUNT!"=="0" (
+        echo.
+        echo New update is available! Run: ml --ai update
+)
+exit /b 0
+
+:cmd_ai_update
+set "FREE_CC_DIR=C:\free-claude-code\free-claude-code"
+if not exist "!FREE_CC_DIR!\.git" (
+        echo free-claude-code directory not found at !FREE_CC_DIR!
+        exit /b 1
+)
+echo Checking for updates in free-claude-code...
+git -C "!FREE_CC_DIR!" fetch origin 2^>nul
+for /f "delims=" %%i in ('git -C "!FREE_CC_DIR!" rev-list HEAD..origin/main --count 2^>nul') do set "UPDATE_COUNT=%%i"
+if not defined UPDATE_COUNT set "UPDATE_COUNT=0"
+if "!UPDATE_COUNT!"=="0" (
+        echo free-claude-code is up to date.
+        exit /b 0
+)
+echo Found !UPDATE_COUNT! update(s). Pulling...
+git -C "!FREE_CC_DIR!" pull origin main
+exit /b 0
 
 :cmd_serve
 set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ml-serve.php"

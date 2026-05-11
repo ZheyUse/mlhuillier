@@ -4,7 +4,10 @@
       "Bash(php -v)",
       "Bash(curl --version)",
       "Bash(php scripts/test-nim-connection.php)",
-      "Bash(php scripts/test-nim-deep.php)"
+      "Bash(php scripts/test-nim-deep.php)",
+      "Bash(uipro init *)",
+      "Bash(python3 .claude/skills/ui-ux-pro-max/scripts/search.py \"developer tools CLI documentation dashboard modern clean professional\" --design-system -p \"ML CLI Documentation\" -f markdown)",
+      "WebFetch(domain:vuetifyjs.com)"
     ]
   }
 }

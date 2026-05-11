@@ -1,6 +1,8 @@
 # Reference gitignore for PHP / XAMPP projects
 # Sourced from ./ignore
 
+/.claude/
+
 # Composer
 /vendor/
 /composer.lock

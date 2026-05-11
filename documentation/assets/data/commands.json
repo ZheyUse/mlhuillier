@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-05-04T04:35:21.355Z",
+  "generatedAt": "2026-05-11T04:13:02.544Z",
   "source": "ml.bat",
-  "cliVersion": "1.1.14",
+  "cliVersion": "1.1.15",
   "commands": [
     {
       "name": "ml --ai",
@@ -124,6 +124,24 @@
         "scenario": "Typical ai workflow using ml --ai stop.",
         "steps": [
           "Run: ml --ai stop",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml --ai update",
+      "description": "Check for updates in free-claude-code",
+      "syntax": "ml --ai update",
+      "params": [],
+      "example": "ml --ai update",
+      "category": "maintenance",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When maintaining CLI consistency across machines.",
+        "scenario": "Typical maintenance workflow using ml --ai update.",
+        "steps": [
+          "Run: ml --ai update",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
@@ -1129,6 +1147,16 @@
         "scenario": "Typical ai workflow using ml --ai stop.",
         "steps": [
           "Run: ml --ai stop",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml --ai update",
+        "whenToUse": "When maintaining CLI consistency across machines.",
+        "scenario": "Typical maintenance workflow using ml --ai update.",
+        "steps": [
+          "Run: ml --ai update",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
