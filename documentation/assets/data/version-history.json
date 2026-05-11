@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-05-11T06:55:23.055Z",
+  "generatedAt": "2026-05-11T07:04:26.777Z",
   "latestVersion": "1.1.15",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 246
+    "commitCount": 247
   },
   "releases": [
     {
       "version": "1.1.15",
       "isLatest": true,
-      "commitCount": 18,
+      "commitCount": 19,
       "dateRange": {
         "from": "2026-04-30",
         "to": "2026-05-11"
       },
       "stats": {
         "release": 2,
-        "feature": 14,
+        "feature": 15,
         "fix": 0,
         "docs": 2,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "feat: update timestamps and commit counts in version history; enhance git fetch logic in ml.bat",
         "feat: enhance installation commands and error handling for Free Claude Code; update documentation and version history",
         "feat: enhance Free Claude Code installation and update commands with error handling",
         "feat: update installation commands and enhance error handling for Free Claude Code",
         "feat: enhance installation commands and update documentation for Free Claude Code",
         "feat: add new database management commands and update documentation",
         "feat: update generatedAt timestamp and increment commit count in version history",
-        "feat: update version to 1.1.15 and add new database commands with tutorials",
-        "feat: update version to 1.1.15, feat: Added ml --ai update"
+        "feat: update version to 1.1.15 and add new database commands with tutorials"
       ],
       "commits": [
+        {
+          "hash": "b8e3cf486acc467d7761d0cbdf43321dc84cce67",
+          "shortHash": "b8e3cf4",
+          "date": "2026-05-11",
+          "title": "feat: update timestamps and commit counts in version history; enhance git fetch logic in ml.bat",
+          "type": "feature"
+        },
         {
           "hash": "d54f5800e140c42d67e648e00d8fd95507b698bc",
           "shortHash": "d54f580",

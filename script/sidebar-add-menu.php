@@ -548,8 +548,28 @@ function buildFallbackMetadata(string $menuName, array $submenuNames): array
  * @param  array[]  $submenus      Each: ['name'=>..., 'slug'=>..., 'permission'=>..., 'path'=>...]
  * @return string
  */
-function generateSidebarBlock(string $menuName, string $menuIcon, array $submenus): string
+function generateSidebarBlock(string $menuName, string $menuIcon, array $submenus, bool $isSingleLink = false): string
 {
+    // Single-link menu (no dropdown)
+    if ($isSingleLink) {
+        $s = $submenus[0] ?? null;
+        if ($s === null) {
+            return '';
+        }
+        return <<<PHP
+
+        <?php if (has_permission('{$s['permission']}')): ?>
+        <li class="sidebar__nav-item">
+          <a href="<?= htmlspecialchars((\$appBaseUrl !== '' ? \$appBaseUrl : '') . '{$s['path']}', ENT_QUOTES, 'UTF-8'); ?>" class="sidebar__nav-link">
+            <span class="material-icons sidebar__nav-icon" aria-hidden="true">{$menuIcon}</span>
+            <span class="sidebar__nav-label">{$menuName}</span>
+          </a>
+        </li>
+        <?php endif; ?>
+PHP;
+    }
+
+    // Dropdown menu with submenus
     $permissionList = implode(', ', array_map(
         fn($s) => "'{$s['permission']}'",
         $submenus
@@ -719,12 +739,223 @@ CSS;
     }
 }
 
+// ── Submenu-only helpers ──────────────────────────────────────────────────────
+
+/**
+ * Extracts all existing menu names from sidebar.php.
+ * Returns array: ['MenuName' => 'MenuName', ...]
+ */
+function parseSidebarMenus(string $sidebarPath): array
+{
+    if (!is_file($sidebarPath)) {
+        return [];
+    }
+
+    $content = (string) file_get_contents($sidebarPath);
+    $menus = [];
+
+    // Match: <span class="sidebar__nav-label">MenuName</span> inside has-submenu items
+    if (preg_match_all('/class="sidebar__nav-item\s+has-submenu"[^>]*>.*?<span\s+class="sidebar__nav-label"[^>]*>([^<]+)<\/span>/s', $content, $matches)) {
+        foreach ($matches[1] as $name) {
+            $name = trim((string) $name);
+            if ($name !== '') {
+                $menus[$name] = $name;
+            }
+        }
+    }
+
+    return $menus;
+}
+
+/**
+ * Find the exact menu name in sidebar.php (case-insensitive match).
+ * Returns the actual casing from the file, or null if not found.
+ */
+function findMenuInSidebar(string $sidebarPath, string $menuName): ?string
+{
+    $menus = parseSidebarMenus($sidebarPath);
+    $search = strtolower(trim($menuName));
+
+    foreach ($menus as $actualName) {
+        if (strtolower($actualName) === $search) {
+            return $actualName;
+        }
+    }
+    return null;
+}
+
+/**
+ * Injects a submenu HTML block into an existing menu's <ul class="sidebar__submenu"> block.
+ */
+function injectSubmenuIntoMenu(string $sidebarPath, string $menuName, string $submenuHtml): bool
+{
+    if (!is_file($sidebarPath)) {
+        return false;
+    }
+
+    $content = (string) file_get_contents($sidebarPath);
+
+    // Find the menu item by label, then find its sidebar__submenu ul, then append
+    // Pattern: find <li class="sidebar__nav-item has-submenu">...<span class="sidebar__nav-label">MenuName</span>...
+    //         then find <ul class="sidebar__submenu"> inside that <li> and append before </ul>
+    $menuPattern = '/(<li\s+class="sidebar__nav-item\s+has-submenu"[^>]*>.*?<span\s+class="sidebar__nav-label"[^>]*>' . preg_quote($menuName, '/') . '<\/span>.*?<ul\s+class="sidebar__submenu")/s';
+
+    if (preg_match($menuPattern, $content, $matches, PREG_OFFSET_CAPTURE)) {
+        $submenuStart = $matches[1][1];
+        $afterTag = strlen($matches[1][0]);
+
+        // Find the closing </ul> for this submenu list
+        $afterStart = $submenuStart + $afterTag;
+        $subContent = substr($content, $afterStart);
+
+        // Find </ul> after the opening <ul class="sidebar__submenu">
+        $endPos = strpos($subContent, '</ul>');
+        if ($endPos !== false) {
+            $insertAt = $afterStart + $endPos;
+            $newContent = substr($content, 0, $insertAt)
+                . $submenuHtml . "\n          "
+                . substr($content, $insertAt);
+
+            return file_put_contents($sidebarPath, $newContent) !== false;
+        }
+    }
+
+    return false;
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 $projectRoot = resolveProjectRoot();
 if ($projectRoot === null) {
     err('Error: run this command inside a scaffolded project directory.');
     exit(2);
+}
+
+// Check if running in submenu-only mode (from ml add submenu)
+$isSubmenuOnly = in_array('--submenu-only', $argv, true);
+
+if ($isSubmenuOnly) {
+    // ===== SUBMENU-ONLY FLOW =====
+    $sidebarPath = $projectRoot
+        . DIRECTORY_SEPARATOR . 'src'
+        . DIRECTORY_SEPARATOR . 'templates'
+        . DIRECTORY_SEPARATOR . 'sidebar.php';
+
+    out('');
+    out('===== Add Submenu to Existing Menu =====');
+    out('');
+
+    // Parse existing menus
+    $menus = parseSidebarMenus($sidebarPath);
+    if (empty($menus)) {
+        err('No existing menus found in sidebar.php.');
+        err('Use "ml add menu" first to create a menu.');
+        exit(1);
+    }
+
+    out('Select Menu:');
+    $menuKeys = array_values($menus);
+    foreach ($menuKeys as $i => $menu) {
+        out('  ' . ($i + 1) . '. ' . $menu);
+    }
+    out('');
+
+    $selected = ask('Select Menu (number or name):');
+    $selectedMenu = null;
+
+    // Check if user entered a number
+    if (is_numeric($selected)) {
+        $idx = (int) $selected - 1;
+        if (isset($menuKeys[$idx])) {
+            $selectedMenu = $menuKeys[$idx];
+        }
+    } else {
+        // Try to match by name (case-insensitive)
+        $selectedMenu = findMenuInSidebar($sidebarPath, $selected);
+    }
+
+    if ($selectedMenu === null) {
+        err('Menu not found: ' . $selected);
+        exit(1);
+    }
+
+    out('');
+
+    // Step: submenu name
+    $submenuName = ask('Enter Submenu name for ' . $selectedMenu . ':');
+    if ($submenuName === '') {
+        err('Submenu name cannot be empty.');
+        exit(1);
+    }
+
+    $submenuNames = [$submenuName];
+
+    // Step: call NVIDIA NIM
+    out('');
+    out('Generating metadata via NVIDIA NIM AI...');
+    $apiKey = getApiKey();
+    $aiData = callNvidiaNim($apiKey, $selectedMenu, $submenuNames);
+
+    if (isset($aiData['error'])) {
+        out('Warning: AI unavailable — error: ' . $aiData['error']);
+        if (!empty($aiData['raw'])) {
+            out('AI raw response was:');
+            out('  ' . $aiData['raw']);
+        }
+        out('Falling back to default metadata.');
+        $aiData = buildFallbackMetadata($selectedMenu, $submenuNames);
+    }
+
+    // Build normalized submenu
+    $finalMenuName = $selectedMenu;
+    $finalMenuIcon = !empty($aiData['menu']['icon']) ? (string) $aiData['menu']['icon'] : 'menu';
+
+    $aiSub = $aiData['submenus'][0] ?? [];
+    $finalName = !empty($aiSub['name']) ? (string) $aiSub['name'] : $submenuName;
+    $finalIcon = !empty($aiSub['icon']) ? (string) $aiSub['icon'] : 'question_mark';
+    $finalTitle = !empty($aiSub['title']) ? (string) $aiSub['title'] : $finalName;
+    $finalSub = !empty($aiSub['subtitle']) ? (string) $aiSub['subtitle'] : 'Edit this description later.';
+
+    $submenuSlug = slug($finalName);
+
+    $normSubmenu = [
+        'name' => $finalName,
+        'slug' => $submenuSlug,
+        'permission' => $finalMenuName . ' ' . $finalName,
+        'path' => '/src/pages/' . noSpaceSlug($finalMenuName) . '/' . $submenuSlug . '/' . $submenuSlug . '.php',
+        'icon' => $finalIcon,
+        'title' => $finalTitle,
+        'subtitle' => $finalSub,
+    ];
+
+    out('');
+    out($finalName . ' has been added as submenu under ' . $finalMenuName . '.');
+
+    // Generate submenu HTML and inject
+    $submenuPermission = $normSubmenu['permission'];
+    $submenuHtml = <<<PHP
+
+            <?php if (has_permission('{$submenuPermission}')): ?>
+            <li class="sidebar__submenu-item"><a href="<?= htmlspecialchars((\$appBaseUrl !== '' ? \$appBaseUrl : '') . '{$normSubmenu['path']}', ENT_QUOTES, 'UTF-8'); ?>" class="sidebar__submenu-link"><span class="sidebar__submenu-label">{$finalName}</span></a></li>
+            <?php endif; ?>
+PHP;
+
+    if (injectSubmenuIntoMenu($sidebarPath, $finalMenuName, $submenuHtml)) {
+        out('Sidebar updated successfully.');
+    } else {
+        out('Warning: Could not auto-inject into sidebar.php — please add manually.');
+        out('');
+        out('--- SUBMENU HTML ---');
+        out($submenuHtml);
+        out('--- END ---');
+    }
+
+    out('');
+    out('Done. Added to ' . $finalMenuName . ':');
+    out('  -> ' . $finalName);
+    out('     header: bp_section_header_html(\'' . $finalIcon . '\', \'' . $finalTitle . '\', \'' . $finalSub . '\')');
+    out('');
+    exit(0);
 }
 
 out('');
@@ -741,27 +972,32 @@ if ($menuName === '') {
 $menuSlug  = slug($menuName);
 $menuTitle = trim($menuName);
 
-// Step 2 — submenus
-$rawSubmenus = ask('Enter Submenu(s) for ' . $menuTitle . ' (comma-separated, e.g. Settings,Extensions,Passwords,Details):');
-if ($rawSubmenus === '') {
-    err('At least one submenu is required.');
-    exit(1);
-}
+// Step 2 — submenus (can be empty for menu-only with no dropdown)
+$rawSubmenus = ask('Enter Submenu(s) for ' . $menuTitle . ' (comma-separated, e.g. Settings,Extensions,Passwords,Details) [Press ENTER for no submenu]:');
+$hasSubmenus = $rawSubmenus !== '';
 
-$submenuNames = array_values(array_filter(
-    array_map('trim', explode(',', $rawSubmenus))
-));
-if (count($submenuNames) === 0) {
-    err('No valid submenus provided.');
-    exit(1);
+$submenuNames = [];
+if ($hasSubmenus) {
+    $submenuNames = array_values(array_filter(
+        array_map('trim', explode(',', $rawSubmenus))
+    ));
+    if (count($submenuNames) === 0) {
+        err('No valid submenus provided.');
+        exit(1);
+    }
 }
 
 // Step 3 — call NVIDIA NIM AI for metadata (icon, title, subtitle)
 out('');
-out('Generating metadata via NVIDIA NIM AI...');
 
-$apiKey = getApiKey();
-$aiData = callNvidiaNim($apiKey, $menuTitle, $submenuNames);
+if (!$hasSubmenus) {
+    $apiKey = getApiKey();
+    $aiData = callNvidiaNim($apiKey, $menuTitle, [$menuName]); // pass menu name as pseudo-submenu for AI metadata
+} else {
+    out('Generating metadata via NVIDIA NIM AI...');
+    $apiKey = getApiKey();
+    $aiData = callNvidiaNim($apiKey, $menuTitle, $submenuNames);
+}
 
 if (isset($aiData['error'])) {
     if ($aiData['error'] === 'INVALID_API_KEY') {
@@ -783,28 +1019,41 @@ $finalMenuName = !empty($aiData['menu']['name']) ? (string) $aiData['menu']['nam
 $finalMenuIcon = !empty($aiData['menu']['icon']) ? (string) $aiData['menu']['icon'] : 'menu';
 
 // Step 4 — build normalised submenu list
-// Match AI submenus back to user-provided names by position
-$normSubmenus = [];
-foreach ($submenuNames as $i => $rawName) {
-    $aiSub      = $aiData['submenus'][$i] ?? [];
-    $finalName  = !empty($aiSub['name'])     ? (string) $aiSub['name']     : $rawName;
-    $finalIcon  = !empty($aiSub['icon'])     ? (string) $aiSub['icon']     : 'question_mark';
-    $finalTitle = !empty($aiSub['title'])    ? (string) $aiSub['title']    : $finalName;
-    $finalSub   = !empty($aiSub['subtitle']) ? (string) $aiSub['subtitle'] : 'Edit this description later.';
-
-    $submenuSlug = slug($finalName);
-    $noSpaceMenu = noSpaceSlug($finalMenuName);
-    $noSpaceSub  = noSpaceSlug($finalName);
-
+// If no submenus provided, treat menu as a single direct-link item (no dropdown)
+if (!$hasSubmenus) {
+    // Create a pseudo-submenu from the menu name for the direct link
     $normSubmenus[] = [
-        'name'       => $finalName,
-        'slug'       => $submenuSlug,
-        'permission' => $finalMenuName . ' ' . $finalName,
-        'path'       => "/src/pages/{$noSpaceMenu}/{$noSpaceSub}/{$noSpaceSub}.php",
-        'icon'       => $finalIcon,
-        'title'      => $finalTitle,
-        'subtitle'   => $finalSub,
+        'name'       => $finalMenuName,
+        'slug'       => slug($finalMenuName),
+        'permission' => $finalMenuName,
+        'path'       => "/src/pages/" . noSpaceSlug($finalMenuName) . "/" . noSpaceSlug($finalMenuName) . "/" . noSpaceSlug($finalMenuName) . ".php",
+        'icon'       => $finalMenuIcon,
+        'title'      => $finalMenuName,
+        'subtitle'   => 'Edit this description later.',
     ];
+} else {
+    // Match AI submenus back to user-provided names by position
+    foreach ($submenuNames as $i => $rawName) {
+        $aiSub      = $aiData['submenus'][$i] ?? [];
+        $finalName  = !empty($aiSub['name'])     ? (string) $aiSub['name']     : $rawName;
+        $finalIcon  = !empty($aiSub['icon'])     ? (string) $aiSub['icon']     : 'question_mark';
+        $finalTitle = !empty($aiSub['title'])    ? (string) $aiSub['title']    : $finalName;
+        $finalSub   = !empty($aiSub['subtitle']) ? (string) $aiSub['subtitle'] : 'Edit this description later.';
+
+        $submenuSlug = slug($finalName);
+        $noSpaceMenu = noSpaceSlug($finalMenuName);
+        $noSpaceSub  = noSpaceSlug($finalName);
+
+        $normSubmenus[] = [
+            'name'       => $finalName,
+            'slug'       => $submenuSlug,
+            'permission' => $finalMenuName . ' ' . $finalName,
+            'path'       => "/src/pages/{$noSpaceMenu}/{$noSpaceSub}/{$noSpaceSub}.php",
+            'icon'       => $finalIcon,
+            'title'      => $finalTitle,
+            'subtitle'   => $finalSub,
+        ];
+    }
 }
 
 // Step 5 — display creation report
@@ -812,6 +1061,9 @@ out('');
 out("{$finalMenuName} has been Created");
 foreach ($normSubmenus as $sm) {
     out("  -> {$sm['name']} has been added");
+}
+if (!$hasSubmenus) {
+    out('  (No submenus - direct link menu)');
 }
 out('');
 
@@ -821,7 +1073,7 @@ $sidebarPath  = $projectRoot
     . DIRECTORY_SEPARATOR . 'templates'
     . DIRECTORY_SEPARATOR . 'sidebar.php';
 
-$sidebarBlock = generateSidebarBlock($finalMenuName, $finalMenuIcon, $normSubmenus);
+$sidebarBlock = generateSidebarBlock($finalMenuName, $finalMenuIcon, $normSubmenus, !$hasSubmenus);
 
 if (injectIntoSidebar($sidebarPath, $sidebarBlock)) {
     out('Sidebar updated successfully.');
@@ -836,7 +1088,10 @@ if (injectIntoSidebar($sidebarPath, $sidebarBlock)) {
 out('');
 
 // Step 7 — template generation prompt
-if (!confirm("Do you want me to create the necessary template of the created {$finalMenuName} and Submenu(s)?")) {
+$confirmMsg = $hasSubmenus
+    ? "Do you want me to create the necessary template of the created {$finalMenuName} and Submenu(s)?"
+    : "Do you want me to create the template for {$finalMenuName}?";
+if (!confirm($confirmMsg)) {
     out('Template creation cancelled.');
     exit(0);
 }

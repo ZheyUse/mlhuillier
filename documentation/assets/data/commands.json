@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-11T07:02:54.495Z",
+  "generatedAt": "2026-05-11T08:30:15.238Z",
   "source": "ml.bat",
   "cliVersion": "1.1.15",
   "commands": [
@@ -258,24 +258,6 @@
       }
     },
     {
-      "name": "ml add --tb",
-      "description": "Add tables to existing database (prompts selection)",
-      "syntax": "ml add --tb",
-      "params": [],
-      "example": "ml add --tb",
-      "category": "database",
-      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
-      "tutorial": {
-        "whenToUse": "When this workflow matches your current task.",
-        "scenario": "Typical database workflow using ml add --tb.",
-        "steps": [
-          "Run: ml add --tb",
-          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
-          "If it fails, apply the recommended fix from Error Handling then retry."
-        ]
-      }
-    },
-    {
       "name": "ml add -db",
       "description": "Run this CLI command to execute its linked workflow.",
       "syntax": "ml add -db",
@@ -312,6 +294,24 @@
       }
     },
     {
+      "name": "ml add -tb",
+      "description": "Add tables to existing database (prompts selection)",
+      "syntax": "ml add -tb",
+      "params": [],
+      "example": "ml add -tb",
+      "category": "database",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical database workflow using ml add -tb.",
+        "steps": [
+          "Run: ml add -tb",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
       "name": "ml add menu",
       "description": "Add sidebar menu and submenu scaffold (ml add menu)",
       "syntax": "ml add menu",
@@ -324,6 +324,24 @@
         "scenario": "Typical database workflow using ml add menu.",
         "steps": [
           "Run: ml add menu",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml add submenu",
+      "description": "Run this CLI command to execute its linked workflow.",
+      "syntax": "ml add submenu",
+      "params": [],
+      "example": "ml add submenu",
+      "category": "database",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical database workflow using ml add submenu.",
+        "steps": [
+          "Run: ml add submenu",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
@@ -1276,16 +1294,6 @@
         ]
       },
       {
-        "command": "ml add --tb",
-        "whenToUse": "When this workflow matches your current task.",
-        "scenario": "Typical database workflow using ml add --tb.",
-        "steps": [
-          "Run: ml add --tb",
-          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
-          "If it fails, apply the recommended fix from Error Handling then retry."
-        ]
-      },
-      {
         "command": "ml add -db",
         "whenToUse": "When this workflow matches your current task.",
         "scenario": "Typical database workflow using ml add -db.",
@@ -1306,11 +1314,31 @@
         ]
       },
       {
+        "command": "ml add -tb",
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical database workflow using ml add -tb.",
+        "steps": [
+          "Run: ml add -tb",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
         "command": "ml add menu",
         "whenToUse": "When this workflow matches your current task.",
         "scenario": "Typical database workflow using ml add menu.",
         "steps": [
           "Run: ml add menu",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml add submenu",
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical database workflow using ml add submenu.",
+        "steps": [
+          "Run: ml add submenu",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
