@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-05-11T12:22:29.828Z",
+  "generatedAt": "2026-05-11T13:14:07.543Z",
   "latestVersion": "1.1.15",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 250
+    "commitCount": 251
   },
   "releases": [
     {
       "version": "1.1.15",
       "isLatest": true,
-      "commitCount": 22,
+      "commitCount": 23,
       "dateRange": {
         "from": "2026-04-30",
         "to": "2026-05-11"
       },
       "stats": {
         "release": 2,
-        "feature": 18,
+        "feature": 19,
         "fix": 0,
         "docs": 2,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "feat: update commands and version history; enhance submenu creation with support for multiple submenus",
         "feat: add commands for submenu creation and enhance error handling in ml.bat; update timestamps in version history",
         "feat: enhance sidebar template generation prompt to conditionally request submenu creation",
         "feat: update command syntax for database management; add submenu functionality and enhance sidebar integration",
         "feat: update timestamps and commit counts in version history; enhance git fetch logic in ml.bat",
         "feat: enhance installation commands and error handling for Free Claude Code; update documentation and version history",
         "feat: enhance Free Claude Code installation and update commands with error handling",
-        "feat: update installation commands and enhance error handling for Free Claude Code",
-        "feat: enhance installation commands and update documentation for Free Claude Code"
+        "feat: update installation commands and enhance error handling for Free Claude Code"
       ],
       "commits": [
+        {
+          "hash": "253dfad3ab2396b4a422034c4ed05de8a25ba934",
+          "shortHash": "253dfad",
+          "date": "2026-05-11",
+          "title": "feat: update commands and version history; enhance submenu creation with support for multiple submenus",
+          "type": "feature"
+        },
         {
           "hash": "3faf312292578fbabca8f61ddaee6f9e735b9d3f",
           "shortHash": "3faf312",
