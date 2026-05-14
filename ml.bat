@@ -114,6 +114,7 @@ echo   serve projectname -o        Open selected project via ngrok share link
 echo   serve projectname --online  Open selected project via ngrok share link
 echo   serve -stop        Stop active ngrok online tunnel
 echo   migrate -db ^<DATABASE^>   Migrate userdb tables to target DB
+echo   migrate check             Check migration compatibility
 echo   migrate global              Centralize / restore project back to userdb
 echo   wb                 Open MySQL Workbench (ml wb)
 echo   wb --export        Run Workbench export helper (ml wb --export)
@@ -155,6 +156,7 @@ echo   ml serve projectname -o
 echo   ml serve projectname --online
 echo   ml serve -stop
 echo   ml migrate -db ^<DATABASE^>
+echo   ml migrate check [--json]
 echo   ml --h nav
 echo   ml --h add userdb
 echo   ml --h install ai
@@ -459,13 +461,23 @@ exit /b 0
 echo.
 echo HELP: Migrate userdb structures
 echo Usage: ml migrate -db ^<DATABASE^>
+echo        ml migrate check [--json]
 echo        ml migrate global
 echo Description: Migrates table structures and data from userdb to a target database.
 echo   Also rewrites project references and updates .env for the target database.
 echo   The global subcommand copies userdb tables from the project's current
 echo   decentralized database back to userdb and resets the project to use userdb.
 echo.
-echo   ml migrate global   Restore the project to use centralized userdb.
+echo Subcommands:
+echo   -db ^<DATABASE^>   Migrate userdb tables to target database
+echo   check              Check migration compatibility (use --json for machine output)
+echo   global             Restore the project to use centralized userdb
+echo.
+echo Examples:
+echo   ml migrate check
+echo   ml migrate check --json
+echo   ml migrate -db myproject_db
+echo   ml migrate global
 exit /b 0
 
 :help_reveal

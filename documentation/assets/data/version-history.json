@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-05-14T01:20:20.503Z",
+  "generatedAt": "2026-05-14T01:20:52.174Z",
   "latestVersion": "1.1.16",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 252
+    "commitCount": 253
   },
   "releases": [
     {
       "version": "1.1.16",
       "isLatest": true,
-      "commitCount": 12,
+      "commitCount": 13,
       "dateRange": {
         "from": "2026-05-11",
         "to": "2026-05-14"
       },
       "stats": {
         "release": 1,
-        "feature": 11,
+        "feature": 12,
         "fix": 0,
         "docs": 0,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "feat: enhance user migration script with compatibility check and detailed usage instructions; add validation for project files and database conflicts",
         "feat: update version to 1.1.16 in VERSION file and related scripts; increment commit counts and timestamps in version history",
         "feat: update commands and version history; enhance submenu creation with support for multiple submenus",
         "feat: add commands for submenu creation and enhance error handling in ml.bat; update timestamps in version history",
         "feat: enhance sidebar template generation prompt to conditionally request submenu creation",
         "feat: update command syntax for database management; add submenu functionality and enhance sidebar integration",
         "feat: update timestamps and commit counts in version history; enhance git fetch logic in ml.bat",
-        "feat: enhance installation commands and error handling for Free Claude Code; update documentation and version history",
-        "feat: enhance Free Claude Code installation and update commands with error handling"
+        "feat: enhance installation commands and error handling for Free Claude Code; update documentation and version history"
       ],
       "commits": [
+        {
+          "hash": "d1c3ca6f074d5039433ab7f2b6b70bb0c6cf405e",
+          "shortHash": "d1c3ca6",
+          "date": "2026-05-14",
+          "title": "feat: enhance user migration script with compatibility check and detailed usage instructions; add validation for project files and database conflicts",
+          "type": "feature"
+        },
         {
           "hash": "ff84d4005784445bf55fb696090749cb9ee9d05b",
           "shortHash": "ff84d40",
