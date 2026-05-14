@@ -2,66 +2,94 @@ Mirror Audit — Instruction
 
 Purpose:
 - Verify `test/` folder is fully mirrored by the scaffolder templates in `generate-file-structure.php`, identify missing/changed files, and produce actionable patches.
-- Keep all audit outputs under a single deletable folder: `audit/`.
+- `audit-sync.ps1` combines audit + auto-sync in one step.
 
-Prerequisites:
-- Run from repository root (where `generate-file-structure.php` lives).
-- PHP CLI and PowerShell available (Windows).
-- Working copy of `test/` is authoritative.
-
-Quick steps (copy/paste):
-
-1) Run the mirror audit script
+Quick start (recommended):
 
 ```powershell
 Push-Location "C:\xampp\htdocs\mlhuillier"
-\.\mirror-audit.ps1
+.\audit-sync.ps1          # Interactive: show preview, then apply on confirm
+.\audit-sync.ps1 -Force    # Auto-apply all changes (CI / automation)
+.\audit-sync.ps1 -DryRun   # Preview only, no file changes
 Pop-Location
 ```
 
-2) Review audit outputs (all inside `audit/`)
+---
+
+Mode reference:
+
+  .\audit-sync.ps1 (default)
+    1. Runs mirror-audit.ps1 to detect drift.
+    2. Classifies files: text files become heredoc entries; binary files (png/jpg/etc.)
+       are skipped with a warning.
+    3. Shows a full preview (file list + first 4 content lines per entry).
+    4. Prompts for confirmation before writing.
+    5. Creates a timestamped backup in `audit/php-backups/`.
+    6. Patches generate-file-structure.php. For existing template entries it replaces
+       the heredoc; for missing entries it inserts them in alphabetical order.
+    7. Validates: PHP syntax check, template dump, partial re-audit.
+
+  -Force
+    Skips the confirmation prompt. All changes are applied immediately.
+    Best for CI pipelines and scripting.
+
+  -DryRun
+    Runs steps 1–3 only. Shows exactly what WOULD be changed without touching
+    generate-file-structure.php.
+
+What audit-sync.ps1 does NOT do:
+- It does NOT modify `test/` (test/ is the authoritative source, never written to).
+- Binary files are skipped because heredoc cannot safely encode them.
+  If a new binary file appears in test/ that needs to be in the scaffold, add it
+  to generate-file-structure.php manually (use base64 or use loadTemplatesFromDir
+  fallback — test/ exists in the real project, so binary files are served from there).
+
+Manual per-step workflow (for understanding / debugging):
+
+  1) Run the mirror audit:
 
 ```powershell
 Push-Location "C:\xampp\htdocs\mlhuillier"
-Get-ChildItem .\audit -Recurse
+.\mirror-audit.ps1
 Pop-Location
 ```
 
-3) Key files
-- `audit/test-files.txt`
-- `audit/scaffold_templates/`
-- `audit/audit-path-report.txt`
-- `audit/audit-diffs-list.txt`
-- `audit/diffs/`
-- `audit/audit-summary.txt`
+  2) Review output files (all inside `audit/`):
+  - `audit/test-files.txt`          — every file tracked in test/
+  - `audit/scaffold_templates/`      — template dump from embedded PHP
+  - `audit/audit-path-report.txt`    — MISSING-IN-SCAFFOLD / EXTRA-IN-SCAFFOLD
+  - `audit/audit-diffs-list.txt`     — files that differ (content mismatch)
+  - `audit/normal-diffs.txt`         — false-positive diffs (whitespace / placeholders)
+  - `audit/error-diffs.txt`         — genuine content mismatches
+  - `audit/audit-summary.txt`       — one-line summary
 
-4) Generate a temp project to validate generator output (optional)
+  3) Remediation guidance:
+  - MISSING-IN-SCAFFOLD: add a new key in `generate-file-structure.php` with that
+    relative path and the file content as a PHP heredoc entry (see existing format).
+  - DIFF (in error-diffs.txt): inspect `audit/diffs/` then update the scaffolder
+    template to match test/ (preferred: update test/, then re-sync).
 
-```powershell
-$target = "C:\xampp\htdocs\mlhuillier\mirror-temp"
-Remove-Item -Recurse -Force $target -ErrorAction SilentlyContinue
-php generate-file-structure.php create mirror-temp
-```
+  4) Validate by re-running: `php generate-file-structure.php create <name>`
 
-5) Remediation guidance (how to fix mismatches)
-- If `MISSING-IN-SCAFFOLD: path`: add a new key in `generate-file-structure.php` with that relative path and the file content as a heredoc.
-- If `DIFF: path`: inspect `audit/diffs/` and update the scaffolder template to match `test/` (preferred).
-
-6) Re-run generator + verify
-- Run `php generate-file-structure.php create <projectName>` and re-run the comparison steps.
-
-7) Optional final step — sync served project
-- To immediately fix a live project (e.g., `del`):
+  5) Optional — sync a live project (e.g. `del`):
 
 ```powershell
 robocopy C:\xampp\htdocs\mlhuillier\test C:\xampp\htdocs\del /MIR /COPY:DAT /R:2 /W:1
 ```
 
-Notes & Best Practices:
-- Back up `generate-file-structure.php` before large edits.
-- Prefer updating scaffolder templates rather than ad-hoc generated projects.
-- Keep only `audit/` for audit history and CI checks.
-
 ---
 
+Backup policy:
+- `audit-sync.ps1` (non-dry-run) automatically backs up to
+  `audit/php-backups/generate-file-structure.<timestamp>.bak` before writing.
+- Restore: `Copy-Item audit/php-backups/generate-file-structure.<timestamp>.bak
+  generate-file-structure.php`
+
+Tips:
+- Start with `-DryRun` to see what would change before applying.
+- `audit/php-backups/` accumulates timestamped backups — safe to prune old ones.
+- Keep only `audit/` for audit history. Clean it before a fresh run (auto-cleaned
+  by mirror-audit.ps1 each time).
+
+---
 Saved by assistant.

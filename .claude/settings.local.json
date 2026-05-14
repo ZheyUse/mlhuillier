@@ -18,7 +18,10 @@
       "Bash(powershell -Command \"& '.\\\\ml.bat' add submenu 2>&1\")",
       "PowerShell(php \"c:\\\\xampp\\\\htdocs\\\\mlhuillier\\\\generate-file-structure.php\" --help)",
       "Bash(xxd \"c:\\\\xampp\\\\htdocs\\\\mlhuillier\\\\mirror-audit.ps1\")",
-      "PowerShell(php \"c:\\\\xampp\\\\htdocs\\\\mlhuillier\\\\generate-file-structure.php\" --dump-templates \"c:\\\\xampp\\\\htdocs\\\\mlhuillier\\\\audit\\\\templates-check\")"
+      "PowerShell(php \"c:\\\\xampp\\\\htdocs\\\\mlhuillier\\\\generate-file-structure.php\" --dump-templates \"c:\\\\xampp\\\\htdocs\\\\mlhuillier\\\\audit\\\\templates-check\")",
+      "Bash(Get-ChildItem C:\\\\xampp\\\\htdocs\\\\mlhuillier\\\\audit\\\\diffs *)",
+      "PowerShell(Get-Content *)",
+      "PowerShell(php -l \"C:\\\\xampp\\\\htdocs\\\\mlhuillier\\\\audit-sync.ps1\" 2>&1)"
     ]
   }
 }

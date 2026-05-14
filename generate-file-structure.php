@@ -238,7 +238,7 @@ function scaffoldProject(string $projectRoot, string $projectName): bool
     } else {
     $templates = [
         '.env' => <<<'ENV'
-      APP_NAME="{{PROJECT_TITLE}}"
+      APP_NAME="Test"
       APP_ENV=local
       APP_DEBUG=true
 
@@ -254,6 +254,9 @@ function scaffoldProject(string $projectRoot, string $projectName): bool
       # Authentication schema name (same server/credentials can access multiple schemas)
       USERDB_HOST=localhost
       USERDB_NAME=userdb
+
+      // Uncomment the line below to set the application environment to production
+      # APP_ENV=production
       ENV,
 
         'src/config/auth.php' => <<<'PHP'
@@ -263,7 +266,140 @@ declare(strict_types=1);
 
 return [
     'session_key' => 'auth_user',
+
+    'session_lifetime' => 0,
+
+    'max_login_attempts' => 5,
+
+    'lockout_duration' => 15,
 ];
+PHP,
+
+        'src/config/audit.php' => <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+require_once __DIR__ . '/env.php';
+require_once __DIR__ . '/db.php';
+
+if (!function_exists('auditLog')) {
+  /**
+   * Logs security-relevant events to audit_logs table.
+   */
+  function auditLog(string $event, string $idNumber, ?array $metadata = null): bool
+  {
+    try {
+      $pdo = userDbConnection();
+      $userDb = preg_replace('/[^A-Za-z0-9_]/', '', env('USERDB_NAME', env('DB_DATABASE', 'my_database')) ?? 'my_database');
+
+      // Ensure audit_logs table exists
+      $tableCheck = $pdo->query("SELECT 1 FROM information_schema.tables WHERE table_schema = '{$userDb}' AND table_name = 'audit_logs' LIMIT 1");
+      if (!$tableCheck->fetch()) {
+        // Table doesn't exist, skip logging silently
+        return false;
+      }
+
+      $stmt = $pdo->prepare("
+        INSERT INTO {$userDb}.audit_logs (event, id_number, ip_address, user_agent, metadata, created_at)
+        VALUES (:event, :id, :ip, :ua, :meta, :created)
+      ");
+
+      return $stmt->execute([
+        'event' => $event,
+        'id' => $idNumber,
+        'ip' => (string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown'),
+        'ua' => (string) ($_SERVER['HTTP_USER_AGENT'] ?? 'unknown'),
+        'meta' => $metadata !== null ? json_encode($metadata) : null,
+        'created' => (new DateTime('now', new DateTimeZone('UTC')))->format('Y-m-d H:i:s'),
+      ]);
+    } catch (Throwable $e) {
+      // Fail silently to not disrupt user flow
+      error_log('Audit log failed: ' . $e->getMessage());
+      return false;
+    }
+  }
+}
+
+if (!function_exists('checkRateLimit')) {
+  /**
+   * Checks rate limiting for an action. Returns true if blocked.
+   */
+  function checkRateLimit(string $action, int $maxAttempts, int $windowSeconds): bool
+  {
+    $key = "rate_limit_{$action}";
+    $now = time();
+
+    $attempts = $_SESSION[$key] ?? [];
+    $attempts = array_filter($attempts, fn($t) => ($now - $t) < $windowSeconds);
+    $_SESSION[$key] = $attempts;
+
+    if (count($attempts) >= $maxAttempts) {
+      return true;
+    }
+
+    $attempts[] = $now;
+    $_SESSION[$key] = $attempts;
+    return false;
+  }
+}
+
+if (!function_exists('getRateLimitRemaining')) {
+  /**
+   * Returns remaining attempts before rate limit.
+   */
+  function getRateLimitRemaining(string $action, int $maxAttempts, int $windowSeconds): int
+  {
+    $key = "rate_limit_{$action}";
+    $now = time();
+
+    $attempts = $_SESSION[$key] ?? [];
+    $attempts = array_filter($attempts, fn($t) => ($now - $t) < $windowSeconds);
+    $remaining = $maxAttempts - count($attempts);
+
+    return max(0, $remaining);
+  }
+}
+
+if (!function_exists('clearRateLimit')) {
+  /**
+   * Clears rate limit for an action.
+   */
+  function clearRateLimit(string $action): void
+  {
+    $key = "rate_limit_{$action}";
+    unset($_SESSION[$key]);
+  }
+}
+
+if (!function_exists('logLoginAttempt')) {
+  /**
+   * Logs login attempts securely (no sensitive data).
+   * Writes to file but strips any potentially sensitive info.
+   */
+  function logLoginAttempt(string $username, bool $success, ?string $reason = null): void
+  {
+    $entry = [
+      'time' => date('c'),
+      'username_hash' => hash('sha256', strtolower(trim($username))),
+      'success' => $success,
+      'reason' => $reason,
+      'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+    ];
+    @file_put_contents(__DIR__ . '/../../logs/login.log', json_encode($entry) . "\n", FILE_APPEND | LOCK_EX);
+  }
+}
+
+if (!function_exists('sanitizeFilename')) {
+  /**
+   * Sanitizes input to prevent path traversal.
+   */
+  function sanitizeFilename(string $input): string
+  {
+    $input = preg_replace('/[^a-zA-Z0-9_\-\.]/', '', $input);
+    return basename($input);
+  }
+}
 PHP,
     'src/templates/header_ui.css' => <<<'CSS'
 @import url('../assets/css/color.css');
@@ -674,14 +810,20 @@ require_once __DIR__ . '/../../src/controllers/accountmanagement/account-load-co
 PHP,
 
         'src/config/csrf.php' => <<<'PHP'
-<?php
+    <?php
 
-declare(strict_types=1);
+    declare(strict_types=1);
 
-return [
-    'token_key' => '_csrf',
-];
-PHP,
+    return [
+      'token_key' => '_csrf',
+
+      'token_length' => 32,
+
+      'regenerate_on_auth' => true,
+
+      'protected_methods' => ['POST', 'PUT', 'DELETE', 'PATCH'],
+    ];
+    PHP,
 
         'src/config/db.php' => <<<'PHP'
 <?php
@@ -761,15 +903,16 @@ if (!function_exists('env')) {
 PHP,
 
         'src/config/error-handling.php' => <<<'PHP'
-<?php
+    <?php
 
-declare(strict_types=1);
+    declare(strict_types=1);
 
-return [
-    'display_errors' => true,
-    'log_errors' => true,
-];
-PHP,
+    return [
+      'display_errors' => true,
+      'log_errors' => true,
+      'error_log_path' => dirname(__DIR__, 2) . '/logs/error.log',
+    ];
+    PHP,
 
         'src/config/helper.php' => <<<'PHP'
 <?php
@@ -782,6 +925,63 @@ if (!function_exists('asset')) {
         return '/src/assets/' . ltrim($path, '/');
     }
 }
+
+if (!function_exists('redirect')) {
+  function redirect(string $to): never
+  {
+    header('Location: ' . $to);
+    exit;
+  }
+}
+
+if (!function_exists('appBase')) {
+  function appBase(): string
+  {
+    $script = (string) ($_SERVER['SCRIPT_NAME'] ?? '');
+    $base = preg_replace('#/(?:(?:public)|(?:src))/.*$#', '', $script);
+    if ($base === null) {
+      return '';
+    }
+    return $base === '' ? '' : $base;
+  }
+}
+
+if (!function_exists('guestOnly')) {
+  function guestOnly(): void
+  {
+    $auth = require __DIR__ . '/auth.php';
+    $sessionKey = (string) ($auth['session_key'] ?? 'auth_user');
+
+    if (!empty($_SESSION[$sessionKey])) {
+      if (empty($_SESSION['must_change_password'])) {
+        $base = appBase();
+        $target = $base . '/src/pages/home/home.php';
+        redirect($target);
+      }
+    }
+  }
+}
+
+if (!function_exists('requireAuth')) {
+  function requireAuth(): void
+  {
+    $auth = require __DIR__ . '/auth.php';
+    $sessionKey = (string) ($auth['session_key'] ?? 'auth_user');
+
+    if (empty($_SESSION[$sessionKey])) {
+      $base = appBase();
+      redirect($base . '/src/pages/error/error-403.php');
+    }
+
+    if (!empty($_SESSION[$sessionKey]) && !empty($_SESSION['must_change_password'])) {
+      $script = (string) ($_SERVER['SCRIPT_NAME'] ?? '');
+      if (strpos($script, '/public/index.php') === false) {
+        $base = appBase();
+        redirect($base . '/public/index.php');
+      }
+    }
+  }
+}
 PHP,
 
         'src/config/login-handler.php' => <<<'PHP'
@@ -790,7 +990,10 @@ PHP,
 declare(strict_types=1);
 
 require_once __DIR__ . '/session.php';
+require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/csrf.php';
+require_once __DIR__ . '/audit.php';
+require_once __DIR__ . '/middleware.php';
 require_once __DIR__ . '/../controllers/login-controller.php';
 require_once __DIR__ . '/../controllers/password-controller/changepass-controller.php';
 
@@ -799,98 +1002,110 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
   exit;
 }
 
-$csrf = require __DIR__ . '/csrf.php';
-$tokenKey = (string) ($csrf['token_key'] ?? '_csrf');
-$postedToken = (string) ($_POST[$tokenKey] ?? '');
-$sessionToken = (string) ($_SESSION[$tokenKey] ?? '');
+$auth = require __DIR__ . '/auth.php';
+$maxAttempts = (int) ($auth['max_login_attempts'] ?? 5);
+$lockoutDuration = (int) ($auth['lockout_duration'] ?? 15) * 60;
 
-if ($postedToken === '' || $sessionToken === '' || !hash_equals($sessionToken, $postedToken)) {
-  $_SESSION['login_error'] = 'Invalid session token. Please try again.';
-  header('Location: ../../public/index.php?login=invalid_csrf');
+// Rate limit check before processing
+if (checkRateLimit('login', $maxAttempts, $lockoutDuration)) {
+  auditLog('login_rate_limited', 'unknown', [
+    'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+  ]);
+  $_SESSION['login_error'] = 'Too many login attempts. Please try again later.';
+  header('Location: ../../public/index.php?login=rate_limited');
   exit;
 }
 
 $username = (string) ($_POST['username'] ?? '');
 $password = (string) ($_POST['password'] ?? '');
 
-try {
-  $controller = new LoginController();
-  $user = $controller->authenticate($username, $password);
-
-  if ($user === null) {
-    $_SESSION['login_error'] = 'Invalid username or password.';
-    header('Location: ../../public/index.php?login=failed');
-    exit;
-  }
-
-  $auth = require __DIR__ . '/auth.php';
-  $sessionKey = (string) ($auth['session_key'] ?? 'auth_user');
-
-  // After authentication, check userlogs for forced password change or missing entries
-  $cp = new ChangePassController();
-  $ulog = $cp->getUserLog((string) ($user['id_number'] ?? ''));
-  // Debug: log fetched userlogs for inspection
-  try {
-    @file_put_contents(__DIR__ . '/../../../logs/login-debug.log', date('c') . " ULOG: " . json_encode(['id' => $user['id_number'] ?? null, 'ulog' => $ulog]) . "\n", FILE_APPEND | LOCK_EX);
-  } catch (Throwable $_) {}
-  // If the user's id_number does not exist in userlogs, show a specific error so admin can investigate
-  if (!is_array($ulog)) {
-    $_SESSION['login_error'] = 'Somethings Wrong! Contact Administrator';
-    header('Location: ../../public/index.php?login=missing_userlog');
-    exit;
-  }
-
-  // If the account has been disabled in userlogs, block login with a clear message
-  if (isset($ulog['status']) && (string)$ulog['status'] === 'disabled') {
-    $_SESSION['login_error'] = 'Your Account has been Disabled!';
-    header('Location: ../../public/index.php?login=disabled');
-    exit;
-  }
-
-  $mustChange = false;
-  $status = (string) ($ulog['status'] ?? '');
-  $dateModified = $ulog['dateModified'] ?? null;
-  // treat NULL, empty string, or zero-datetime as requiring change
-  $dmEmpty = ($dateModified === null || $dateModified === '' || $dateModified === '0000-00-00 00:00:00');
-  if ($status === 'reset' || ($status === 'active' && $dmEmpty)) {
-    $mustChange = true;
-  }
-  if ($status !== 'active' && $status !== 'reset' && $status !== 'disabled') {
-    // unexpected status value — log for admin review
-    error_log("Login: unexpected userlogs.status='{$status}' for id=" . (($user['id_number'] ?? '')));
-  }
-
-  // Now set session (only after userlogs check passes)
-  session_regenerate_id(true);
-  $_SESSION[$sessionKey] = $user;
-  unset($_SESSION['login_error']);
-
-  if ($mustChange) {
-    // mark session so middleware/pages can show the changepass modal
-    $_SESSION['must_change_password'] = true;
-    header('Location: ../../public/index.php');
-    exit;
-  }
-
-  // Normal login: update last_online
-  try {
-    $pdo = userDbConnection();
-    $userDb = preg_replace('/[^A-Za-z0-9_]/', '', env('USERDB_NAME', env('USERDB_DATABASE', env('DB_DATABASE', 'my_database'))));
-    $userlogsTable = "`" . $userDb . "`.`userlogs`";
-    $now = (new DateTime('now', new DateTimeZone('UTC')))->format('Y-m-d H:i:s');
-    $upd = $pdo->prepare("UPDATE {$userlogsTable} SET last_online = :lo WHERE id_number = :id");
-    $upd->execute(['lo' => $now, 'id' => (string) ($user['id_number'] ?? '')]);
-  } catch (Throwable $_) {
-    // ignore update failures for now
-  }
-
-  header('Location: ../../src/pages/home/home.php');
-  exit;
-} catch (Throwable $e) {
-  $_SESSION['login_error'] = 'Login unavailable right now. Please try again.';
-  header('Location: ../../public/index.php?login=error');
+if ($username === '' || $password === '') {
+  $_SESSION['login_error'] = 'Please enter username and password.';
+  header('Location: ../../public/index.php?login=empty');
   exit;
 }
+
+$controller = new LoginController();
+$user = $controller->authenticate($username, $password);
+
+if ($user === null) {
+  auditLog('login_failed', 'unknown', [
+    'reason' => 'invalid_credentials',
+    'remaining_attempts' => getRateLimitRemaining('login', $maxAttempts, $lockoutDuration),
+    'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+  ]);
+  $_SESSION['login_error'] = 'Invalid username or password.';
+  header('Location: ../../public/index.php?login=failed');
+  exit;
+}
+
+$sessionKey = (string) ($auth['session_key'] ?? 'auth_user');
+$userId = (string) ($user['id_number'] ?? '');
+
+// After authentication, check userlogs for forced password change or missing entries
+$cp = new ChangePassController();
+$ulog = $cp->getUserLog($userId);
+
+if (!is_array($ulog)) {
+  logLoginAttempt($username, false, 'missing_userlog');
+  auditLog('login_failed', $userId, ['reason' => 'missing_userlog']);
+  $_SESSION['login_error'] = 'Somethings Wrong! Contact Administrator';
+  header('Location: ../../public/index.php?login=missing_userlog');
+  exit;
+}
+
+// If the account has been disabled in userlogs, block login with a clear message
+if (isset($ulog['status']) && (string)$ulog['status'] === 'disabled') {
+  logLoginAttempt($username, false, 'account_disabled');
+  auditLog('login_failed', $userId, ['reason' => 'account_disabled']);
+  $_SESSION['login_error'] = 'Your Account has been Disabled!';
+  header('Location: ../../public/index.php?login=disabled');
+  exit;
+}
+
+$mustChange = false;
+$status = (string) ($ulog['status'] ?? '');
+$dateModified = $ulog['dateModified'] ?? null;
+
+$dmEmpty = ($dateModified === null || $dateModified === '' || $dateModified === '0000-00-00 00:00:00');
+if ($status === 'reset' || ($status === 'active' && $dmEmpty)) {
+  $mustChange = true;
+}
+
+// Now set session (only after userlogs check passes)
+session_regenerate_id(true);
+regenerateCsrfToken();
+
+$_SESSION[$sessionKey] = $user;
+unset($_SESSION['login_error']);
+
+// Clear rate limit on successful login
+clearRateLimit('login');
+
+// Log successful login
+logLoginAttempt($username, true, 'success');
+auditLog('login_success', $userId, [
+  'role' => $user['role'] ?? null,
+  'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+]);
+
+if ($mustChange) {
+  $_SESSION['must_change_password'] = true;
+  header('Location: ../../public/index.php');
+  exit;
+}
+
+// Normal login: update last_online
+try {
+  $pdo = userDbConnection();
+  $userDb = preg_replace('/[^A-Za-z0-9_]/', '', env('USERDB_NAME', env('DB_DATABASE', 'my_database')));
+  $now = (new DateTime('now', new DateTimeZone('UTC')))->format('Y-m-d H:i:s');
+  $upd = $pdo->prepare("UPDATE `{$userDb}`.`userlogs` SET last_online = :lo WHERE id_number = :id");
+  $upd->execute(['lo' => $now, 'id' => $userId]);
+} catch (Throwable $_) {}
+
+header('Location: ../../src/pages/home/home.php');
+exit;
 PHP,
 
         'src/config/logout-handler.php' => <<<'PHP'
@@ -923,9 +1138,24 @@ declare(strict_types=1);
 require_once __DIR__ . '/session.php';
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/csrf.php';
+require_once __DIR__ . '/audit.php';
 require_once __DIR__ . '/../controllers/password-controller/changepass-controller.php';
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+  header('Location: ../public/index.php');
+  exit;
+}
+
+$auth = require __DIR__ . '/auth.php';
+$maxAttempts = (int) ($auth['max_login_attempts'] ?? 5);
+$lockoutDuration = (int) ($auth['lockout_duration'] ?? 15) * 60;
+
+// Check rate limit before processing
+if (checkRateLimit('changepass', $maxAttempts, $lockoutDuration)) {
+  auditLog('password_change_rate_limited', 'unknown', [
+    'remaining_attempts' => 0
+  ]);
+  $_SESSION['changepass_error'] = 'Too many attempts. Please try again later.';
   header('Location: ../public/index.php');
   exit;
 }
@@ -962,7 +1192,6 @@ if (!isset($_SESSION['auth_user']) && !isset($_SESSION[(require __DIR__ . '/auth
   exit;
 }
 
-$auth = require __DIR__ . '/auth.php';
 $sessionKey = (string) ($auth['session_key'] ?? 'auth_user');
 $user = $_SESSION[$sessionKey] ?? null;
 if (!is_array($user) || empty($user['id_number'])) {
@@ -974,12 +1203,17 @@ if (!is_array($user) || empty($user['id_number'])) {
 $id = (string) $user['id_number'];
 $controller = new ChangePassController();
 if (!$controller->verifyCurrentPassword($id, $current)) {
+  auditLog('password_change_failed', $id, [
+    'reason' => 'invalid_current_password',
+    'remaining_attempts' => getRateLimitRemaining('changepass', $maxAttempts, $lockoutDuration)
+  ]);
   $_SESSION['changepass_error'] = 'Current password is incorrect.';
   header('Location: ../public/index.php');
   exit;
 }
 
 if ($controller->changePassword($id, $new)) {
+  clearRateLimit('changepass');
   unset($_SESSION['must_change_password']);
   header('Location: ../pages/home/home.php');
   exit;
@@ -995,134 +1229,401 @@ PHP,
 
 declare(strict_types=1);
 
-if (!function_exists('redirect')) {
-  function redirect(string $to): never
+require_once __DIR__ . '/session.php';
+require_once __DIR__ . '/csrf.php';
+require_once __DIR__ . '/security.php';
+require_once __DIR__ . '/helper.php';
+
+// Apply security headers at the start
+sendSecurityHeaders();
+
+if (!function_exists('generateCsrfToken')) {
+  /**
+   * Generates and stores a new CSRF token.
+   */
+  function generateCsrfToken(): string
   {
-    header('Location: ' . $to);
-    exit;
+    $csrf = require __DIR__ . '/csrf.php';
+    $tokenKey = (string) ($csrf['token_key'] ?? '_csrf');
+    $tokenLength = (int) ($csrf['token_length'] ?? 32);
+
+    $token = bin2hex(random_bytes($tokenLength));
+    $_SESSION[$tokenKey] = $token;
+
+    return $token;
   }
 }
 
-if (!function_exists('appBase')) {
-  function appBase(): string
+if (!function_exists('csrfToken')) {
+  /**
+   * Returns the current CSRF token, generating one if none exists.
+   */
+  function csrfToken(): string
   {
-    $script = (string) ($_SERVER['SCRIPT_NAME'] ?? '');
-    $base = preg_replace('#/(?:(?:public)|(?:src))/.*$#', '', $script);
-    if ($base === null) {
-      return '';
+    $csrf = require __DIR__ . '/csrf.php';
+    $tokenKey = (string) ($csrf['token_key'] ?? '_csrf');
+
+    if (empty($_SESSION[$tokenKey])) {
+      generateCsrfToken();
     }
-    return $base === '' ? '' : $base;
+
+    return (string) $_SESSION[$tokenKey];
   }
 }
 
-if (!function_exists('guestOnly')) {
-  function guestOnly(): void
+if (!function_exists('csrfField')) {
+  /**
+   * Returns the CSRF hidden input field HTML.
+   */
+  function csrfField(): string
   {
-    $auth = require __DIR__ . '/auth.php';
-    $sessionKey = (string) ($auth['session_key'] ?? 'auth_user');
+    $csrf = require __DIR__ . '/csrf.php';
+    $tokenKey = (string) ($csrf['token_key'] ?? '_csrf');
+    $token = csrfToken();
 
-    if (!empty($_SESSION[$sessionKey])) {
-      // If user is authenticated but flagged to change password, allow staying on public index
-      if (empty($_SESSION['must_change_password'])) {
-        $base = appBase();
-        $target = $base . '/src/pages/home/home.php';
-        header('Location: ' . $target);
-        exit;
-      }
-    }
+    return '<input type="hidden" name="' . htmlspecialchars($tokenKey, ENT_QUOTES, 'UTF-8') . '" value="' . htmlspecialchars($token, ENT_QUOTES, 'UTF-8') . '">';
   }
 }
 
-if (!function_exists('requireAuth')) {
-  function requireAuth(): void
+if (!function_exists('regenerateCsrfToken')) {
+  /**
+   * Regenerates the CSRF token if regeneration on auth is enabled.
+   */
+  function regenerateCsrfToken(): string
   {
-    $auth = require __DIR__ . '/auth.php';
-    $sessionKey = (string) ($auth['session_key'] ?? 'auth_user');
+    $csrf = require __DIR__ . '/csrf.php';
 
-    if (empty($_SESSION[$sessionKey])) {
-      $base = appBase();
-      $target = $base . '/public/index.php';
-      header('Location: ' . $target);
-      exit;
+    if (!empty($csrf['regenerate_on_auth'])) {
+      return generateCsrfToken();
     }
 
-    // If user is authenticated but required to change password, force them back to public index
-    if (!empty($_SESSION[$sessionKey]) && !empty($_SESSION['must_change_password'])) {
-      $script = (string) ($_SERVER['SCRIPT_NAME'] ?? '');
-      if (strpos($script, '/public/index.php') === false) {
-        $base = appBase();
-        header('Location: ' . $base . '/public/index.php');
-        exit;
-      }
-    }
+    return csrfToken();
   }
 }
 PHP,
 
-        'src/config/session.php' => <<<'PHP'
+        'src/config/security.php' => <<<'PHP'
 <?php
 
 declare(strict_types=1);
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+require_once __DIR__ . '/env.php';
+
+/**
+ * Security headers configuration.
+ * Call sendSecurityHeaders() before any output to apply these headers.
+ */
+$securityHeaders = [
+    'X-Frame-Options' => 'SAMEORIGIN',
+    'X-Content-Type-Options' => 'nosniff',
+    'X-XSS-Protection' => '1; mode=block',
+    'Referrer-Policy' => 'strict-origin-when-cross-origin',
+    'Permissions-Policy' => 'accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=()',
+];
+
+/**
+ * CSP policy for production (stricter).
+ * For development, CSP is relaxed to allow inline styles/scripts during dev.
+ */
+$isProduction = (env('APP_ENV', 'development') === 'production');
+
+if ($isProduction) {
+    $securityHeaders['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; frame-ancestors 'self';";
+    $securityHeaders['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains';
+} else {
+    // Development: allow inline for hot reloading, etc
+    $securityHeaders['Content-Security-Policy'] = "default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self';";
+}
+
+/**
+ * Sends all security headers.
+ * Call this at the start of every page, before any output.
+ */
+if (!function_exists('sendSecurityHeaders')) {
+    function sendSecurityHeaders(): void
+    {
+        global $securityHeaders;
+
+        if (headers_sent()) {
+            return;
+        }
+
+        foreach ($securityHeaders as $name => $value) {
+            header("{$name}: {$value}");
+        }
+    }
+}
+
+/**
+ * Sanitizes output for XSS prevention.
+ * Use this for any user-generated content.
+ */
+if (!function_exists('e')) {
+    function e(?string $str): string
+    {
+        return htmlspecialchars((string) $str, ENT_QUOTES, 'UTF-8');
+    }
+}
+
+/**
+ * Validates and sanitizes an ID parameter (numeric).
+ * Returns 0 if invalid.
+ */
+if (!function_exists('validateId')) {
+    function validateId(mixed $id): int
+    {
+        if (is_numeric($id)) {
+            return (int) $id;
+        }
+        return 0;
+    }
+}
+
+/**
+ * Checks if current request is HTTPS.
+ */
+if (!function_exists('isHttps')) {
+    function isHttps(): bool
+    {
+        if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+            return true;
+        }
+        if (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+            return true;
+        }
+        if (!empty($_SERVER['HTTP_FRONT_END_HTTPS']) && $_SERVER['HTTP_FRONT_END_HTTPS'] !== 'off') {
+            return true;
+        }
+        return false;
+    }
+}
+
+/**
+ * Forces HTTPS redirect if not already on HTTPS (production only).
+ */
+if (!function_exists('forceHttps')) {
+    function forceHttps(): void
+    {
+        if (isHttps()) {
+            return;
+        }
+        if (headers_sent()) {
+            return;
+        }
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $uri = $_SERVER['REQUEST_URI'] ?? '/';
+        header('Location: https://' . $host . $uri);
+        exit;
+    }
 }
 PHP,
 
-        'src/controllers/login-controller.php' => <<<'PHP'
-    <?php
+        'src/config/session.php' => <<<'PHP'
+      <?php
 
-    declare(strict_types=1);
+      declare(strict_types=1);
 
-    require_once __DIR__ . '/../config/env.php';
-    require_once __DIR__ . '/../config/db.php';
+      require_once __DIR__ . '/env.php';
 
-    class LoginController
-    {
-      public function authenticate(string $username, string $password): ?array
-      {
-        $username = trim($username);
-        if ($username === '' || $password === '') {
-          return null;
-        }
+      $isProduction = (env('APP_ENV', 'development') === 'production');
 
-        $pdo = userDbConnection();
-        $stmt = $pdo->prepare('SELECT id_number, username, firstname, middlename, lastname, role, password FROM users WHERE username = :username LIMIT 1');
-        $stmt->execute(['username' => $username]);
-        $user = $stmt->fetch();
+      $sessionConfig = [
+        'cookie_httponly' => true,
+        'cookie_secure' => $isProduction, // Auto-enable in production
+        'cookie_samesite' => 'Lax',
+        'regenerate_on_auth' => true,
+      ];
 
-        if (!is_array($user)) {
-          // Debug: log failure to find user
-          @file_put_contents(__DIR__ . '/../../../logs/login-debug.log', date('c') . " AUTH: user not found for username={$username}\n", FILE_APPEND | LOCK_EX);
-          return null;
-        }
+      ini_set('session.cookie_httponly', '1');
+      ini_set('session.cookie_secure', $sessionConfig['cookie_secure'] ? '1' : '0');
+      ini_set('session.cookie_samesite', $sessionConfig['cookie_samesite']);
 
-        $storedPassword = (string) ($user['password'] ?? '');
-        $isValid = password_verify($password, $storedPassword) || hash_equals($storedPassword, $password);
-
-        // Debug: log authentication attempt (do NOT log plaintext password)
-        try {
-          $dbg = [
-            'time' => date('c'),
-            'username' => $username,
-            'id_number' => $user['id_number'] ?? null,
-            'role' => $user['role'] ?? null,
-            'stored_password_hinted' => (bool) preg_match('/^\$2[ayb]\$/', $storedPassword),
-            'password_verify' => $isValid,
-          ];
-          @file_put_contents(__DIR__ . '/../../../logs/login-debug.log', json_encode($dbg) . "\n", FILE_APPEND | LOCK_EX);
-        } catch (Throwable $_) {}
-
-        if (!$isValid) {
-          @file_put_contents(__DIR__ . '/../../../logs/login-debug.log', date('c') . " AUTH: password invalid for username={$username}\n", FILE_APPEND | LOCK_EX);
-          return null;
-        }
-
-        unset($user['password']);
-        return $user;
+      if (session_status() === PHP_SESSION_NONE) {
+        session_start();
       }
-    }
+PHP,
+
+        'src/config/validation.php' => <<<'PHP'
+      <?php
+
+      declare(strict_types=1);
+
+      /**
+       * Input validation configuration.
+       */
+      return [
+        'username' => [
+          'min_length' => 3,
+          'max_length' => 50,
+          'pattern' => '/^[a-zA-Z0-9_]+$/', // Alphanumeric + underscore only
+        ],
+        'password' => [
+          'min_length' => 8,
+          'max_length' => 128,
+        ],
+        'name' => [
+          'min_length' => 1,
+          'max_length' => 100,
+          'pattern' => '/^[a-zA-ZñÑ\s\-\'\.]+$/u', // Letters, spaces, hyphens, apostrophes, periods
+        ],
+        'email' => [
+          'max_length' => 255,
+        ],
+        'id_number' => [
+          'pattern' => '/^[A-Z0-9]+$/',
+          'max_length' => 50,
+        ],
+      ];
+
+      /**
+       * Validation functions (define in a separate file if needed).
+       */
+      if (!function_exists('validateUsername')) {
+        function validateUsername(string $username): array
+        {
+          $errors = [];
+          $config = require __DIR__ . '/validation.php';
+          $cfg = $config['username'];
+
+          $username = trim($username);
+
+          if (strlen($username) < ($cfg['min_length'] ?? 3)) {
+            $errors[] = 'Username must be at least ' . ($cfg['min_length'] ?? 3) . ' characters.';
+          }
+
+          if (strlen($username) > ($cfg['max_length'] ?? 50)) {
+            $errors[] = 'Username must not exceed ' . ($cfg['max_length'] ?? 50) . ' characters.';
+          }
+
+          if (!preg_match($cfg['pattern'] ?? '/^[a-zA-Z0-9_]+$/', $username)) {
+            $errors[] = 'Username can only contain letters, numbers, and underscores.';
+          }
+
+          return $errors;
+        }
+      }
+
+      if (!function_exists('validatePassword')) {
+        function validatePassword(string $password): array
+        {
+          $errors = [];
+          $config = require __DIR__ . '/validation.php';
+          $cfg = $config['password'];
+
+          if (strlen($password) < ($cfg['min_length'] ?? 8)) {
+            $errors[] = 'Password must be at least ' . ($cfg['min_length'] ?? 8) . ' characters.';
+          }
+
+          if (strlen($password) > ($cfg['max_length'] ?? 128)) {
+            $errors[] = 'Password is too long.';
+          }
+
+          return $errors;
+        }
+      }
+
+      if (!function_exists('validateName')) {
+        function validateName(string $name, string $fieldName = 'Name'): array
+        {
+          $errors = [];
+          $config = require __DIR__ . '/validation.php';
+          $cfg = $config['name'];
+
+          $name = trim($name);
+
+          if (strlen($name) < ($cfg['min_length'] ?? 1)) {
+            $errors[] = "{$fieldName} is required.";
+          }
+
+          if (strlen($name) > ($cfg['max_length'] ?? 100)) {
+            $errors[] = "{$fieldName} must not exceed " . ($cfg['max_length'] ?? 100) . " characters.";
+          }
+
+          if (!preg_match($cfg['pattern'] ?? '/^[a-zA-Z\s\-]+$/', $name)) {
+            $errors[] = "{$fieldName} contains invalid characters.";
+          }
+
+          return $errors;
+        }
+      }
+
+      if (!function_exists('validateIdNumber')) {
+        function validateIdNumber(string $id): array
+        {
+          $errors = [];
+          $config = require __DIR__ . '/validation.php';
+          $cfg = $config['id_number'];
+
+          $id = trim($id);
+
+          if (strlen($id) > ($cfg['max_length'] ?? 50)) {
+            $errors[] = 'ID number is too long.';
+          }
+
+          if (!preg_match($cfg['pattern'] ?? '/^[A-Z0-9]+$/', $id)) {
+            $errors[] = 'ID number contains invalid characters.';
+          }
+
+          return $errors;
+        }
+      }
+
+      if (!function_exists('sanitizeInput')) {
+        function sanitizeInput(string $input): string
+        {
+          return trim(strip_tags($input));
+        }
+      }
+
+      if (!function_exists('limitStringLength')) {
+        function limitStringLength(string $input, int $maxLength): string
+        {
+          return mb_substr($input, 0, $maxLength, 'UTF-8');
+        }
+      }
     PHP,
+
+        'src/controllers/login-controller.php' => <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+require_once __DIR__ . '/../config/env.php';
+require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/../config/audit.php';
+
+class LoginController
+{
+  public function authenticate(string $username, string $password): ?array
+  {
+    $username = trim($username);
+    if ($username === '' || $password === '') {
+      return null;
+    }
+
+    $pdo = userDbConnection();
+    $stmt = $pdo->prepare('SELECT id_number, username, firstname, middlename, lastname, role, password FROM users WHERE username = :username LIMIT 1');
+    $stmt->execute(['username' => $username]);
+    $user = $stmt->fetch();
+
+    if (!is_array($user)) {
+      logLoginAttempt($username, false, 'user_not_found');
+      return null;
+    }
+
+    $storedPassword = (string) ($user['password'] ?? '');
+    $isValid = password_verify($password, $storedPassword) || hash_equals($storedPassword, $password);
+
+    if (!$isValid) {
+      logLoginAttempt($username, false, 'invalid_password');
+      return null;
+    }
+
+    unset($user['password']);
+    return $user;
+  }
+}
+PHP,
 
         'src/controllers/usercontroller.php' => <<<'PHP'
 <?php
@@ -1180,6 +1681,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../config/env.php';
 require_once __DIR__ . '/../../config/db.php';
+require_once __DIR__ . '/../../config/audit.php';
 
 class ChangePassController
 {
@@ -1198,10 +1700,20 @@ class ChangePassController
     $stmt = $pdo->prepare('SELECT password FROM users WHERE id_number = :id LIMIT 1');
     $stmt->execute(['id' => $id_number]);
     $row = $stmt->fetch();
-    if (!is_array($row)) return false;
+    if (!is_array($row)) {
+      auditLog('password_verify_failed', $id_number, ['reason' => 'user_not_found']);
+      return false;
+    }
     $stored = (string) ($row['password'] ?? '');
-    if ($stored === '') return false;
-    return password_verify($currentPassword, $stored) || hash_equals($stored, $currentPassword);
+    if ($stored === '') {
+      auditLog('password_verify_failed', $id_number, ['reason' => 'empty_password']);
+      return false;
+    }
+    $valid = password_verify($currentPassword, $stored) || hash_equals($stored, $currentPassword);
+    if (!$valid) {
+      auditLog('password_verify_failed', $id_number, ['reason' => 'invalid_password']);
+    }
+    return $valid;
   }
 
   public function changePassword(string $id_number, string $newPassword): bool
@@ -1220,9 +1732,11 @@ class ChangePassController
       $ulog->execute(['dm' => $now, 'lo' => $now, 'st' => 'active', 'id' => $id_number]);
 
       $pdo->commit();
+      auditLog('password_changed', $id_number, ['success' => true]);
       return true;
     } catch (Throwable $e) {
       $pdo->rollBack();
+      auditLog('password_change_failed', $id_number, ['reason' => $e->getMessage()]);
       return false;
     }
   }
@@ -1242,13 +1756,7 @@ PHP,
 
         'src/modals/login-modal/login-modal.php' => <<<'PHP'
 <?php
-require_once __DIR__ . '/../../config/session.php';
-$csrf = require __DIR__ . '/../../config/csrf.php';
-$tokenKey = (string) ($csrf['token_key'] ?? '_csrf');
-
-if (empty($_SESSION[$tokenKey])) {
-  $_SESSION[$tokenKey] = bin2hex(random_bytes(32));
-}
+require_once __DIR__ . '/../../config/middleware.php';
 
 $loginError = (string) ($_SESSION['login_error'] ?? '');
 unset($_SESSION['login_error']);
@@ -1265,7 +1773,7 @@ unset($_SESSION['login_error']);
     </div>
 
     <form id="loginForm" class="login-modal__form" method="post" action="../src/config/login-handler.php" autocomplete="on">
-      <input type="hidden" name="<?= htmlspecialchars($tokenKey, ENT_QUOTES, 'UTF-8'); ?>" value="<?= htmlspecialchars((string) $_SESSION[$tokenKey], ENT_QUOTES, 'UTF-8'); ?>">
+      <?= csrfField() ?>
 
       <?php if ($loginError !== ''): ?>
         <div class="login-error" role="alert"><?= htmlspecialchars($loginError, ENT_QUOTES, 'UTF-8'); ?></div>
@@ -1373,13 +1881,13 @@ PHP,
 
         'src/modals/login-modal/changepass-modal.php' => <<<'PHP'
 <?php
-require_once __DIR__ . '/../../config/session.php';
-$csrf = require __DIR__ . '/../../config/csrf.php';
-$tokenKey = (string) ($csrf['token_key'] ?? '_csrf');
+require_once __DIR__ . '/../../config/middleware.php';
 
-$scriptName = (string) ($_SERVER['SCRIPT_NAME'] ?? '');
-$appBaseUrl = preg_replace('#/(?:(?:public)|(?:src))/.*$#', '', $scriptName);
-$appBaseUrl = $appBaseUrl === null ? '' : rtrim((string) $appBaseUrl, '/');
+$appBaseUrl = (function(): string {
+  $scriptName = (string) ($_SERVER['SCRIPT_NAME'] ?? '');
+  $base = preg_replace('#/(?:(?:public)|(?:src))/.*$#', '', $scriptName);
+  return $base === null ? '' : rtrim((string) $base, '/');
+})();
 $action = ($appBaseUrl !== '' ? $appBaseUrl : '') . '/src/config/changepass-handler.php';
 
 $error = $_SESSION['changepass_error'] ?? '';
@@ -1405,7 +1913,7 @@ unset($_SESSION['changepass_error']);
     <?php endif; ?>
 
     <form id="changepassForm" method="post" action="<?= htmlspecialchars($action, ENT_QUOTES, 'UTF-8'); ?>">
-      <input type="hidden" name="<?= htmlspecialchars($tokenKey, ENT_QUOTES, 'UTF-8'); ?>" value="<?= htmlspecialchars((string) $_SESSION[$tokenKey] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+      <?= csrfField() ?>
 
       <div class="changepass-modal__body">
         <div class="field">
@@ -1535,6 +2043,87 @@ unset($_SESSION['changepass_error']);
   })();
 </script>
 PHP,
+
+        'src/pages/error/error-403.php' => <<<'HTML'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Access Denied</title>
+  <link rel="icon" type="image/png" href="../../assets/images/logo2.png">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #e4e4e4;
+    }
+    .error-container {
+      text-align: center;
+      padding: 3rem;
+    }
+    .error-icon {
+      font-size: 80px;
+      color: #ff6b6b;
+      margin-bottom: 1rem;
+    }
+    .error-code {
+      font-size: 120px;
+      font-weight: 700;
+      color: #ff6b6b;
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+    .error-title {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: #fff;
+    }
+    .error-message {
+      font-size: 1.1rem;
+      color: #a0a0a0;
+      margin-bottom: 2rem;
+      max-width: 400px;
+    }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.875rem 2rem;
+      background: #e63946;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 50px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    .back-btn:hover {
+      background: #d62839;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(230, 57, 70, 0.4);
+    }
+  </style>
+</head>
+<body>
+  <div class="error-container">
+    <span class="material-icons error-icon">gpp_bad</span>
+    <div class="error-code">403</div>
+    <h1 class="error-title">Access Denied</h1>
+    <p class="error-message">You don't have permission to access this page. Please log in to continue.</p>
+    <a href="/public/index.php" class="back-btn">
+      <span class="material-icons">login</span>
+      Go to Login
+    </a>
+  </div>
+</body>
+</html>
+HTML,
 
         'src/modals/login-modal/login-modal.css' => <<<'CSS'
 .login-modal {

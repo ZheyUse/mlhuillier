@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-05-14T01:31:17.297Z",
+  "generatedAt": "2026-05-14T04:16:12.258Z",
   "latestVersion": "1.1.16",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 254
+    "commitCount": 255
   },
   "releases": [
     {
       "version": "1.1.16",
       "isLatest": true,
-      "commitCount": 14,
+      "commitCount": 15,
       "dateRange": {
         "from": "2026-05-11",
         "to": "2026-05-14"
       },
       "stats": {
         "release": 1,
-        "feature": 13,
+        "feature": 14,
         "fix": 0,
         "docs": 0,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "feat: update settings and documentation; enhance security features in generated projects and improve template handling",
         "feat: add migration compatibility check command and update ml.bat help text; enhance version history with new command details",
         "feat: enhance user migration script with compatibility check and detailed usage instructions; add validation for project files and database conflicts",
         "feat: update version to 1.1.16 in VERSION file and related scripts; increment commit counts and timestamps in version history",
         "feat: update commands and version history; enhance submenu creation with support for multiple submenus",
         "feat: add commands for submenu creation and enhance error handling in ml.bat; update timestamps in version history",
         "feat: enhance sidebar template generation prompt to conditionally request submenu creation",
-        "feat: update command syntax for database management; add submenu functionality and enhance sidebar integration",
-        "feat: update timestamps and commit counts in version history; enhance git fetch logic in ml.bat"
+        "feat: update command syntax for database management; add submenu functionality and enhance sidebar integration"
       ],
       "commits": [
+        {
+          "hash": "d02560c24f56ee44571e7ee0a79ef943396d64c0",
+          "shortHash": "d02560c",
+          "date": "2026-05-14",
+          "title": "feat: update settings and documentation; enhance security features in generated projects and improve template handling",
+          "type": "feature"
+        },
         {
           "hash": "68b06491dd16ed65007ec8759dfae16af2e8b2a7",
           "shortHash": "68b0649",
