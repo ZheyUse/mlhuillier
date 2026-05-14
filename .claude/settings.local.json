@@ -15,7 +15,10 @@
       "Bash(Select-Object -ExpandProperty Line)",
       "Bash(cmd /c \"ml.bat add submenu 2>&1\")",
       "Bash(awk *)",
-      "Bash(powershell -Command \"& '.\\\\ml.bat' add submenu 2>&1\")"
+      "Bash(powershell -Command \"& '.\\\\ml.bat' add submenu 2>&1\")",
+      "PowerShell(php \"c:\\\\xampp\\\\htdocs\\\\mlhuillier\\\\generate-file-structure.php\" --help)",
+      "Bash(xxd \"c:\\\\xampp\\\\htdocs\\\\mlhuillier\\\\mirror-audit.ps1\")",
+      "PowerShell(php \"c:\\\\xampp\\\\htdocs\\\\mlhuillier\\\\generate-file-structure.php\" --dump-templates \"c:\\\\xampp\\\\htdocs\\\\mlhuillier\\\\audit\\\\templates-check\")"
     ]
   }
 }

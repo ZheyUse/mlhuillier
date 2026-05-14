@@ -299,6 +299,300 @@ The scaffolder (`generate-file-structure.php`) creates a complete starter app in
 - starter UI/layout files (`index.php`, CSS templates, modal/components)
 - project `.env` and starter `README.md`
 
+## Security Features
+
+Generated projects include built-in security measures.
+
+### CSRF Protection
+
+- All forms automatically include CSRF tokens
+- Tokens regenerate on successful authentication
+- Tokens are validated on all POST, PUT, DELETE, and PATCH requests
+
+Configuration: `src/config/csrf.php`
+
+```php
+'token_key' => '_csrf',
+'token_length' => 32,
+'regenerate_on_auth' => true,
+'protected_methods' => ['POST', 'PUT', 'DELETE', 'PATCH']
+```
+
+### Session Security
+
+- HttpOnly cookies to help prevent XSS cookie theft
+- SameSite=Lax policy to help prevent CSRF
+- Secure flag auto-enabled in production
+- Session regenerated on authentication
+
+Configuration: `src/config/session.php`
+
+```php
+'cookie_httponly' => true,
+'cookie_secure' => true,  // Auto in production
+'cookie_samesite' => 'Lax'
+```
+
+### Rate Limiting
+
+- Login attempts limited to 5 per 15 minutes
+- Password change attempts limited
+- Configurable via `src/config/auth.php`
+
+```php
+'max_login_attempts' => 5,
+'lockout_duration' => 15  // minutes
+```
+
+### Security Headers
+
+Generated projects send automatic security headers on all requests:
+
+- `X-Frame-Options: SAMEORIGIN`
+- `X-Content-Type-Options: nosniff`
+- `X-XSS-Protection: 1; mode=block`
+- `Content-Security-Policy` (stricter in production)
+- `Strict-Transport-Security` (production only)
+- `Referrer-Policy: strict-origin-when-cross-origin`
+
+### Audit Logging
+
+Security events are logged to the `audit_logs` table:
+
+- Login attempts (success/failure)
+- Password changes
+- Rate limit blocks
+
+Usage:
+
+```php
+require_once __DIR__ . '/config/audit.php';
+auditLog('event_name', 'user_id', ['metadata' => 'value']);
+```
+
+## Scaffold Configuration Files
+
+| File | Purpose |
+|------|---------|
+| `src/config/auth.php` | Authentication settings |
+| `src/config/session.php` | Session/cookie configuration |
+| `src/config/csrf.php` | CSRF token settings |
+| `src/config/security.php` | Security headers |
+| `src/config/audit.php` | Audit logging and rate limiting |
+| `src/config/validation.php` | Input validation rules |
+| `src/config/middleware.php` | CSRF helpers and security headers |
+| `src/config/helper.php` | Common helpers such as redirect and requireAuth |
+
+## Scaffold Environment Variables
+
+Create a `.env` file in the generated project root:
+
+```env
+# Database
+DB_DRIVER=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=my_database
+DB_USERNAME=root
+DB_PASSWORD=
+DB_CHARSET=utf8mb4
+
+# User Database (separate schema for user data)
+USERDB_NAME=my_database
+
+# Application (IMPORTANT: Only set to 'production' when deploying with HTTPS!)
+APP_ENV=development
+APP_DEBUG=true
+
+# Optional: SSL
+DB_SSL_CA=
+```
+
+### Environment Modes
+
+| APP_ENV | Changes |
+|---------|---------|
+| `development` | Relaxed CSP, debug errors, `cookie_secure=false` |
+| `production` | Strict CSP, secure cookies, HSTS enabled |
+
+Warning: do not set `APP_ENV=production` locally unless SSL is set up.
+
+## Scaffold Database Requirements
+
+Generated projects expect these tables in your database.
+
+### `audit_logs` (for audit logging)
+
+```sql
+CREATE TABLE `audit_logs` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `event` VARCHAR(100) NOT NULL,
+  `id_number` VARCHAR(50),
+  `ip_address` VARCHAR(45),
+  `user_agent` VARCHAR(255),
+  `metadata` JSON,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_event` (`event`),
+  INDEX `idx_id_number` (`id_number`)
+);
+```
+
+### `users` (example structure)
+
+```sql
+CREATE TABLE `users` (
+  `no` INT AUTO_INCREMENT PRIMARY KEY,
+  `id_number` VARCHAR(50) UNIQUE NOT NULL,
+  `username` VARCHAR(50) UNIQUE NOT NULL,
+  `firstname` VARCHAR(100),
+  `middlename` VARCHAR(100),
+  `lastname` VARCHAR(100),
+  `role` VARCHAR(50) DEFAULT 'Public',
+  `password` VARCHAR(255) NOT NULL,
+  `dateCreated` DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### `userlogs` (for account status)
+
+```sql
+CREATE TABLE `userlogs` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `id_number` VARCHAR(50) UNIQUE NOT NULL,
+  `status` ENUM('active','disabled','reset') DEFAULT 'active',
+  `dateModified` DATETIME,
+  `last_online` DATETIME
+);
+```
+
+## Available Helper Functions
+
+### Security Helpers (`middleware.php`)
+
+```php
+csrfField()           // Returns CSRF hidden input field
+csrfToken()           // Returns current CSRF token
+generateCsrfToken()   // Generates new token
+regenerateCsrfToken() // Regenerates token on auth
+```
+
+### Auth Helpers (`helper.php`)
+
+```php
+redirect('url')       // Redirect with header
+appBase()             // Get app base URL
+requireAuth()         // Redirect guest to 403 page
+guestOnly()           // Redirect logged-in user to home
+```
+
+### Input Helpers (`validation.php`)
+
+```php
+validateUsername($username)     // Returns array of errors
+validatePassword($password)     // Returns array of errors
+validateName($name)             // Returns array of errors
+sanitizeInput($input)           // Strip tags, trim
+limitStringLength($input, $max) // Truncate with UTF-8 support
+```
+
+### Output Helpers (`security.php`)
+
+```php
+e($string)            // htmlspecialchars shortcut
+validateId($id)       // Safely validate numeric ID
+isHttps()             // Check if request is HTTPS
+forceHttps()          // Redirect to HTTPS (production)
+sendSecurityHeaders() // Send all security headers
+```
+
+### Audit Helpers (`audit.php`)
+
+```php
+auditLog($event, $id, $metadata)             // Log to audit_logs
+checkRateLimit($action, $max, $window)       // Returns true if blocked
+getRateLimitRemaining($action, $max, $window) // Returns remaining attempts
+clearRateLimit($action)                      // Clear rate limit
+logLoginAttempt($username, $success, $reason) // Log to file safely
+```
+
+### Database Helpers (`db.php`)
+
+```php
+userDbConnection() // Returns PDO connection
+```
+
+### Environment Helpers (`env.php`)
+
+```php
+env('KEY', 'default') // Get env variable with default
+```
+
+## Generated Scaffold Structure
+
+```text
+src/
+├── config/
+│   ├── auth.php
+│   ├── audit.php
+│   ├── changepass-handler.php
+│   ├── csrf.php
+│   ├── db.php
+│   ├── env.php
+│   ├── error-handling.php
+│   ├── helper.php
+│   ├── login-handler.php
+│   ├── logout-handler.php
+│   ├── middleware.php
+│   ├── security.php
+│   ├── session.php
+│   └── validation.php
+├── controllers/
+│   ├── login-controller.php
+│   ├── logout-controller.php
+│   ├── password-controller/
+│   │   └── changepass-controller.php
+│   ├── usercontroller.php
+│   └── accountmanagement/
+│       └── ... (account CRUD controllers)
+├── modals/
+│   ├── login-modal/
+│   │   ├── login-modal.php
+│   │   └── changepass-modal.php
+│   └── logout-modal/
+├── templates/
+│   ├── sidebar.php
+│   └── header_ui.php
+├── pages/
+│   ├── home/
+│   │   └── home.php
+│   └── error/
+│       └── error-403.php
+├── models/
+│   └── user-model.php
+└── assets/
+    ├── images/
+    └── icons/
+```
+
+## Generated Project Quick Start
+
+1. Clone the repo
+2. Create a `.env` file, or copy from `.env.example` when available
+3. Create database tables from the database requirements above
+4. Start PHP server: `php -S localhost:8000 -t public`
+5. Visit `http://localhost:8000`
+
+## Security Checklist Before Production
+
+- [ ] Set `APP_ENV=production` with HTTPS enabled
+- [ ] Set secure database credentials
+- [ ] Create `logs/` directory with write permissions
+- [ ] Run database migrations
+- [ ] Test login/logout flows
+- [ ] Verify security headers in browser devtools
+- [ ] Set up SSL certificate
+- [ ] Point domain to server
+
 ## Database Model
 
 Main shared database: `userdb`

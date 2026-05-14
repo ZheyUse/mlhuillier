@@ -231,11 +231,10 @@ function scaffoldProject(string $projectRoot, string $projectName): bool
       return $result;
     }
 
-    // Use embedded templates by default. External audit templates are opt-in
-    // to avoid stale snapshots silently overriding generator updates.
-    $useAuditTemplates = (getenv('ML_USE_AUDIT_TEMPLATES') === '1');
-    if ($useAuditTemplates && is_dir(__DIR__ . '/audit/scaffold_templates')) {
-      $templates = loadTemplatesFromDir(__DIR__ . '/audit/scaffold_templates');
+    // Mirror the authoritative checked-in scaffold when available.
+    $testTemplateDir = __DIR__ . DIRECTORY_SEPARATOR . 'test';
+    if (is_dir($testTemplateDir)) {
+      $templates = loadTemplatesFromDir($testTemplateDir);
     } else {
     $templates = [
         '.env' => <<<'ENV'
@@ -4095,27 +4094,8 @@ MD,
     ];
     }
 
-    // Keep critical account-management templates mirrored from /test (source of truth)
-    // when this repository includes it.
-    $testRoot = __DIR__ . DIRECTORY_SEPARATOR . 'test';
-    $syncFromTest = [
-      'src/modals/accountmanagement/add-account-modal.css',
-      'src/modals/accountmanagement/add-account-modal.php',
-      'src/modals/accountmanagement/edit-account-modal.php',
-      'src/pages/maintenance/accountmanagement/accountmanagement.php',
-    ];
-    if (is_dir($testRoot)) {
-      foreach ($syncFromTest as $relativePath) {
-        $sourcePath = $testRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
-        if (!is_file($sourcePath)) {
-          continue;
-        }
-        $content = @file_get_contents($sourcePath);
-        if ($content === false) {
-          continue;
-        }
-        $templates[$relativePath] = $content;
-      }
+    if (is_dir($testTemplateDir)) {
+      $templates = loadTemplatesFromDir($testTemplateDir);
     }
 
     foreach ($templates as $relativeFile => $content) {
@@ -4234,11 +4214,11 @@ function downloadMigrationFiles(string $projectRoot): bool
     return false;
   }
 
+  $localSourceDir = __DIR__ . DIRECTORY_SEPARATOR . 'migration' . DIRECTORY_SEPARATOR . 'userdb';
   $baseRawUrl = 'https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/migration/userdb';
   $files = ['userdb_users.sql', 'userdb_userlogs.sql'];
 
   foreach ($files as $fileName) {
-    $url = $baseRawUrl . '/' . $fileName;
     $target = $migrationDir . DIRECTORY_SEPARATOR . $fileName;
 
     if (file_exists($target)) {
@@ -4246,6 +4226,17 @@ function downloadMigrationFiles(string $projectRoot): bool
       continue;
     }
 
+    $localSource = $localSourceDir . DIRECTORY_SEPARATOR . $fileName;
+    if (is_file($localSource) && is_readable($localSource)) {
+      if (!@copy($localSource, $target)) {
+        report('file', $target, $projectRoot, 'FAILED');
+        return false;
+      }
+      report('file', $target, $projectRoot, 'OK');
+      continue;
+    }
+
+    $url = $baseRawUrl . '/' . $fileName;
     $content = downloadRemoteText($url);
     if ($content === null) {
       report('file', $target, $projectRoot, 'FAILED');
