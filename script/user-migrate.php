@@ -79,7 +79,10 @@ function resolveProjectRoot(): ?string
 
 function usage(): void
 {
-    out('Usage: ml migrate -db <databasename>');
+    out('Usage:');
+    out('  ml migrate check [--json]  - Check migration compatibility (use --json for machine output)');
+    out('  ml migrate -db <databasename>  - Migrate to target database');
+    out('  ml migrate global         - Centralize back to userdb');
 }
 
 function parseTargetDb(array $argv): string
@@ -95,6 +98,10 @@ function parseTargetDb(array $argv): string
 
         if (strtolower($arg) === 'global') {
             return '__global__';
+        }
+
+        if (strtolower($arg) === 'check') {
+            return '__check__';
         }
 
         if (strtolower($arg) === '-db') {
@@ -445,6 +452,242 @@ function writeMigrationLog(
     file_put_contents($logPath, implode(PHP_EOL, $lines), FILE_APPEND);
 }
 
+function validateProjectFiles(string $projectRoot): array
+{
+    $issues = [];
+    $warnings = [];
+
+    $requiredFiles = [
+        'src/config/env.php' => 'Environment config',
+        'src/config/db.php' => 'Database config',
+    ];
+    foreach ($requiredFiles as $file => $label) {
+        $path = $projectRoot . DIRECTORY_SEPARATOR . $file;
+        if (!is_file($path)) {
+            $issues[] = "[FAIL] {$label} missing: {$file}";
+        }
+    }
+
+    $optionalFiles = [
+        'src/config/login-handler.php' => 'Login handler',
+        'src/config/pbac-session.php' => 'PBAC session',
+        'src/controllers/usercontroller.php' => 'User controller',
+        '.env' => 'Environment file',
+    ];
+    foreach ($optionalFiles as $file => $label) {
+        $path = $projectRoot . DIRECTORY_SEPARATOR . $file;
+        if (!is_file($path)) {
+            $warnings[] = "[WARN] {$label} missing: {$file}";
+        }
+    }
+
+    $envPath = $projectRoot . DIRECTORY_SEPARATOR . '.env';
+    if (is_file($envPath)) {
+        $env = parseEnvFile($envPath);
+        $requiredEnvVars = ['DB_HOST', 'DB_DATABASE', 'DB_USERNAME'];
+        foreach ($requiredEnvVars as $var) {
+            if (!isset($env[$var]) || $env[$var] === '') {
+                $issues[] = "[FAIL] .env missing '{$var}' configuration";
+            }
+        }
+    }
+
+    return [
+        'file_issues' => $issues,
+        'file_warnings' => $warnings,
+    ];
+}
+
+function checkDatabaseConflicts(PDO $pdo, string $targetDb, string $sourceDb, string $projectName): array
+{
+    $warnings = [];
+
+    $stmt = $pdo->query("SHOW DATABASES LIKE '{$targetDb}'");
+    if ($stmt->fetch()) {
+        $warnings[] = "[WARN] Target database '{$targetDb}' already exists - will be reused";
+
+        if (tableExists($pdo, $targetDb, 'users')) {
+            $warnings[] = "[WARN] '{$targetDb}.users' exists - data will be preserved (INSERT)";
+        }
+    }
+
+    $pattern = '%' . $projectName . '_%';
+    $stmt = $pdo->query("SHOW DATABASES LIKE '{$pattern}'");
+    $similarDbs = [];
+    while ($row = $stmt->fetch()) {
+        $db = $row['Database'] ?? '';
+        if (!empty($db) && strtolower($db) !== strtolower($targetDb)) {
+            $similarDbs[] = $db;
+        }
+    }
+    if (count($similarDbs) > 0) {
+        $warnings[] = "[INFO] Related project databases found: " . implode(', ', $similarDbs);
+    }
+
+    return $warnings;
+}
+
+function checkCompatibility(PDO $pdo, string $projectRoot, string $projectName, array $env, string $outputFormat = 'text'): array
+{
+    $results = [
+        'project' => $projectName,
+        'timestamp' => date('c'),
+        'source' => [],
+        'converted' => [],
+        'current' => [],
+        'files' => [],
+        'conflicts' => [],
+        'issues' => [],
+        'warnings' => [],
+        'status' => 'unknown',
+    ];
+
+    $host = $env['USERDB_HOST'] ?? $env['DB_HOST'] ?? '127.0.0.1';
+    $port = $env['USERDB_PORT'] ?? $env['DB_PORT'] ?? '3306';
+    $sourceDb = $env['USERDB_NAME'] ?? 'userdb';
+    $currentDb = $env['DB_DATABASE'] ?? '';
+
+    $results['source'] = [
+        'host' => $host,
+        'port' => $port,
+        'database' => $sourceDb,
+    ];
+
+    $stmt = $pdo->query("SHOW DATABASES LIKE '{$sourceDb}'");
+    $results['source']['db_exists'] = $stmt->fetch() !== false;
+    if (!$results['source']['db_exists']) {
+        $results['issues'][] = "Source database '{$sourceDb}' does not exist";
+    }
+
+    $results['source']['tables'] = [];
+    $requiredTables = ['users', 'userlogs'];
+    foreach ($requiredTables as $table) {
+        $exists = tableExists($pdo, $sourceDb, $table);
+        $results['source']['tables'][$table] = $exists;
+        if (!$exists) {
+            $results['issues'][] = "Table '{$sourceDb}.{$table}' missing - migration requires this table";
+        }
+    }
+
+    $convertedTables = detectConvertedTables($pdo, $projectRoot, $sourceDb, $projectName);
+    $results['converted']['detected'] = $convertedTables;
+    foreach ($convertedTables as $tbl) {
+        $exists = tableExists($pdo, $sourceDb, $tbl);
+        $results['converted']['tables'][$tbl] = $exists;
+        if (!$exists) {
+            $results['warnings'][] = "Referenced table '{$sourceDb}.{$tbl}' not found";
+        }
+    }
+
+    if ($currentDb !== '') {
+        $results['current']['database'] = $currentDb;
+        $stmt = $pdo->query("SHOW DATABASES LIKE '{$currentDb}'");
+        $results['current']['db_exists'] = $stmt->fetch() !== false;
+        if (!$results['current']['db_exists']) {
+            $results['warnings'][] = "Project's configured DB '{$currentDb}' does not exist";
+        }
+    }
+
+    $fileCheck = validateProjectFiles($projectRoot);
+    $results['files'] = [
+        'issues' => $fileCheck['file_issues'],
+        'warnings' => $fileCheck['file_warnings'],
+    ];
+    $results['issues'] = array_merge($results['issues'], $fileCheck['file_issues']);
+    $results['warnings'] = array_merge($results['warnings'], $fileCheck['file_warnings']);
+
+    if (count($results['issues']) > 0) {
+        $results['status'] = 'not_ready';
+    } elseif (count($results['warnings']) > 0) {
+        $results['status'] = 'ready_with_warnings';
+    } else {
+        $results['status'] = 'ready';
+    }
+
+    return $results;
+}
+
+function outputResult(array $results, string $format): void
+{
+    if ($format === 'json') {
+        echo json_encode($results, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL;
+        return;
+    }
+
+    out('=== ML Migrate Check ===');
+    out('Project: ' . $results['project']);
+    out('Time: ' . $results['timestamp']);
+    out('');
+
+    out('--- Source Database ---');
+    $src = $results['source'];
+    out("Host: {$src['host']}:{$src['port']}");
+    out("Database: {$src['database']}");
+    out($src['db_exists'] ? '[OK] Database exists' : '[FAIL] Database missing');
+
+    out('Required tables:');
+    foreach ($src['tables'] ?? [] as $table => $exists) {
+        out($exists ? "  [OK] {$table}" : "  [FAIL] {$table} missing");
+    }
+
+    out('');
+    out('--- Converted Tables ---');
+    if (count($results['converted']['detected'] ?? []) === 0) {
+        out('[WARN] No converted RBAC/PBAC tables detected');
+    } else {
+        out('Detected: ' . implode(', ', $results['converted']['detected']));
+        foreach ($results['converted']['tables'] ?? [] as $table => $exists) {
+            out($exists ? "  [OK] {$table}" : "  [WARN] {$table} not found in source");
+        }
+    }
+
+    out('');
+    out('--- Current Configuration ---');
+    if (isset($results['current']['database'])) {
+        $curDb = $results['current']['database'];
+        $status = $results['current']['db_exists'] ? 'exists' : 'missing';
+        out("Database: {$curDb} ({$status})");
+        if (strtolower($curDb) === strtolower($src['database'])) {
+            out('[INFO] Using centralized userdb');
+        }
+    }
+
+    out('');
+    out('--- File Validation ---');
+    foreach ($results['files']['issues'] ?? [] as $issue) {
+        err($issue);
+    }
+    foreach ($results['files']['warnings'] ?? [] as $warn) {
+        out($warn);
+    }
+    if (empty($results['files']['issues']) && empty($results['files']['warnings'])) {
+        out('[OK] All critical files present');
+    }
+
+    out('');
+    out('--- Summary ---');
+    foreach ($results['warnings'] as $warn) {
+        if (strpos($warn, '[WARN]') !== 0) {
+            out('[WARN] ' . $warn);
+        } else {
+            out($warn);
+        }
+    }
+
+    out('');
+    $status = $results['status'];
+    if ($status === 'not_ready') {
+        out('Status: NOT READY FOR MIGRATION');
+        out('Fix the issues above before running: ml migrate -db <target>');
+    } elseif ($status === 'ready_with_warnings') {
+        out('Status: READY WITH WARNINGS');
+        out('You may proceed: ml migrate -db <target>');
+    } else {
+        out('Status: READY');
+        out('All checks passed: ml migrate -db <target>');
+    }
+}
+
 $targetDb = parseTargetDb($argv);
 if ($targetDb === '') {
     usage();
@@ -527,6 +770,56 @@ if ($targetDb === '__global__') {
     exit(0);
 }
 // ── End global/centralize ───────────────────────────────────────────────────
+
+// ── Handle: ml migrate check ────────────────────────────────────────────────
+if ($targetDb === '__check__') {
+    $projectRoot = resolveProjectRoot();
+    if ($projectRoot === null) {
+        err('Error: run this command inside a scaffolded project directory.');
+        exit(2);
+    }
+
+    $projectName = basename($projectRoot);
+    $env = parseEnvFile($projectRoot . DIRECTORY_SEPARATOR . '.env');
+
+    $outputFormat = 'text';
+    foreach (array_slice($argv, 1) as $arg) {
+        if (strtolower($arg) === '--json') {
+            $outputFormat = 'json';
+            break;
+        }
+    }
+
+    $host = $env['USERDB_HOST'] ?? $env['DB_HOST'] ?? '127.0.0.1';
+    $port = $env['USERDB_PORT'] ?? $env['DB_PORT'] ?? '3306';
+    $user = $env['DB_USERNAME'] ?? $env['DB_USER'] ?? 'root';
+    $pass = $env['DB_PASSWORD'] ?? $env['DB_PASS'] ?? '';
+
+    try {
+        $dsnServer = sprintf('mysql:host=%s;port=%s;charset=utf8mb4', $host, $port);
+        $pdo = new PDO($dsnServer, $user, $pass, [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_TIMEOUT => 8,
+        ]);
+
+        $results = checkCompatibility($pdo, $projectRoot, $projectName, $env, $outputFormat);
+        outputResult($results, $outputFormat);
+
+        exit($results['status'] === 'not_ready' ? 2 : 0);
+    } catch (Throwable $e) {
+        if ($outputFormat === 'json') {
+            echo json_encode([
+                'status' => 'error',
+                'error' => $e->getMessage(),
+            ], JSON_PRETTY_PRINT) . PHP_EOL;
+        } else {
+            err('Connection failed: ' . $e->getMessage());
+        }
+        exit(2);
+    }
+}
+// ── End check ──────────────────────────────────────────────────────────────
 
 $dsnServer = sprintf('mysql:host=%s;port=%s;charset=%s', $host, $port, $charset);
 

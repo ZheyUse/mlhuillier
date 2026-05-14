@@ -1,25 +1,25 @@
 {
-  "generatedAt": "2026-05-11T13:14:07.543Z",
-  "latestVersion": "1.1.15",
+  "generatedAt": "2026-05-14T01:20:20.503Z",
+  "latestVersion": "1.1.16",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 251
+    "commitCount": 252
   },
   "releases": [
     {
-      "version": "1.1.15",
+      "version": "1.1.16",
       "isLatest": true,
-      "commitCount": 23,
+      "commitCount": 12,
       "dateRange": {
-        "from": "2026-04-30",
-        "to": "2026-05-11"
+        "from": "2026-05-11",
+        "to": "2026-05-14"
       },
       "stats": {
-        "release": 2,
-        "feature": 19,
+        "release": 1,
+        "feature": 11,
         "fix": 0,
-        "docs": 2,
+        "docs": 0,
         "refactor": 0,
         "performance": 0,
         "security": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "feat: update version to 1.1.16 in VERSION file and related scripts; increment commit counts and timestamps in version history",
         "feat: update commands and version history; enhance submenu creation with support for multiple submenus",
         "feat: add commands for submenu creation and enhance error handling in ml.bat; update timestamps in version history",
         "feat: enhance sidebar template generation prompt to conditionally request submenu creation",
         "feat: update command syntax for database management; add submenu functionality and enhance sidebar integration",
         "feat: update timestamps and commit counts in version history; enhance git fetch logic in ml.bat",
         "feat: enhance installation commands and error handling for Free Claude Code; update documentation and version history",
-        "feat: enhance Free Claude Code installation and update commands with error handling",
-        "feat: update installation commands and enhance error handling for Free Claude Code"
+        "feat: enhance Free Claude Code installation and update commands with error handling"
       ],
       "commits": [
+        {
+          "hash": "ff84d4005784445bf55fb696090749cb9ee9d05b",
+          "shortHash": "ff84d40",
+          "date": "2026-05-14",
+          "title": "feat: update version to 1.1.16 in VERSION file and related scripts; increment commit counts and timestamps in version history",
+          "type": "release"
+        },
         {
           "hash": "253dfad3ab2396b4a422034c4ed05de8a25ba934",
           "shortHash": "253dfad",
@@ -114,7 +121,40 @@
           "date": "2026-05-11",
           "title": "feat: update generatedAt timestamp and increment commit count in version history",
           "type": "feature"
-        },
+        }
+      ]
+    },
+    {
+      "version": "1.1.15",
+      "isLatest": false,
+      "commitCount": 12,
+      "dateRange": {
+        "from": "2026-04-30",
+        "to": "2026-05-11"
+      },
+      "stats": {
+        "release": 2,
+        "feature": 8,
+        "fix": 0,
+        "docs": 2,
+        "refactor": 0,
+        "performance": 0,
+        "security": 0,
+        "test": 0,
+        "chore": 0,
+        "other": 0
+      },
+      "highlights": [
+        "feat: update version to 1.1.15 and add new database commands with tutorials",
+        "feat: update version to 1.1.15, feat: Added ml --ai update",
+        "feat(docs): add comprehensive AI installer guide for Free Claude Code",
+        "feat(installation): add install and uninstall scripts for macOS/Linux docs: update README with installation instructions and uninstaller details chore: increment version and update generatedAt timestamp in version history",
+        "feat(ai): update command categories and add new AI commands for Claude Code",
+        "feat(ai): update AI command descriptions and add new commands in CLI and documentation",
+        "feat(ai): add command to update NVIDIA_NIM_API_KEY in Free Claude Code",
+        "feat(ai): add command to change configured model in Free Claude Code"
+      ],
+      "commits": [
         {
           "hash": "930fd3806000dfe2e218f543a0d154a84b9cba3c",
           "shortHash": "930fd38",
