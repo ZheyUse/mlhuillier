@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-05-14T04:16:12.258Z",
+  "generatedAt": "2026-05-14T04:45:38.478Z",
   "latestVersion": "1.1.16",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 255
+    "commitCount": 256
   },
   "releases": [
     {
       "version": "1.1.16",
       "isLatest": true,
-      "commitCount": 15,
+      "commitCount": 16,
       "dateRange": {
         "from": "2026-05-11",
         "to": "2026-05-14"
       },
       "stats": {
         "release": 1,
-        "feature": 14,
+        "feature": 15,
         "fix": 0,
         "docs": 0,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "feat: enhance security features and logging; implement rate limiting for login and password change processes",
         "feat: update settings and documentation; enhance security features in generated projects and improve template handling",
         "feat: add migration compatibility check command and update ml.bat help text; enhance version history with new command details",
         "feat: enhance user migration script with compatibility check and detailed usage instructions; add validation for project files and database conflicts",
         "feat: update version to 1.1.16 in VERSION file and related scripts; increment commit counts and timestamps in version history",
         "feat: update commands and version history; enhance submenu creation with support for multiple submenus",
         "feat: add commands for submenu creation and enhance error handling in ml.bat; update timestamps in version history",
-        "feat: enhance sidebar template generation prompt to conditionally request submenu creation",
-        "feat: update command syntax for database management; add submenu functionality and enhance sidebar integration"
+        "feat: enhance sidebar template generation prompt to conditionally request submenu creation"
       ],
       "commits": [
+        {
+          "hash": "a2581490b28e9ee26a910ee3c5120feb4e90e85b",
+          "shortHash": "a258149",
+          "date": "2026-05-14",
+          "title": "feat: enhance security features and logging; implement rate limiting for login and password change processes",
+          "type": "feature"
+        },
         {
           "hash": "d02560c24f56ee44571e7ee0a79ef943396d64c0",
           "shortHash": "d02560c",

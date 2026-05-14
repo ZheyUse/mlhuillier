@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * generate-file-structure.php
  *
