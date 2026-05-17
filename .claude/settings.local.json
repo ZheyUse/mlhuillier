@@ -21,7 +21,15 @@
       "PowerShell(php \"c:\\\\xampp\\\\htdocs\\\\mlhuillier\\\\generate-file-structure.php\" --dump-templates \"c:\\\\xampp\\\\htdocs\\\\mlhuillier\\\\audit\\\\templates-check\")",
       "Bash(Get-ChildItem C:\\\\xampp\\\\htdocs\\\\mlhuillier\\\\audit\\\\diffs *)",
       "PowerShell(Get-Content *)",
-      "PowerShell(php -l \"C:\\\\xampp\\\\htdocs\\\\mlhuillier\\\\audit-sync.ps1\" 2>&1)"
+      "PowerShell(php -l \"C:\\\\xampp\\\\htdocs\\\\mlhuillier\\\\audit-sync.ps1\" 2>&1)",
+      "Read(//c/free-claude-code/free-claude-code/.git/**)",
+      "PowerShell(git -C \"C:\\\\free-claude-code\\\\free-claude-code\" branch --show-current 2>&1)",
+      "PowerShell(php c:\\\\xampp\\\\htdocs\\\\mlhuillier\\\\ai-commands.php update-info 2>&1)",
+      "Bash(cmd /c \"cd C:\\\\free-claude-code\\\\free-claude-code && git fetch origin\")",
+      "Bash(git -C \"C:\\\\free-claude-code\\\\free-claude-code\" rev-list --left-right --count origin/main...HEAD)",
+      "PowerShell(php -r \"echo escapeshellarg\\('C:\\\\free-claude-code\\\\free-claude-code'\\) . PHP_EOL;\" 2>&1)",
+      "PowerShell(php c:\\\\tmp\\\\test-git.php 2>&1)",
+      "PowerShell(git branch --show-current 2>/dev/null; echo \"Exit code: $LASTEXITCODE\")"
     ]
   }
 }

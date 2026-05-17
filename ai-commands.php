@@ -511,33 +511,39 @@ function openAdminBrowser(): void
 
 // ── Update Info ───────────────────────────────────────────────────────────────
 
+function getStderrRedirect(): string
+{
+    return isWindows() ? '2>nul' : '2>/dev/null';
+}
+
 function checkGitUpdates(): void
 {
     ensureInstalled();
 
     $installDir = aiInstallDir();
+    $stderr = getStderrRedirect();
 
     echo 'Checking for updates...' . PHP_EOL;
     echo PHP_EOL;
 
     // Fetch latest from remote
     $out = [];
-    exec('cd ' . escapeshellarg($installDir) . ' && git fetch origin 2>&1', $out, $rc);
+    exec('git -C ' . escapeshellarg($installDir) . ' fetch origin 2>&1', $out, $rc);
 
     // Get current branch
-    $branch = trim((string)@exec('cd ' . escapeshellarg($installDir) . ' && git branch --show-current 2>/dev/null'));
+    $branch = trim((string)@exec('git -C ' . escapeshellarg($installDir) . ' branch --show-current ' . $stderr));
     if (empty($branch)) {
         $branch = 'main';
     }
 
     // Get commits ahead/behind remote
-    $revList = trim((string)@exec('cd ' . escapeshellarg($installDir) . ' && git rev-list --left-right --count origin/' . escapeshellarg($branch) . '...HEAD 2>/dev/null'));
+    $revList = trim((string)@exec('git -C ' . escapeshellarg($installDir) . ' rev-list --left-right --count origin/' . escapeshellarg($branch) . '...HEAD ' . $stderr));
 
     echo 'Branch: ' . $branch . PHP_EOL;
     echo 'Remote: origin' . PHP_EOL;
     echo PHP_EOL;
 
-    if ($revList !== '') {
+    if ($revList !== '' && $revList !== false) {
         $parts = explode("\t", $revList);
         $behind = (int)($parts[0] ?? 0);
         $ahead = (int)($parts[1] ?? 0);
@@ -550,7 +556,7 @@ function checkGitUpdates(): void
             // Show what's new
             echo 'Updates available:' . PHP_EOL;
             $logOut = [];
-            exec('cd ' . escapeshellarg($installDir) . ' && git log HEAD..origin/' . escapeshellarg($branch) . ' --oneline 2>&1', $logOut);
+            exec('git -C ' . escapeshellarg($installDir) . ' log HEAD..origin/' . escapeshellarg($branch) . ' --oneline 2>&1', $logOut);
             foreach ($logOut as $line) {
                 echo '  ' . trim($line) . PHP_EOL;
             }

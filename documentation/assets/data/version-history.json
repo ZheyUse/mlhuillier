@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-05-17T14:16:42.041Z",
+  "generatedAt": "2026-05-17T14:18:57.599Z",
   "latestVersion": "1.1.17",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 260
+    "commitCount": 261
   },
   "releases": [
     {
       "version": "1.1.17",
       "isLatest": true,
-      "commitCount": 3,
+      "commitCount": 4,
       "dateRange": {
         "from": "2026-05-17",
         "to": "2026-05-17"
       },
       "stats": {
         "release": 3,
-        "feature": 0,
+        "feature": 1,
         "fix": 0,
         "docs": 0,
         "refactor": 0,
@@ -28,11 +28,19 @@
         "other": 0
       },
       "highlights": [
+        "feat: update timestamps and commit counts in version history; add local AI script handling in ml.bat",
         "feat: update generated timestamps and commit counts in version history; enhance release details for 1.1.17",
         "feat: add admin panel command and update version history to 1.1.17; include git update check functionality",
         "feat: update version to 1.1.17; increment commit counts and timestamps in version history"
       ],
       "commits": [
+        {
+          "hash": "c69d3db60cd3dec0d9fa517e0d3879d9b6a796b7",
+          "shortHash": "c69d3db",
+          "date": "2026-05-17",
+          "title": "feat: update timestamps and commit counts in version history; add local AI script handling in ml.bat",
+          "type": "feature"
+        },
         {
           "hash": "34c10fb626b09cfb6864be1d68f324eb808c8c5d",
           "shortHash": "34c10fb",
