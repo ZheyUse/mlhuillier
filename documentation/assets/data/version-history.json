@@ -1,22 +1,22 @@
 {
-  "generatedAt": "2026-05-14T04:45:38.478Z",
+  "generatedAt": "2026-05-14T06:39:12.343Z",
   "latestVersion": "1.1.16",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 256
+    "commitCount": 257
   },
   "releases": [
     {
       "version": "1.1.16",
       "isLatest": true,
-      "commitCount": 16,
+      "commitCount": 17,
       "dateRange": {
         "from": "2026-05-11",
         "to": "2026-05-14"
       },
       "stats": {
-        "release": 1,
+        "release": 2,
         "feature": 15,
         "fix": 0,
         "docs": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "feat: update version history and commit counts; enhance highlights and commit details for release 1.1.16",
         "feat: enhance security features and logging; implement rate limiting for login and password change processes",
         "feat: update settings and documentation; enhance security features in generated projects and improve template handling",
         "feat: add migration compatibility check command and update ml.bat help text; enhance version history with new command details",
         "feat: enhance user migration script with compatibility check and detailed usage instructions; add validation for project files and database conflicts",
         "feat: update version to 1.1.16 in VERSION file and related scripts; increment commit counts and timestamps in version history",
         "feat: update commands and version history; enhance submenu creation with support for multiple submenus",
-        "feat: add commands for submenu creation and enhance error handling in ml.bat; update timestamps in version history",
-        "feat: enhance sidebar template generation prompt to conditionally request submenu creation"
+        "feat: add commands for submenu creation and enhance error handling in ml.bat; update timestamps in version history"
       ],
       "commits": [
+        {
+          "hash": "b0a38b1bd01fb6e131603457cbd8044b2b7412f3",
+          "shortHash": "b0a38b1",
+          "date": "2026-05-14",
+          "title": "feat: update version history and commit counts; enhance highlights and commit details for release 1.1.16",
+          "type": "release"
+        },
         {
           "hash": "a2581490b28e9ee26a910ee3c5120feb4e90e85b",
           "shortHash": "a258149",

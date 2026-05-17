@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 
 set "ML_SCRIPT=%~dp0generate-file-structure.php"
-set "ML_VERSION=1.1.16"
+set "ML_VERSION=1.1.17"
 set "PHP_EXE=php"
 if exist "C:\xampp\php\php.exe" set "PHP_EXE=C:\xampp\php\php.exe"
 
@@ -128,7 +128,8 @@ echo   update             Update ML CLI from remote
 echo   --ai               Start uvicorn + Claude Code (visible)
 echo   --ai claude        Start Claude Code in current directory (bg uvicorn)
 echo   --ai bg            Start both in background
-echo   --ai update       Check for updates in free-claude-code
+echo   --ai admin       Open Free Claude Code admin panel in browser
+   echo   --ai update-info Check what updates are available before pulling
 echo   --ai stop          Stop all processes
 echo   --ai restart       Stop and start both in background
 echo   --ai cm            Change model (Opus/Sonnet/Haiku/Default)
@@ -269,9 +270,11 @@ echo Subcommands:
 echo   ml --ai           Start uvicorn and Claude Code in visible terminals
 echo   ml --ai claude    Start uvicorn in bg, Claude Code visibly (runs in current working directory)
 echo   ml --ai bg        Start both processes in background
+echo   ml --ai admin     Open Free Claude Code admin panel (http://127.0.0.1:8082/admin)
 echo   ml --ai stop       Stop Free Claude Code processes
 echo   ml --ai restart    Stop then start both processes in background
 echo   ml --ai update     Check for and pull updates in free-claude-code
+echo   ml --ai update-info Check what updates are available (without pulling)
 echo   ml --ai cm         Change Opus, Sonnet, Haiku, or default model in .env
 echo   ml --ai key        Update NVIDIA_NIM_API_KEY in .env
 echo.
