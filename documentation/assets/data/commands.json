@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-05-14T04:29:59.469Z",
+  "generatedAt": "2026-05-17T14:15:36.720Z",
   "source": "ml.bat",
-  "cliVersion": "1.1.16",
+  "cliVersion": "1.1.17",
   "commands": [
     {
       "name": "ml --ai",
@@ -16,6 +16,24 @@
         "scenario": "Typical ai workflow using ml --ai.",
         "steps": [
           "Run: ml --ai",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      }
+    },
+    {
+      "name": "ml --ai admin",
+      "description": "Open Free Claude Code admin panel in browser",
+      "syntax": "ml --ai admin",
+      "params": [],
+      "example": "ml --ai admin",
+      "category": "ai",
+      "expectedResult": "Runs the command workflow and returns success or actionable error output.",
+      "tutorial": {
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical ai workflow using ml --ai admin.",
+        "steps": [
+          "Run: ml --ai admin",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]
@@ -131,7 +149,7 @@
     },
     {
       "name": "ml --ai update",
-      "description": "Check for updates in free-claude-code",
+      "description": "Run this CLI command to execute its linked workflow.",
       "syntax": "ml --ai update",
       "params": [],
       "example": "ml --ai update",
@@ -1203,6 +1221,16 @@
         "scenario": "Typical ai workflow using ml --ai.",
         "steps": [
           "Run: ml --ai",
+          "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
+          "If it fails, apply the recommended fix from Error Handling then retry."
+        ]
+      },
+      {
+        "command": "ml --ai admin",
+        "whenToUse": "When this workflow matches your current task.",
+        "scenario": "Typical ai workflow using ml --ai admin.",
+        "steps": [
+          "Run: ml --ai admin",
           "Review output and confirm expected result: Runs the command workflow and returns success or actionable error output.",
           "If it fails, apply the recommended fix from Error Handling then retry."
         ]

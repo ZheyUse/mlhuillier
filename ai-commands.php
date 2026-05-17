@@ -371,8 +371,6 @@ function startAiUnix(bool $uvicornVisible, bool $claudeVisible): void
     ensureInstalled();
 
     $installDir = aiInstallDir();
-    $envSetup = 'cd ' . escapeshellarg($installDir);
-    $stateFile = mlHome() . DIRECTORY_SEPARATOR . 'ml-ai-pids.txt';
 
     // Ensure logs dir exists
     $logDir = mlHome() . DIRECTORY_SEPARATOR . 'logs';
@@ -424,7 +422,6 @@ function startAiUnix(bool $uvicornVisible, bool $claudeVisible): void
             $found = false;
             foreach ($terminals as $term) {
                 if (commandExists($term)) {
-                    $escaped = str_replace('"', '\\"', $claudeCmdFull);
                     if ($term === 'konsole') {
                         exec("$term -e 'bash -c " . escapeshellarg($claudeCmdFull) . "' 2>/dev/null &");
                     } else {
@@ -463,7 +460,7 @@ function stopAiUnix(): void
         $pid = (int)$pid;
         if ($pid > 0) {
             if (function_exists('posix_kill')) {
-                posix_kill($pid, SIGTERM);
+                posix_kill($pid, 15); // 15 = SIGTERM
             } else {
                 exec('kill ' . (int)$pid . ' 2>/dev/null');
             }
@@ -491,6 +488,83 @@ function stopAiUnix(): void
     }
 
     echo "CLI: Free Claude Code processes stopped." . PHP_EOL;
+}
+
+// ── Admin ─────────────────────────────────────────────────────────────────────
+
+function openAdminBrowser(): void
+{
+    ensureInstalled();
+
+    $url = 'http://127.0.0.1:8082/admin';
+
+    if (isWindows()) {
+        exec('start "" ' . escapeshellarg($url) . ' 2>nul');
+    } elseif (isMac()) {
+        exec('open ' . escapeshellarg($url) . ' 2>/dev/null');
+    } else {
+        exec('xdg-open ' . escapeshellarg($url) . ' 2>/dev/null');
+    }
+
+    echo 'CLI: Opening ' . $url . ' in browser.' . PHP_EOL;
+}
+
+// ── Update Info ───────────────────────────────────────────────────────────────
+
+function checkGitUpdates(): void
+{
+    ensureInstalled();
+
+    $installDir = aiInstallDir();
+
+    echo 'Checking for updates...' . PHP_EOL;
+    echo PHP_EOL;
+
+    // Fetch latest from remote
+    $out = [];
+    exec('cd ' . escapeshellarg($installDir) . ' && git fetch origin 2>&1', $out, $rc);
+
+    // Get current branch
+    $branch = trim((string)@exec('cd ' . escapeshellarg($installDir) . ' && git branch --show-current 2>/dev/null'));
+    if (empty($branch)) {
+        $branch = 'main';
+    }
+
+    // Get commits ahead/behind remote
+    $revList = trim((string)@exec('cd ' . escapeshellarg($installDir) . ' && git rev-list --left-right --count origin/' . escapeshellarg($branch) . '...HEAD 2>/dev/null'));
+
+    echo 'Branch: ' . $branch . PHP_EOL;
+    echo 'Remote: origin' . PHP_EOL;
+    echo PHP_EOL;
+
+    if ($revList !== '') {
+        $parts = explode("\t", $revList);
+        $behind = (int)($parts[0] ?? 0);
+        $ahead = (int)($parts[1] ?? 0);
+
+        echo 'Commits behind: ' . $behind . PHP_EOL;
+        echo 'Commits ahead: ' . $ahead . PHP_EOL;
+        echo PHP_EOL;
+
+        if ($behind > 0) {
+            // Show what's new
+            echo 'Updates available:' . PHP_EOL;
+            $logOut = [];
+            exec('cd ' . escapeshellarg($installDir) . ' && git log HEAD..origin/' . escapeshellarg($branch) . ' --oneline 2>&1', $logOut);
+            foreach ($logOut as $line) {
+                echo '  ' . trim($line) . PHP_EOL;
+            }
+            echo PHP_EOL;
+            echo 'Run: ml --ai update' . PHP_EOL;
+        } else {
+            echo 'You are up to date. No changes to pull.' . PHP_EOL;
+        }
+    } else {
+        echo 'Unable to determine update status.' . PHP_EOL;
+        echo 'Tracking: origin/' . $branch . PHP_EOL;
+    }
+
+    echo PHP_EOL;
 }
 
 // ── Main dispatch ───────────────────────────────────────────────────────────────
@@ -554,8 +628,16 @@ switch ($subcommand) {
         changeApiKey();
         exit(0);
 
+    case 'admin':
+        openAdminBrowser();
+        exit(0);
+
+    case 'update-info':
+        checkGitUpdates();
+        exit(0);
+
     default:
         fwrite(STDERR, 'Unknown ml --ai subcommand: ' . $subcommand . PHP_EOL);
-        fwrite(STDERR, 'Use: ml --ai [claude|bg|stop|restart|cm|key]' . PHP_EOL);
+        fwrite(STDERR, 'Use: ml --ai [claude|bg|stop|restart|cm|key|admin|update-info]' . PHP_EOL);
         exit(2);
 }
