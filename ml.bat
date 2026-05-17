@@ -1342,6 +1342,18 @@ if not exist "!FREE_CC_DIR!\.git" (
         echo.
         exit /b 1
 )
+rem Use local ai-commands.php if available, otherwise download from remote
+set "LOCAL_AI_SCRIPT=%~dp0ai-commands.php"
+if not exist "!LOCAL_AI_SCRIPT!" set "LOCAL_AI_SCRIPT=C:\xampp\htdocs\mlhuillier\ai-commands.php"
+if exist "!LOCAL_AI_SCRIPT!" (
+        echo Using local AI helper...
+        echo.
+        "%PHP_EXE%" -d display_errors=0 "!LOCAL_AI_SCRIPT!" "!ARG2!"
+        set "RC=%ERRORLEVEL%"
+        call :maybe_show_update_notice
+        exit /b %RC%
+)
+
 set "RAW_URL=https://raw.githubusercontent.com/ZheyUse/mlhuillier/main/ai-commands.php"
 set "CACHE_BUST=%RANDOM%%RANDOM%%RANDOM%"
 set "RAW_URL=!RAW_URL!?t=!CACHE_BUST!"

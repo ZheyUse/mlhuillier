@@ -1,22 +1,22 @@
 {
-  "generatedAt": "2026-05-17T14:16:04.061Z",
+  "generatedAt": "2026-05-17T14:16:42.041Z",
   "latestVersion": "1.1.17",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 259
+    "commitCount": 260
   },
   "releases": [
     {
       "version": "1.1.17",
       "isLatest": true,
-      "commitCount": 2,
+      "commitCount": 3,
       "dateRange": {
         "from": "2026-05-17",
         "to": "2026-05-17"
       },
       "stats": {
-        "release": 2,
+        "release": 3,
         "feature": 0,
         "fix": 0,
         "docs": 0,
@@ -28,10 +28,18 @@
         "other": 0
       },
       "highlights": [
+        "feat: update generated timestamps and commit counts in version history; enhance release details for 1.1.17",
         "feat: add admin panel command and update version history to 1.1.17; include git update check functionality",
         "feat: update version to 1.1.17; increment commit counts and timestamps in version history"
       ],
       "commits": [
+        {
+          "hash": "34c10fb626b09cfb6864be1d68f324eb808c8c5d",
+          "shortHash": "34c10fb",
+          "date": "2026-05-17",
+          "title": "feat: update generated timestamps and commit counts in version history; enhance release details for 1.1.17",
+          "type": "release"
+        },
         {
           "hash": "83a5dbc7b014152632a0ef29e5e21488a10e8582",
           "shortHash": "83a5dbc",
