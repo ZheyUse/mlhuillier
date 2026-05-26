@@ -43,6 +43,11 @@ if ($code === null) {
     exit(2);
 }
 
+// Remove UTF-8 BOM if present so strict_types stays the first statement.
+if (strncmp($code, "\xEF\xBB\xBF", 3) === 0) {
+    $code = substr($code, 3);
+}
+
 // Save to a temp file and require it to run in current process.
 // Create an isolated temp work directory for the fetched generator and its assets.
 $workDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'mlgen_work_' . bin2hex(random_bytes(8));
