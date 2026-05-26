@@ -1,4 +1,6 @@
 ﻿<?php
+declare(strict_types=1);
+
 /**
  * generate-file-structure.php
  *
@@ -9,8 +11,6 @@
  * Legacy usage (scaffold in current directory):
  *   php generate-file-structure.php
  */
-
-declare(strict_types=1);
 
 if (PHP_SAPI !== 'cli') {
     fwrite(STDERR, "This script must be run from the terminal.\n");

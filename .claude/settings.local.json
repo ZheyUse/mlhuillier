@@ -29,7 +29,10 @@
       "Bash(git -C \"C:\\\\free-claude-code\\\\free-claude-code\" rev-list --left-right --count origin/main...HEAD)",
       "PowerShell(php -r \"echo escapeshellarg\\('C:\\\\free-claude-code\\\\free-claude-code'\\) . PHP_EOL;\" 2>&1)",
       "PowerShell(php c:\\\\tmp\\\\test-git.php 2>&1)",
-      "PowerShell(git branch --show-current 2>/dev/null; echo \"Exit code: $LASTEXITCODE\")"
+      "PowerShell(git branch --show-current 2>/dev/null; echo \"Exit code: $LASTEXITCODE\")",
+      "Bash(ml create *)",
+      "Bash(Select-Object -First 5)",
+      "Bash(Remove-Item -Path \"C:\\\\xampp\\\\htdocs\\\\mlhuillier\\\\test_strict\" -Recurse -Force -ErrorAction SilentlyContinue)"
     ]
   }
 }
