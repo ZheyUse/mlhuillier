@@ -582,6 +582,10 @@ if (is_dir(mlHome()) && !is_dir(aiInstallDir())) {
 }
 
 $subcommand = strtolower(trim((string)($argv[1] ?? '')));
+if ($subcommand !== '') {
+    // Allow "-claude" or "--claude" variants.
+    $subcommand = ltrim($subcommand, '-');
+}
 
 switch ($subcommand) {
     case '':

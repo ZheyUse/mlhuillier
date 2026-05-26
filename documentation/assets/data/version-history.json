@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-05-26T03:44:35.227Z",
+  "generatedAt": "2026-05-26T03:50:26.888Z",
   "latestVersion": "1.1.17",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 263
+    "commitCount": 264
   },
   "releases": [
     {
       "version": "1.1.17",
       "isLatest": true,
-      "commitCount": 6,
+      "commitCount": 7,
       "dateRange": {
         "from": "2026-05-17",
         "to": "2026-05-26"
       },
       "stats": {
         "release": 3,
-        "feature": 3,
+        "feature": 4,
         "fix": 0,
         "docs": 0,
         "refactor": 0,
@@ -28,6 +28,7 @@
         "other": 0
       },
       "highlights": [
+        "feat: update version history with new timestamps and commit counts; fix UTF-8 BOM handling in remote file generation",
         "feat: update command handling and version history; enhance file structure generation script",
         "feat: enhance git update check functionality; update version history with new commit counts and timestamps",
         "feat: update timestamps and commit counts in version history; add local AI script handling in ml.bat",
@@ -36,6 +37,13 @@
         "feat: update version to 1.1.17; increment commit counts and timestamps in version history"
       ],
       "commits": [
+        {
+          "hash": "ae09e5f67b6c2a2c280823c97d87cbb3eb40a52a",
+          "shortHash": "ae09e5f",
+          "date": "2026-05-26",
+          "title": "feat: update version history with new timestamps and commit counts; fix UTF-8 BOM handling in remote file generation",
+          "type": "feature"
+        },
         {
           "hash": "80961196e737109af64d15c32247145d4d9df0ed",
           "shortHash": "8096119",

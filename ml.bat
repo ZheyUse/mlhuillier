@@ -1333,6 +1333,7 @@ exit /b %RC%
 
 :cmd_ai
 rem Check for update subcommand first
+set "ARG2=%~2"
 if /I "%ARG2%"=="update" goto :cmd_ai_update
 set "FREE_CC_DIR=C:\free-claude-code\free-claude-code"
 if not exist "!FREE_CC_DIR!\.git" (
