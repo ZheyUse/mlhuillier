@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-07-20T01:58:49.433Z",
+  "generatedAt": "2026-07-20T02:10:33.191Z",
   "latestVersion": "1.1.18",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 270
+    "commitCount": 271
   },
   "releases": [
     {
       "version": "1.1.18",
       "isLatest": true,
-      "commitCount": 10,
+      "commitCount": 11,
       "dateRange": {
         "from": "2026-05-17",
         "to": "2026-07-20"
       },
       "stats": {
         "release": 2,
-        "feature": 8,
+        "feature": 9,
         "fix": 0,
         "docs": 0,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "feat: enhance fccClaudeScript and fccCodexScript to support running in current directory; update related command handling",
         "feat: update generated timestamps and commit counts in version history; enhance release details",
         "feat: update generated timestamps and commit counts in commands and version history files",
         "feat: update generated timestamps and version to 1.1.18 in commands and version history files",
         "feat: update version to 1.1.18; adjust version history and documentation timestamps; enhance uninstall script version tracking",
         "feat: update AI command handling in ml.bat and documentation; enhance version history tracking fix: correct command descriptions and add new subcommands for fcc-codex and fcc-pi docs: revise ai-installer-guide.md to reflect updated command structure and features chore: create ai-commands-study.md for documenting AI command architecture and planned updates",
         "feat: enhance ai command handling to allow subcommand variants; update version history timestamps and commit counts",
-        "feat: update version history with new timestamps and commit counts; fix UTF-8 BOM handling in remote file generation",
-        "feat: update command handling and version history; enhance file structure generation script"
+        "feat: update version history with new timestamps and commit counts; fix UTF-8 BOM handling in remote file generation"
       ],
       "commits": [
+        {
+          "hash": "8e15e086fb95d9d92c15009afb537f106a076d42",
+          "shortHash": "8e15e08",
+          "date": "2026-07-20",
+          "title": "feat: enhance fccClaudeScript and fccCodexScript to support running in current directory; update related command handling",
+          "type": "feature"
+        },
         {
           "hash": "88c60f40090bab8738e4730284aa9d822716910b",
           "shortHash": "88c60f4",

@@ -201,7 +201,7 @@ function psSingleQuote(string $value): string
 
 function powershellQuoteArg(string $value): string
 {
-    return '"' . str_replace('"', '\\"', $value) . '"';
+    return '"' . str_replace('"', '\"', $value) . '"';
 }
 
 function writeScript(string $name, string $body): string
@@ -234,28 +234,21 @@ function fccServerScript(): string
         'uv run ' . FCC_PROJECT_FLAG . ' fcc-server' . PHP_EOL;
 }
 
-// Build PowerShell here-string content for server script
-// Important: @ must be on its own line, @" starts here-string, content on next line, "@ ends on its own line
-function buildServerHereString(): string
-{
-    return '$serverScript = [System.IO.Path]::GetTempFileName() + ".ps1"' . PHP_EOL .
-        '$serverBody = @"' . PHP_EOL .
-        '$Host.UI.RawUI.WindowTitle = "ml --ai fcc-server (bg)"' . PHP_EOL .
-        'Set-Location ' . psSingleQuote(FCC_INSTALL_DIR) . PHP_EOL .
-        'uv run ' . FCC_PROJECT_FLAG . ' fcc-server' . PHP_EOL .
-        '"@' . PHP_EOL .
-        'Set-Content -Path $serverScript -Value $serverBody' . PHP_EOL .
-        'Start-Process powershell.exe -ArgumentList "-NoExit","-ExecutionPolicy","Bypass","-File",$serverScript -WindowStyle Hidden' . PHP_EOL .
-        'Start-Sleep -Seconds 2' . PHP_EOL;
-}
-
 function fccClaudeScript(bool $runInCurrentDir = false): string
 {
     if ($runInCurrentDir) {
         // When called via 'ml --ai claude': run fcc-claude in CURRENT directory
         // Server runs in background from FCC_INSTALL_DIR
         return '$Host.UI.RawUI.WindowTitle = "ml --ai fcc-claude"' . PHP_EOL .
-            buildServerHereString() .
+            '$serverScript = [System.IO.Path]::GetTempFileName() + ".ps1"' . PHP_EOL .
+            '$serverBody = @' . PHP_EOL .
+            '\"$Host.UI.RawUI.WindowTitle = \'ml --ai fcc-server (bg)\'"\' + "`n" + ' . PHP_EOL .
+            '"Set-Location ' . psSingleQuote(FCC_INSTALL_DIR) . '`n' . PHP_EOL .
+            '"uv run ' . FCC_PROJECT_FLAG . ' fcc-server`"' . PHP_EOL .
+            '@' . PHP_EOL .
+            'Set-Content -Path $serverScript -Value $serverBody' . PHP_EOL .
+            'Start-Process powershell.exe -ArgumentList "-NoExit","-ExecutionPolicy","Bypass","-File",$serverScript -WindowStyle Hidden' . PHP_EOL .
+            'Start-Sleep -Seconds 2' . PHP_EOL .
             'uv run ' . FCC_PROJECT_FLAG . ' fcc-claude' . PHP_EOL;
     }
 
@@ -271,7 +264,15 @@ function fccCodexScript(bool $runInCurrentDir = false): string
         // When called via 'ml --ai codex': run fcc-codex in CURRENT directory
         // Server runs in background from FCC_INSTALL_DIR
         return '$Host.UI.RawUI.WindowTitle = "ml --ai fcc-codex"' . PHP_EOL .
-            buildServerHereString() .
+            '$serverScript = [System.IO.Path]::GetTempFileName() + ".ps1"' . PHP_EOL .
+            '$serverBody = @' . PHP_EOL .
+            '\"$Host.UI.RawUI.WindowTitle = \'ml --ai fcc-server (bg)\'"\' + "`n" + ' . PHP_EOL .
+            '"Set-Location ' . psSingleQuote(FCC_INSTALL_DIR) . '`n' . PHP_EOL .
+            '"uv run ' . FCC_PROJECT_FLAG . ' fcc-server`"' . PHP_EOL .
+            '@' . PHP_EOL .
+            'Set-Content -Path $serverScript -Value $serverBody' . PHP_EOL .
+            'Start-Process powershell.exe -ArgumentList "-NoExit","-ExecutionPolicy","Bypass","-File",$serverScript -WindowStyle Hidden' . PHP_EOL .
+            'Start-Sleep -Seconds 2' . PHP_EOL .
             'uv run ' . FCC_PROJECT_FLAG . ' fcc-codex' . PHP_EOL;
     }
 
