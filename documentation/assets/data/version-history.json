@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-05-26T04:01:40.370Z",
+  "generatedAt": "2026-07-20T01:55:31.456Z",
   "latestVersion": "1.1.17",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 265
+    "commitCount": 266
   },
   "releases": [
     {
       "version": "1.1.17",
       "isLatest": true,
-      "commitCount": 8,
+      "commitCount": 9,
       "dateRange": {
         "from": "2026-05-17",
-        "to": "2026-05-26"
+        "to": "2026-07-20"
       },
       "stats": {
         "release": 3,
-        "feature": 5,
+        "feature": 6,
         "fix": 0,
         "docs": 0,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "feat: update AI command handling in ml.bat and documentation; enhance version history tracking fix: correct command descriptions and add new subcommands for fcc-codex and fcc-pi docs: revise ai-installer-guide.md to reflect updated command structure and features chore: create ai-commands-study.md for documenting AI command architecture and planned updates",
         "feat: enhance ai command handling to allow subcommand variants; update version history timestamps and commit counts",
         "feat: update version history with new timestamps and commit counts; fix UTF-8 BOM handling in remote file generation",
         "feat: update command handling and version history; enhance file structure generation script",
         "feat: enhance git update check functionality; update version history with new commit counts and timestamps",
         "feat: update timestamps and commit counts in version history; add local AI script handling in ml.bat",
         "feat: update generated timestamps and commit counts in version history; enhance release details for 1.1.17",
-        "feat: add admin panel command and update version history to 1.1.17; include git update check functionality",
-        "feat: update version to 1.1.17; increment commit counts and timestamps in version history"
+        "feat: add admin panel command and update version history to 1.1.17; include git update check functionality"
       ],
       "commits": [
+        {
+          "hash": "4ed601c516f6d81eb5056fdd0846f8f984e13e08",
+          "shortHash": "4ed601c",
+          "date": "2026-07-20",
+          "title": "feat: update AI command handling in ml.bat and documentation; enhance version history tracking fix: correct command descriptions and add new subcommands for fcc-codex and fcc-pi docs: revise ai-installer-guide.md to reflect updated command structure and features chore: create ai-commands-study.md for documenting AI command architecture and planned updates",
+          "type": "feature"
+        },
         {
           "hash": "74a212bafc6337c51fbf3885f8c8a4ded61ec79d",
           "shortHash": "74a212b",

@@ -38,7 +38,7 @@
 │   C:\free-claude-code\free-claude-code\                       │
 │                                                             │
 │   ┌──────────────────────────────────────────────────────┐ │
-│   │              fcc-server (uvicorn)                      │ │
+│   │              fcc-server (FastAPI/uvicorn)               │ │
 │   │         Port 8082 - Admin UI + Proxy                   │ │
 │   └──────────────────────────────────────────────────────┘ │
 │                                                             │
@@ -79,7 +79,7 @@ if /I "%~1"=="--ai" goto :cmd_ai
 | CLI Command | Action | Location |
 |-------------|--------|----------|
 | `ml install ai` | Downloads and runs `ai-installer.php` | Line 44 |
-| `ml --ai` | Starts both uvicorn + Claude Code (visible) | Line 27 → `:cmd_ai` |
+| `ml --ai` | Starts fcc-server and fcc-claude (both visible) | Line 27 → `:cmd_ai` |
 | `ml --ai update` | Pulls latest from free-claude-code git | Line 26 → `:cmd_ai_update` |
 | `ml --ai help` | Shows integrated AI help | Via `:help_ai` (lines 264-286) |
 
@@ -201,7 +201,7 @@ fcc-pi = "free_claude_code.cli.launchers.pi:launch"
 
 | Command | Description |
 |---------|-------------|
-| `fcc-server` | Start the uvicorn proxy server |
+| `fcc-server` | Start the fcc-server proxy (uses uvicorn under the hood) |
 | `fcc-server --version` | Print version without starting |
 | `fcc-claude` | Launch Claude Code via local proxy |
 | `fcc-codex` | Launch Codex CLI via local proxy |
@@ -228,8 +228,10 @@ FCC_CONFIG=/path/to/config.toml fcc-server
 
 **Current (Outdated):**
 ```batch
-echo   --ai               Start uvicorn + Claude Code (visible)
-echo   --ai claude        Start Claude Code in current directory (bg uvicorn)
+echo   --ai               Start fcc-server and fcc-claude (both visible)
+echo   --ai claude        Start fcc-claude only (server must be running)
+echo   --ai bg            Start fcc-server and fcc-claude in background
+echo   --ai codex         Start fcc-codex (server must be running)
 echo   --ai bg            Start both in background
 echo   --ai admin       Open Free Claude Code admin panel in browser
 echo   --ai update-info Check what updates are available before pulling
@@ -384,9 +386,10 @@ echo   --ai key           Update NVIDIA_NIM_API_KEY in .env
 
 | Command | Before | After |
 |---------|--------|-------|
-| `ml --ai` | `uvicorn + claude` visible | `fcc-server + fcc-claude` visible |
-| `ml --ai bg` | `uvicorn + claude` bg | `fcc-server + fcc-claude` bg |
-| `ml --ai claude` | Background uvicorn + visible claude | `fcc-claude` only |
+| `ml --ai` | `fcc-server + fcc-claude` visible | `fcc-server + fcc-claude` visible |
+| `ml --ai bg` | `fcc-server + fcc-claude` bg | `fcc-server + fcc-claude` bg |
+| `ml --ai claude` | `fcc-claude` only | `fcc-claude` only |
+| `ml --ai codex` | ❌ Did not exist | `fcc-codex` only |
 | `ml --ai codex` | ❌ Did not exist | `fcc-codex` only |
 
 ---
@@ -416,7 +419,7 @@ echo   --ai key           Update NVIDIA_NIM_API_KEY in .env
 
 ## Verification Checklist
 
-- [ ] Test `ml --ai` starts uvicorn and Claude Code
+- [x] Test `ml --ai` starts fcc-server and fcc-claude
 - [ ] Test `ml --ai bg` starts in background
 - [ ] Test `ml --ai stop` kills processes
 - [ ] Test `ml --ai admin` opens browser
