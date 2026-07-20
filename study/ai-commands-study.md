@@ -9,7 +9,8 @@
 
 1. [Architecture Overview](#architecture-overview)
 2. [Current ML CLI AI Commands](#current-ml-cli-ai-commands)
-3. [Free Claude Code Installation](#free-claude-code-installation)
+3. [ml install ai - Installation Command](#ml-install-ai---installation-command)
+4. [Free Claude Code Installation](#free-claude-code-installation)
 4. [Entry Points & Commands](#entry-points--commands)
 5. [What Needs Updates](#what-needs-updates)
 6. [Comparison: Current vs Expected](#comparison-current-vs-expected)
@@ -91,6 +92,125 @@ if /I "%~1"=="--ai" goto :cmd_ai
 | `ai-installer.php` | Installation automation |
 
 **Source:** `C:\xampp\htdocs\mlhuillier\ai-commands.php`
+
+---
+
+## ml install ai - Installation Command
+
+### Command Summary
+
+| Item | Value |
+|------|-------|
+| **Command** | `ml install ai` |
+| **Purpose** | Download and install Free Claude Code stack |
+| **Installer Script** | `ai-installer.php` |
+| **Installation Location** | `C:\free-claude-code\free-claude-code` (Windows) / `~/.free-claude-code/free-claude-code` (Unix) |
+| **Prerequisites** | Git, Node.js/npm, internet connection |
+
+### What It Does
+
+The `ml install ai` command performs a complete installation of the Free Claude Code AI stack:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   ml install ai                              │
+│                   (from ml.bat line ~44)                     │
+└──────────────────────────┬──────────────────────────────────┘
+                           │ Downloads ai-installer.php
+                           │ Runs it with PHP
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    ai-installer.php                         │
+│  C:\xampp\htdocs\mlhuillier\ai-installer.php                 │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+         ┌─────────────────┴─────────────────┐
+         ▼                                   ▼
+┌─────────────────┐              ┌─────────────────┐
+│  Clone Repo      │              │  Install uv      │
+│  (git clone)     │              │  + Python 3.14   │
+└────────┬────────┘              └────────┬────────┘
+         │                                │
+         ▼                                ▼
+┌─────────────────┐              ┌─────────────────┐
+│  Configure .env │              │  Install npm    │
+│  (models, keys)  │              │  (claude-code)   │
+└────────┬────────┘              └────────┬────────┘
+         │                                │
+         └────────────┬───────────────────┘
+                      ▼
+            ┌─────────────────┐
+            │  Create .venv    │
+            │  (uv venv)       │
+            └────────┬────────┘
+                     ▼
+            ┌─────────────────┐
+            │  Run uv sync    │
+            │  (install deps) │
+            └────────┬────────┘
+                     ▼
+            ┌─────────────────┐
+            │  Install FCC    │
+            │  (uv pip install)│
+            └─────────────────┘
+```
+
+### Installation Steps (from ai-installer.php)
+
+| Step | Action | Details |
+|------|--------|---------|
+| 1 | Detect platform | Windows/macOS/Linux |
+| 2 | Check prerequisites | Git, Node.js, npm, PHP |
+| 3 | Create directory | `C:\free-claude-code` or `~/.free-claude-code` |
+| 4 | Clone repo | `git clone https://github.com/Alishahryar1/free-claude-code.git` |
+| 5 | Install uv | Download and install uv package manager |
+| 6 | Setup Python | Install Python 3.14 via uv |
+| 7 | Create .env | Copy `.env.example` to `.env` |
+| 8 | Configure models | Set default MODEL config |
+| 9 | Prompt for API key | Ask for NVIDIA_NIM_API_KEY |
+| 10 | Install npm | `npm install -g @anthropic-ai/claude-code` |
+| 11 | Create venv | `uv venv` |
+| 12 | Sync deps | `uv sync` |
+| 13 | Install FCC | `uv pip install -e .` |
+
+### Key Files Created/Modified
+
+| File | Purpose |
+|------|---------|
+| `C:\free-claude-code\free-claude-code\.env` | Configuration with API keys |
+| `C:\free-claude-code\free-claude-code\.venv\` | Python virtual environment |
+| `C:\free-claude-code\free-claude-code\logs\` | Log directory |
+| `%APPDATA%\Code\User\settings.json` | VS Code settings (patched) |
+
+### After Installation
+
+Once installed, you can use:
+
+```bash
+ml --ai              # Start server + Claude Code (visible)
+ml --ai claude       # Start Claude Code in current directory
+ml --ai bg           # Start both in background
+ml --ai codex        # Start Codex in current directory
+ml --ai admin        # Open admin panel
+ml --ai stop         # Stop all processes
+ml --ai update       # Update Free Claude Code
+```
+
+### Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| "Git not found" | Install Git from https://git-scm.com |
+| "Node.js not found" | Install from https://nodejs.org |
+| "NVIDIA API key invalid" | Get key from https://build.nvidia.com and run `ml --ai key` |
+| Installation fails | Check internet connection, try running as administrator |
+
+### Source Files
+
+| File | Path | Line |
+|------|------|------|
+| ml.bat handler | `ml.bat` | ~44 |
+| ai-installer.php | `C:\xampp\htdocs\mlhuillier\ai-installer.php` | Full file |
 
 ---
 
