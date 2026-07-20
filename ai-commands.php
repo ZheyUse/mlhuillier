@@ -1,7 +1,10 @@
 <?php
 // ai-commands.php
-// Usage: php ai-commands.php [claude|bg|stop|restart|cm|key]
+// Usage: php ai-commands.php [claude|bg|stop|restart|cm|key|codex|admin|update-info]
 // Works on Windows (PowerShell), macOS, and Linux (bash/sh).
+
+const FCC_INSTALL_DIR = 'C:\\free-claude-code\\free-claude-code';
+const FCC_PROJECT_FLAG = '--project ' . FCC_INSTALL_DIR;
 
 function isWindows(): bool
 {
@@ -186,7 +189,7 @@ function changeApiKey(): void
 
     setEnvValue($envPath, 'NVIDIA_NIM_API_KEY', $key);
 
-    echo 'NVIDIA_NIM_API_KEY has been set sucessfully' . PHP_EOL;
+    echo 'NVIDIA_NIM_API_KEY has been set successfully' . PHP_EOL;
 }
 
 // ── Windows implementation ─────────────────────────────────────────────────────
@@ -224,40 +227,46 @@ function startPowerShellScript(string $scriptPath, bool $visible): int
     return (int)trim((string)end($out));
 }
 
-function uvicornScript(): string
+function fccServerScript(): string
 {
-    return '$Host.UI.RawUI.WindowTitle = "ml --ai uvicorn"' . PHP_EOL .
-        'Set-Location ' . psSingleQuote(aiInstallDir()) . PHP_EOL .
-        'uv run uvicorn server:app --host 0.0.0.0 --port 8082' . PHP_EOL;
+    return '$Host.UI.RawUI.WindowTitle = "ml --ai fcc-server"' . PHP_EOL .
+        'Set-Location ' . psSingleQuote(FCC_INSTALL_DIR) . PHP_EOL .
+        'uv run ' . FCC_PROJECT_FLAG . ' fcc-server' . PHP_EOL;
 }
 
-function claudeScript(): string
+function fccClaudeScript(): string
 {
-    return '$Host.UI.RawUI.WindowTitle = "ml --ai claude"' . PHP_EOL .
-        '$env:ANTHROPIC_AUTH_TOKEN = "freecc"' . PHP_EOL .
-        '$env:ANTHROPIC_BASE_URL = "http://localhost:8082"' . PHP_EOL .
-        'claude' . PHP_EOL;
+    return '$Host.UI.RawUI.WindowTitle = "ml --ai fcc-claude"' . PHP_EOL .
+        'Set-Location ' . psSingleQuote(FCC_INSTALL_DIR) . PHP_EOL .
+        'uv run ' . FCC_PROJECT_FLAG . ' fcc-claude' . PHP_EOL;
 }
 
-function startAiWindows(bool $uvicornVisible, bool $claudeVisible): void
+function fccCodexScript(): string
+{
+    return '$Host.UI.RawUI.WindowTitle = "ml --ai fcc-codex"' . PHP_EOL .
+        'Set-Location ' . psSingleQuote(FCC_INSTALL_DIR) . PHP_EOL .
+        'uv run ' . FCC_PROJECT_FLAG . ' fcc-codex' . PHP_EOL;
+}
+
+function startAiWindows(bool $serverVisible, bool $claudeVisible): void
 {
     ensureInstalled();
 
-    $uvicornPs = writeScript('ml-ai-uvicorn', uvicornScript());
-    $claudePs  = writeScript('ml-ai-claude', claudeScript());
+    $serverPs = writeScript('ml-ai-fcc-server', fccServerScript());
+    $claudePs  = writeScript('ml-ai-fcc-claude', fccClaudeScript());
 
     $state = [
         'started_at' => date(DATE_ATOM),
-        'scripts'   => [$uvicornPs, $claudePs],
+        'scripts'   => [$serverPs, $claudePs],
         'pids'      => [],
     ];
 
-    $uvicornPid = startPowerShellScript($uvicornPs, $uvicornVisible);
-    if ($uvicornPid > 0) {
-        $state['pids'][] = $uvicornPid;
+    $serverPid = startPowerShellScript($serverPs, $serverVisible);
+    if ($serverPid > 0) {
+        $state['pids'][] = $serverPid;
     }
 
-    sleep(1);
+    sleep(2);
 
     $claudePid = startPowerShellScript($claudePs, $claudeVisible);
     if ($claudePid > 0) {
@@ -266,6 +275,27 @@ function startAiWindows(bool $uvicornVisible, bool $claudeVisible): void
 
     saveState($state);
     echo 'CLI: Free Claude Code processes started.' . PHP_EOL;
+}
+
+function startCodexWindows(bool $visible): void
+{
+    ensureInstalled();
+
+    $codexPs = writeScript('ml-ai-fcc-codex', fccCodexScript());
+
+    $state = [
+        'started_at' => date(DATE_ATOM),
+        'scripts'   => [$codexPs],
+        'pids'      => [],
+    ];
+
+    $codexPid = startPowerShellScript($codexPs, $visible);
+    if ($codexPid > 0) {
+        $state['pids'][] = $codexPid;
+    }
+
+    saveState($state);
+    echo 'CLI: Free Claude Code (Codex) started.' . PHP_EOL;
 }
 
 function stopAiWindows(): void
@@ -279,9 +309,10 @@ function stopAiWindows(): void
 
     $ps = <<<'PS'
 $matches = Get-CimInstance Win32_Process | Where-Object {
-    ($_.CommandLine -like '*uvicorn server:app*' -and $_.CommandLine -like '*free-claude-code*') -or
-    ($_.CommandLine -like '*ml-ai-uvicorn*') -or
-    ($_.CommandLine -like '*ml-ai-claude*')
+    ($_.CommandLine -like '*fcc-server*' -and $_.CommandLine -like '*free-claude-code*') -or
+    ($_.CommandLine -like '*fcc-claude*' -and $_.CommandLine -like '*free-claude-code*') -or
+    ($_.CommandLine -like '*fcc-codex*' -and $_.CommandLine -like '*free-claude-code*') -or
+    ($_.CommandLine -like '*ml-ai-fcc-*')
 }
 foreach ($p in $matches) {
     try { taskkill /F /T /PID $p.ProcessId | Out-Null } catch {}
@@ -305,53 +336,19 @@ PS;
 
 // ── Unix / macOS implementation ─────────────────────────────────────────────────
 
-// Spawn a background process tied to the session (won't die when terminal closes).
-// Uses nohup on macOS/Linux.
-function nohupSpawn(string $cmd, string $wd, bool $keepOpen): int
+function fccServerCommand(): string
 {
-    $nohup = 'nohup';
-    $redirect = '> /dev/null 2>&1';
-    if ($keepOpen) {
-        // Keep a terminal window open (macOS Terminal / xterm)
-        if (isMac()) {
-            $escapedCmd = str_replace('"', '\\"', $cmd);
-            $full = "osascript -e 'tell app \"Terminal\" to do script \"cd " . escapeshellarg($wd) . " && " . $escapedCmd . " && sleep 86400\"' 2>/dev/null";
-            exec($full, $out, $rc);
-            return 0; // Terminal doesn't give us a PID
-        }
-        // Linux: try x-terminal-emulator or konsole/gnome-terminal
-        $terminals = ['x-terminal-emulator', 'konsole', 'gnome-terminal', 'xfce4-terminal', 'alacritty'];
-        foreach ($terminals as $term) {
-            if (commandExists($term)) {
-                $escapedCmd = str_replace('"', '\\"', $cmd);
-                $full = "$term -e 'bash -c " . escapeshellarg("cd " . escapeshellarg($wd) . " && " . $escapedCmd) . "' 2>/dev/null &";
-                exec($full);
-                return 0;
-            }
-        }
-        // Fallback: background without visible terminal
-        $redirect = '>> ' . escapeshellarg(mlHome() . '/logs') . ' 2>&1 &';
-    }
+    return 'cd ' . escapeshellarg(FCC_INSTALL_DIR) . ' && uv run ' . FCC_PROJECT_FLAG . ' fcc-server';
+}
 
-    $spawnCmd = "$nohup $cmd $redirect";
-    // Drop to background so PHP can exit
-    if (isMac()) {
-        $final = "bash -c '$spawnCmd' &";
-    } else {
-        $final = "nohup $cmd $redirect & echo \\$!";
-    }
+function fccClaudeCommand(): string
+{
+    return 'cd ' . escapeshellarg(FCC_INSTALL_DIR) . ' && uv run ' . FCC_PROJECT_FLAG . ' fcc-claude';
+}
 
-    $out = [];
-    exec($final, $out, $rc);
-
-    // Extract PID from & echo $! output if available
-    foreach ($out as $line) {
-        $line = trim($line);
-        if (is_numeric($line)) {
-            return (int)$line;
-        }
-    }
-    return 0;
+function fccCodexCommand(): string
+{
+    return 'cd ' . escapeshellarg(FCC_INSTALL_DIR) . ' && uv run ' . FCC_PROJECT_FLAG . ' fcc-codex';
 }
 
 function commandExists(string $cmd): bool
@@ -366,13 +363,12 @@ function commandExists(string $cmd): bool
     return $rc === 0;
 }
 
-function startAiUnix(bool $uvicornVisible, bool $claudeVisible): void
+function startAiUnix(bool $serverVisible, bool $claudeVisible): void
 {
     ensureInstalled();
 
     $installDir = aiInstallDir();
 
-    // Ensure logs dir exists
     $logDir = mlHome() . DIRECTORY_SEPARATOR . 'logs';
     if (!is_dir($logDir)) {
         mkdir($logDir, 0755, true);
@@ -383,64 +379,58 @@ function startAiUnix(bool $uvicornVisible, bool $claudeVisible): void
         'pids'       => [],
     ];
 
-    // Start uvicorn
-    $uvicornCmd = 'cd ' . escapeshellarg($installDir) . ' && uv run uvicorn server:app --host 0.0.0.0 --port 8082';
-    $pidFile = sys_get_temp_dir() . '/ml-ai-uvicorn.pid';
+    $serverCmd = fccServerCommand();
+    $serverLogFile = $logDir . '/fcc-server.log';
 
     if (isMac()) {
-        // macOS: use launchd or just background with nohup + Terminal
-        if ($uvicornVisible) {
-            exec("osascript -e 'tell app \"Terminal\" to do script \"cd " . escapeshellarg($installDir) . " && uv run uvicorn server:app --host 0.0.0.0 --port 8082\"' 2>/dev/null");
-            $uvicornPid = 0;
+        if ($serverVisible) {
+            exec("osascript -e 'tell app \"Terminal\" to do script \"cd " . escapeshellarg($installDir) . " && uv run " . FCC_PROJECT_FLAG . " fcc-server\"' 2>/dev/null");
+            $serverPid = 0;
         } else {
-            exec("cd " . escapeshellarg($installDir) . " && nohup uv run uvicorn server:app --host 0.0.0.0 --port 8082 > " . escapeshellarg($logDir . '/uvicorn.log') . " 2>&1 &");
-            $uvicornPid = (int)@exec("pgrep -f 'uvicorn server:app.*8082' | head -1");
+            exec("cd " . escapeshellarg($installDir) . " && nohup uv run " . FCC_PROJECT_FLAG . " fcc-server > " . escapeshellarg($serverLogFile) . " 2>&1 &");
+            $serverPid = (int)@exec("pgrep -f 'fcc-server.*free-claude-code' | head -1");
         }
     } else {
-        $uvicornCmd = "cd " . escapeshellarg($installDir) . " && uv run uvicorn server:app --host 0.0.0.0 --port 8082 > " . escapeshellarg($logDir . '/uvicorn.log') . " 2>&1 &";
-        exec($uvicornCmd);
-        $uvicornPid = (int)@exec("pgrep -f 'uvicorn server:app.*8082' | tail -1");
+        exec("cd " . escapeshellarg($installDir) . " && nohup uv run " . FCC_PROJECT_FLAG . " fcc-server > " . escapeshellarg($serverLogFile) . " 2>&1 &");
+        $serverPid = (int)@exec("pgrep -f 'fcc-server.*free-claude-code' | tail -1");
     }
 
-    if ($uvicornPid > 0) {
-        $state['pids'][] = $uvicornPid;
-        @file_put_contents($pidFile, (string)$uvicornPid);
+    if ($serverPid > 0) {
+        $state['pids'][] = $serverPid;
+        @file_put_contents(sys_get_temp_dir() . '/ml-ai-fcc-server.pid', (string)$serverPid);
     }
 
-    echo "CLI: uvicorn started (PID $uvicornPid)." . PHP_EOL;
+    echo "CLI: fcc-server started (PID $serverPid)." . PHP_EOL;
     sleep(2);
 
-    // Start Claude Code
-    $claudeCmdFull = 'cd ' . escapeshellarg($installDir) . ' && ANTHROPIC_AUTH_TOKEN=freecc ANTHROPIC_BASE_URL=http://localhost:8082 claude';
+    $claudeCmd = fccClaudeCommand();
 
     if ($claudeVisible) {
         if (isMac()) {
-            exec("osascript -e 'tell app \"Terminal\" to do script \"cd " . escapeshellarg($installDir) . " && ANTHROPIC_AUTH_TOKEN=freecc ANTHROPIC_BASE_URL=http://localhost:8082 claude\"' 2>/dev/null");
+            exec("osascript -e 'tell app \"Terminal\" to do script \"cd " . escapeshellarg($installDir) . " && uv run " . FCC_PROJECT_FLAG . " fcc-claude\"' 2>/dev/null");
         } else {
-            // Try to find a terminal emulator on Linux
             $terminals = ['konsole', 'gnome-terminal', 'xfce4-terminal'];
             $found = false;
             foreach ($terminals as $term) {
                 if (commandExists($term)) {
                     if ($term === 'konsole') {
-                        exec("$term -e 'bash -c " . escapeshellarg($claudeCmdFull) . "' 2>/dev/null &");
+                        exec("$term -e 'bash -c " . escapeshellarg($claudeCmd) . "' 2>/dev/null &");
                     } else {
-                        exec("$term -- bash -c " . escapeshellarg($claudeCmdFull) . " 2>/dev/null &");
+                        exec("$term -- bash -c " . escapeshellarg($claudeCmd) . " 2>/dev/null &");
                     }
                     $found = true;
                     break;
                 }
             }
             if (!$found) {
-                // Fallback: run in background
-                exec("nohup bash -c " . escapeshellarg($claudeCmdFull) . " >> " . escapeshellarg($logDir . '/claude.log') . " 2>&1 &");
+                exec("nohup bash -c " . escapeshellarg($claudeCmd) . " >> " . escapeshellarg($logDir . '/fcc-claude.log') . " 2>&1 &");
             }
         }
         $claudePid = 0;
     } else {
-        $claudeLogFile = $logDir . '/claude.log';
-        exec("nohup bash -c " . escapeshellarg($claudeCmdFull) . " >> " . escapeshellarg($claudeLogFile) . " 2>&1 &");
-        $claudePid = (int)@exec("pgrep -f 'ANTHROPIC_BASE_URL=http://localhost:8082 claude|claude' | tail -1");
+        $claudeLogFile = $logDir . '/fcc-claude.log';
+        exec("nohup bash -c " . escapeshellarg($claudeCmd) . " >> " . escapeshellarg($claudeLogFile) . " 2>&1 &");
+        $claudePid = (int)@exec("pgrep -f 'fcc-claude.*free-claude-code' | tail -1");
         if ($claudePid > 0) {
             $state['pids'][] = $claudePid;
         }
@@ -450,17 +440,68 @@ function startAiUnix(bool $uvicornVisible, bool $claudeVisible): void
     echo "CLI: Free Claude Code processes started." . PHP_EOL;
 }
 
+function startCodexUnix(bool $visible): void
+{
+    ensureInstalled();
+
+    $installDir = aiInstallDir();
+    $logDir = mlHome() . DIRECTORY_SEPARATOR . 'logs';
+    if (!is_dir($logDir)) {
+        mkdir($logDir, 0755, true);
+    }
+
+    $state = [
+        'started_at' => date(DATE_ATOM),
+        'pids'       => [],
+    ];
+
+    $codexCmd = fccCodexCommand();
+
+    if ($visible) {
+        if (isMac()) {
+            exec("osascript -e 'tell app \"Terminal\" to do script \"cd " . escapeshellarg($installDir) . " && uv run " . FCC_PROJECT_FLAG . " fcc-codex\"' 2>/dev/null");
+        } else {
+            $terminals = ['konsole', 'gnome-terminal', 'xfce4-terminal'];
+            $found = false;
+            foreach ($terminals as $term) {
+                if (commandExists($term)) {
+                    if ($term === 'konsole') {
+                        exec("$term -e 'bash -c " . escapeshellarg($codexCmd) . "' 2>/dev/null &");
+                    } else {
+                        exec("$term -- bash -c " . escapeshellarg($codexCmd) . " 2>/dev/null &");
+                    }
+                    $found = true;
+                    break;
+                }
+            }
+            if (!$found) {
+                exec("nohup bash -c " . escapeshellarg($codexCmd) . " >> " . escapeshellarg($logDir . '/fcc-codex.log') . " 2>&1 &");
+            }
+        }
+        $codexPid = 0;
+    } else {
+        $codexLogFile = $logDir . '/fcc-codex.log';
+        exec("nohup bash -c " . escapeshellarg($codexCmd) . " >> " . escapeshellarg($codexLogFile) . " 2>&1 &");
+        $codexPid = (int)@exec("pgrep -f 'fcc-codex.*free-claude-code' | tail -1");
+        if ($codexPid > 0) {
+            $state['pids'][] = $codexPid;
+        }
+    }
+
+    saveState($state);
+    echo "CLI: fcc-codex started." . PHP_EOL;
+}
+
 function stopAiUnix(): void
 {
     $state = loadState();
     $pids = $state['pids'] ?? [];
 
-    // Kill tracked PIDs
     foreach ($pids as $pid) {
         $pid = (int)$pid;
         if ($pid > 0) {
             if (function_exists('posix_kill')) {
-                posix_kill($pid, 15); // 15 = SIGTERM
+                posix_kill($pid, 15);
             } else {
                 exec('kill ' . (int)$pid . ' 2>/dev/null');
             }
@@ -468,20 +509,18 @@ function stopAiUnix(): void
         }
     }
 
-    // Also kill by process name patterns
     $patterns = [
-        'uvicorn server:app',
-        'ANTHROPIC_BASE_URL=http://localhost:8082 claude',
-        'ml-ai-uvicorn',
+        'fcc-server.*free-claude-code',
+        'fcc-claude.*free-claude-code',
+        'fcc-codex.*free-claude-code',
+        'uv run.*fcc-',
     ];
 
     foreach ($patterns as $pattern) {
         exec("pkill -f " . escapeshellarg($pattern) . " 2>/dev/null");
     }
 
-    // Clean up pid files
-    $pidFile = sys_get_temp_dir() . '/ml-ai-uvicorn.pid';
-    @unlink($pidFile);
+    @unlink(sys_get_temp_dir() . '/ml-ai-fcc-server.pid');
 
     if (is_file(aiStateFile())) {
         @unlink(aiStateFile());
@@ -526,17 +565,14 @@ function checkGitUpdates(): void
     echo 'Checking for updates...' . PHP_EOL;
     echo PHP_EOL;
 
-    // Fetch latest from remote
     $out = [];
     exec('git -C ' . escapeshellarg($installDir) . ' fetch origin 2>&1', $out, $rc);
 
-    // Get current branch
     $branch = trim((string)@exec('git -C ' . escapeshellarg($installDir) . ' branch --show-current ' . $stderr));
     if (empty($branch)) {
         $branch = 'main';
     }
 
-    // Get commits ahead/behind remote
     $revList = trim((string)@exec('git -C ' . escapeshellarg($installDir) . ' rev-list --left-right --count origin/' . escapeshellarg($branch) . '...HEAD ' . $stderr));
 
     echo 'Branch: ' . $branch . PHP_EOL;
@@ -553,7 +589,6 @@ function checkGitUpdates(): void
         echo PHP_EOL;
 
         if ($behind > 0) {
-            // Show what's new
             echo 'Updates available:' . PHP_EOL;
             $logOut = [];
             exec('git -C ' . escapeshellarg($installDir) . ' log HEAD..origin/' . escapeshellarg($branch) . ' --oneline 2>&1', $logOut);
@@ -583,7 +618,6 @@ if (is_dir(mlHome()) && !is_dir(aiInstallDir())) {
 
 $subcommand = strtolower(trim((string)($argv[1] ?? '')));
 if ($subcommand !== '') {
-    // Allow "-claude" or "--claude" variants.
     $subcommand = ltrim($subcommand, '-');
 }
 
@@ -596,6 +630,14 @@ switch ($subcommand) {
         }
         exit(0);
 
+    case 'bg':
+        if (isWindows()) {
+            startAiWindows(false, false);
+        } else {
+            startAiUnix(false, false);
+        }
+        exit(0);
+
     case 'claude':
         if (isWindows()) {
             startAiWindows(false, true);
@@ -604,11 +646,11 @@ switch ($subcommand) {
         }
         exit(0);
 
-    case 'bg':
+    case 'codex':
         if (isWindows()) {
-            startAiWindows(false, false);
+            startCodexWindows(true);
         } else {
-            startAiUnix(false, false);
+            startCodexUnix(true);
         }
         exit(0);
 
@@ -648,6 +690,6 @@ switch ($subcommand) {
 
     default:
         fwrite(STDERR, 'Unknown ml --ai subcommand: ' . $subcommand . PHP_EOL);
-        fwrite(STDERR, 'Use: ml --ai [claude|bg|stop|restart|cm|key|admin|update-info]' . PHP_EOL);
+        fwrite(STDERR, 'Use: ml --ai [claude|bg|codex|stop|restart|cm|key|admin|update-info]' . PHP_EOL);
         exit(2);
 }

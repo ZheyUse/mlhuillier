@@ -8,7 +8,7 @@ A beginner-friendly guide to installing and using Free Claude Code with your ML 
 
 Running `ml install ai` installs **Free Claude Code** — a local AI coding assistant that runs through NVIDIA NIM models. It sets up:
 
-- A local API server (uvicorn) that routes AI requests to NVIDIA NIM
+- A local API server (fcc-server) that routes AI requests to NVIDIA NIM
 - Claude Code agent for interactive AI assistance in your terminal
 - Proper VS Code settings for AI integration
 
@@ -24,7 +24,7 @@ Before running `ml install ai`, make sure you have:
 | **Node.js / npm** | [Download Node.js](https://nodejs.org) | `brew install node` | `sudo apt install nodejs npm` | Runs Claude Code agent (npm package) |
 | **PHP CLI** | XAMPP includes it | `brew install php` | `sudo apt install php` | Runs the ML CLI installer scripts |
 | **curl** | Already included in Windows 10/11 | Already included | Usually pre-installed | Used by `ml` command and uv installer |
-| **Python 3.14** | Installed automatically | Installed automatically | Installed automatically | Required by the uvicorn API server |
+| **Python 3.14** | Installed automatically | Installed automatically | Installed automatically | Required by the fcc-server proxy |
 
 ### How to Check If You Have curl
 
@@ -124,15 +124,21 @@ There are several ways to start Free Claude Code:
 ```powershell
 ml --ai
 ```
+This starts `fcc-server` and `fcc-claude` in visible terminals.
 
-**Option 2: Background uvicorn, visible Claude Code**
+**Option 2: Background mode (server + claude hidden)**
+```powershell
+ml --ai bg
+```
+
+**Option 3: Claude Code only (server must already be running)**
 ```powershell
 ml --ai claude
 ```
 
-**Option 3: Both in background**
+**Option 4: Codex CLI (server must already be running)**
 ```powershell
-ml --ai bg
+ml --ai codex
 ```
 
 ### Stopping the AI Features
@@ -319,11 +325,17 @@ If something goes wrong, run through this checklist:
 | Command | What It Does |
 |---------|--------------|
 | `ml install ai` | Install Free Claude Code |
-| `ml --ai` | Start uvicorn + Claude Code |
-| `ml --ai stop` | Stop all AI processes |
-| `ml --ai key` | Update NVIDIA API key |
-| `ml --ai cm` | Change AI model |
-| `ml --ai restart` | Restart all AI processes |
+| `ml --ai` | Start fcc-server and fcc-claude (both visible) |
+| `ml --ai claude` | Start fcc-claude only (server must be running) |
+| `ml --ai bg` | Start fcc-server and fcc-claude in background |
+| `ml --ai codex` | Start fcc-codex (server must be running) |
+| `ml --ai stop` | Stop all fcc-server, fcc-claude, fcc-codex processes |
+| `ml --ai restart` | Restart fcc-server and fcc-claude in background |
+| `ml --ai admin` | Open Admin UI at http://127.0.0.1:8082/admin |
+| `ml --ai cm` | Change model selection in .env |
+| `ml --ai key` | Update NVIDIA_NIM_API_KEY in .env |
+| `ml --ai update` | Pull latest updates from free-claude-code |
+| `ml --ai update-info` | Check available updates without pulling |
 
 ---
 

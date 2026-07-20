@@ -125,15 +125,16 @@ echo   create --pbac      Create PBAC table and apply PBAC scaffold
 echo   create --rbac      Create RBAC table in userdb
 echo   gen                Generate local PBAC access map (ml gen)
 echo   update             Update ML CLI from remote
-echo   --ai               Start uvicorn + Claude Code (visible)
-echo   --ai claude        Start Claude Code in current directory (bg uvicorn)
-echo   --ai bg            Start both in background
-echo   --ai admin       Open Free Claude Code admin panel in browser
-   echo   --ai update-info Check what updates are available before pulling
-echo   --ai stop          Stop all processes
-echo   --ai restart       Stop and start both in background
-echo   --ai cm            Change model (Opus/Sonnet/Haiku/Default)
-echo   --ai key           Update NVIDIA_NIM_API_KEY
+echo   --ai               Start fcc-server and fcc-claude (both visible)
+echo   --ai claude        Start fcc-claude only (server must be running)
+echo   --ai bg            Start fcc-server and fcc-claude in background
+echo   --ai codex         Start fcc-codex (server must be running)
+echo   --ai admin         Open Free Claude Code admin panel in browser
+echo   --ai update-info   Check what updates are available before pulling
+echo   --ai stop          Stop all fcc-server, fcc-claude, fcc-codex processes
+echo   --ai restart       Stop and start fcc-server/fcc-claude in background
+echo   --ai cm            Change model selection in .env
+echo   --ai key           Update NVIDIA_NIM_API_KEY in .env
 echo   --d                Download remote installer
 echo   --c                Check remote ML CLI version
 echo   rev / reveal       Reveal current project folder in File Explorer
@@ -267,22 +268,22 @@ echo HELP: Free Claude Code
 echo Usage: ml --ai [subcommand]
 echo.
 echo Subcommands:
-echo   ml --ai           Start uvicorn and Claude Code in visible terminals
-echo   ml --ai claude    Start uvicorn in bg, Claude Code visibly (runs in current working directory)
-echo   ml --ai bg        Start both processes in background
+echo   ml --ai           Start fcc-server and fcc-claude (both visible)
+echo   ml --ai claude    Start fcc-claude only (server must be running)
+echo   ml --ai bg        Start fcc-server and fcc-claude in background
+echo   ml --ai codex     Start fcc-codex (server must be running)
 echo   ml --ai admin     Open Free Claude Code admin panel (http://127.0.0.1:8082/admin)
-echo   ml --ai stop       Stop Free Claude Code processes
-echo   ml --ai restart    Stop then start both processes in background
-echo   ml --ai update     Check for and pull updates in free-claude-code
+echo   ml --ai stop      Stop all fcc-server, fcc-claude, fcc-codex processes
+echo   ml --ai restart   Stop and start fcc-server/fcc-claude in background
+echo   ml --ai update    Check for and pull updates in free-claude-code
 echo   ml --ai update-info Check what updates are available (without pulling)
-echo   ml --ai cm         Change Opus, Sonnet, Haiku, or default model in .env
-echo   ml --ai key        Update NVIDIA_NIM_API_KEY in .env
+echo   ml --ai cm        Change model selection in .env
+echo   ml --ai key       Update NVIDIA_NIM_API_KEY in .env
 echo.
-echo Models auto-configured on install:
-echo   MODEL_OPUS     - nvidia_nim/deepseek-ai/deepseek-v4-pro
-echo   MODEL_SONNET   - nvidia_nim/minimaxai/minimax-m2.7
-echo   MODEL_HAIKU    - nvidia_nim/z-ai/glm4.7
-echo   MODEL          - nvidia_nim/z-ai/glm-5.1
+echo Commands use: uv run --project C:\free-claude-code\free-claude-code fcc-*
+echo.
+echo For 25+ AI providers, use the Admin UI at http://127.0.0.1:8082/admin
+echo Supported: NVIDIA NIM, OpenRouter, Gemini, DeepSeek, Mistral, and more.
 exit /b 0
 
 :help_wb

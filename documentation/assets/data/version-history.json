@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-05-26T03:50:26.888Z",
+  "generatedAt": "2026-05-26T04:01:40.370Z",
   "latestVersion": "1.1.17",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 264
+    "commitCount": 265
   },
   "releases": [
     {
       "version": "1.1.17",
       "isLatest": true,
-      "commitCount": 7,
+      "commitCount": 8,
       "dateRange": {
         "from": "2026-05-17",
         "to": "2026-05-26"
       },
       "stats": {
         "release": 3,
-        "feature": 4,
+        "feature": 5,
         "fix": 0,
         "docs": 0,
         "refactor": 0,
@@ -28,6 +28,7 @@
         "other": 0
       },
       "highlights": [
+        "feat: enhance ai command handling to allow subcommand variants; update version history timestamps and commit counts",
         "feat: update version history with new timestamps and commit counts; fix UTF-8 BOM handling in remote file generation",
         "feat: update command handling and version history; enhance file structure generation script",
         "feat: enhance git update check functionality; update version history with new commit counts and timestamps",
@@ -37,6 +38,13 @@
         "feat: update version to 1.1.17; increment commit counts and timestamps in version history"
       ],
       "commits": [
+        {
+          "hash": "74a212bafc6337c51fbf3885f8c8a4ded61ec79d",
+          "shortHash": "74a212b",
+          "date": "2026-05-26",
+          "title": "feat: enhance ai command handling to allow subcommand variants; update version history timestamps and commit counts",
+          "type": "feature"
+        },
         {
           "hash": "ae09e5f67b6c2a2c280823c97d87cbb3eb40a52a",
           "shortHash": "ae09e5f",

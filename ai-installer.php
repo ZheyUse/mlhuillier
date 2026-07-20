@@ -664,21 +664,21 @@ if (isWindows()) {
     $timeoutSec = 600; // 10 minutes max
 
     echo 'CLI: Launching ml --ai for first-time package installation...' . PHP_EOL;
-    echo '      (This will install ~77 packages in the uvicorn terminal)' . PHP_EOL;
-    echo '      Waiting for uvicorn to start...' . PHP_EOL;
+    echo '      (This will install ~77 packages in the fcc-server terminal)' . PHP_EOL;
+    echo '      Waiting for fcc-server to start...' . PHP_EOL;
 
     // Launch ml --ai in a new visible PowerShell window (non-blocking)
     $psCmd = "powershell -NoProfile -Command \"Start-Process powershell -ArgumentList '-NoExit','-Command','ml --ai' -WindowStyle Normal\"";
     exec($psCmd . " >NUL 2>&1");
 
-    // Monitor for uvicorn readiness by checking port 8082
+    // Monitor for fcc-server readiness by checking port 8082
     $dotCount = 0;
     while ((time() - $startTime) < $timeoutSec) {
         $sock = @fsockopen('127.0.0.1', 8082, $errCode, $errMsg, 1);
         if ($sock !== false) {
             fclose($sock);
             $elapsed = time() - $startTime;
-            echo PHP_EOL . 'CLI: uvicorn is ready! (took ' . $elapsed . 's)' . PHP_EOL;
+            echo PHP_EOL . 'CLI: fcc-server is ready! (took ' . $elapsed . 's)' . PHP_EOL;
             break;
         }
         // Progress indicator

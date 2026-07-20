@@ -32,7 +32,9 @@
       "PowerShell(git branch --show-current 2>/dev/null; echo \"Exit code: $LASTEXITCODE\")",
       "Bash(ml create *)",
       "Bash(Select-Object -First 5)",
-      "Bash(Remove-Item -Path \"C:\\\\xampp\\\\htdocs\\\\mlhuillier\\\\test_strict\" -Recurse -Force -ErrorAction SilentlyContinue)"
+      "Bash(Remove-Item -Path \"C:\\\\xampp\\\\htdocs\\\\mlhuillier\\\\test_strict\" -Recurse -Force -ErrorAction SilentlyContinue)",
+      "Bash(grep -E \"server|\\\\.py$\")",
+      "Bash(dir \"C:\\\\free-claude-code\\\\free-claude-code\")"
     ]
   }
 }

@@ -42,7 +42,7 @@ ML CLI provides one command surface (`ml`) for:
 - Configuring and running MySQL schema backups via `mysqldump`
 - Checking and applying CLI updates from GitHub
 - Adding interactive sidebar menus with Material Icons (AI-assisted via NVIDIA NIM)
-- Installing and managing **Free Claude Code** (uvicorn API server + Claude Code agent)
+- Installing and managing **Free Claude Code** (fcc-server proxy + Claude/Codex/Pi agents)
 - Migrating userdb tables between databases (decentralize / centralize)
 - Exporting MySQL databases via MySQL Workbench (6 export methods)
 - Opening project folders in File Explorer, Finder, or the Linux desktop file manager
@@ -268,13 +268,16 @@ ml serve -o       (share via ngrok tunnel)
 ### AI Integration
 
 - `ml install ai` : install Free Claude Code stack (`C:\free-claude-code\free-claude-code` on Windows, `~/.free-claude-code/free-claude-code` on macOS/Linux)
-- `ml --ai` : start uvicorn + Claude Code (visible terminals)
-- `ml --ai claude` : start uvicorn in background, Claude Code visible
-- `ml --ai bg` : start both processes in the background
-- `ml --ai stop` : stop all Free Claude Code processes
-- `ml --ai restart` : stop and restart both in the background
-- `ml --ai cm` : change Opus, Sonnet, Haiku, or default model in Free Claude Code `.env`
+- `ml --ai` : start fcc-server and fcc-claude (both visible)
+- `ml --ai claude` : start fcc-claude only (server must be running)
+- `ml --ai bg` : start fcc-server and fcc-claude in the background
+- `ml --ai codex` : start fcc-codex only (server must be running)
+- `ml --ai stop` : stop all fcc-server, fcc-claude, fcc-codex processes
+- `ml --ai restart` : stop and restart fcc-server/fcc-claude in the background
+- `ml --ai admin` : open Admin UI at http://127.0.0.1:8082/admin
+- `ml --ai cm` : change model selection in Free Claude Code `.env`
 - `ml --ai key` : update or rotate `NVIDIA_NIM_API_KEY` in Free Claude Code `.env`
+- `ml --ai update` : pull latest updates from free-claude-code
 
 `ml install ai` follows the upstream Free Claude Code requirements:
 
@@ -876,4 +879,4 @@ Open docs page:
 - Windows, macOS, and Linux are supported through platform-specific wrappers and helper behavior.
 - Many helper flows fetch the latest scripts from GitHub at runtime.
 - For stable offline behavior, keep local script copies and avoid remote dependency paths where needed.
-- Free Claude Code requires Python and Node.js for the uvicorn API server component.
+- Free Claude Code requires Python 3.14+ and Node.js for the fcc-server proxy component.

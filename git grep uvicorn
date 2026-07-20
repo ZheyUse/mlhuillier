@@ -1,0 +1,58 @@
+[35m.claude/settings.local.json[m[36m:[m      "Read(//c/[1;31mfree-claude-code[m/[1;31mfree-claude-code[m/.git/**)",
+[35m.claude/settings.local.json[m[36m:[m      "PowerShell(git -C \"C:\\\\[1;31mfree-claude-code[m\\\\[1;31mfree-claude-code[m\" branch --show-current 2>&1)",
+[35m.claude/settings.local.json[m[36m:[m      "Bash(cmd /c \"cd C:\\\\[1;31mfree-claude-code[m\\\\[1;31mfree-claude-code[m && git fetch origin\")",
+[35m.claude/settings.local.json[m[36m:[m      "Bash(git -C \"C:\\\\[1;31mfree-claude-code[m\\\\[1;31mfree-claude-code[m\" rev-list --left-right --count origin/main...HEAD)",
+[35m.claude/settings.local.json[m[36m:[m      "PowerShell(php -r \"echo escapeshellarg\\('C:\\\\[1;31mfree-claude-code[m\\\\[1;31mfree-claude-code[m'\\) . PHP_EOL;\" 2>&1)",
+[35mREADME.md[m[36m:[m| Free Claude Code | `C:\[1;31mfree-claude-code[m\[1;31mfree-claude-code[m` | `~/.[1;31mfree-claude-code[m/[1;31mfree-claude-code[m` |
+[35mREADME.md[m[36m:[m- `ml install ai` : install Free Claude Code stack (`C:\[1;31mfree-claude-code[m\[1;31mfree-claude-code[m` on Windows, `~/.[1;31mfree-claude-code[m/[1;31mfree-claude-code[m` on macOS/Linux)
+[35mai-commands.php[m[36m:[m        return 'C:\\[1;31mfree-claude-code[m';
+[35mai-commands.php[m[36m:[m    return $home . DIRECTORY_SEPARATOR . '.[1;31mfree-claude-code[m';
+[35mai-commands.php[m[36m:[m    return mlHome() . DIRECTORY_SEPARATOR . '[1;31mfree-claude-code[m';
+[35mai-commands.php[m[36m:[m    ($_.CommandLine -like '*uvicorn server:app*' -and $_.CommandLine -like '*[1;31mfree-claude-code[m*') -or
+[35mai-installer-guide.md[m[36m:[m   - Windows: `C:\[1;31mfree-claude-code[m\[1;31mfree-claude-code[m`
+[35mai-installer-guide.md[m[36m:[m   - macOS/Linux: `~/.[1;31mfree-claude-code[m/[1;31mfree-claude-code[m`
+[35mai-installer-guide.md[m[36m:[m### "CLI: Failed cloning [1;31mfree-claude-code[m"
+[35mai-installer-guide.md[m[36m:[m| Installation directory | `C:\[1;31mfree-claude-code[m\[1;31mfree-claude-code[m` | `~/.[1;31mfree-claude-code[m/[1;31mfree-claude-code[m` |
+[35mai-installer-guide.md[m[36m:[m| Configuration file | `C:\[1;31mfree-claude-code[m\[1;31mfree-claude-code[m\.env` | `~/.[1;31mfree-claude-code[m/[1;31mfree-claude-code[m/.env` |
+[35mai-installer-guide.md[m[36m:[m- **Free Claude Code Repo:** [https://github.com/Alishahryar1/[1;31mfree-claude-code[m](https://github.com/Alishahryar1/[1;31mfree-claude-code[m)
+[35mai-installer-guide.txt[m[36m:[mWindows: C:\[1;31mfree-claude-code[m\[1;31mfree-claude-code[m
+[35mai-installer-guide.txt[m[36m:[mMac/Linux: ~/.[1;31mfree-claude-code[m/[1;31mfree-claude-code[m
+[35mai-installer.php[m[36m:[mconst AI_REPO_URL = 'https://github.com/Alishahryar1/[1;31mfree-claude-code[m.git';
+[35mai-installer.php[m[36m:[m        return 'C:\\[1;31mfree-claude-code[m';
+[35mai-installer.php[m[36m:[m    return $home . '/.[1;31mfree-claude-code[m';
+[35mai-installer.php[m[36m:[m    return mlHome() . DIRECTORY_SEPARATOR . '[1;31mfree-claude-code[m';
+[35mai-installer.php[m[36m:[mecho 'CLI: Cloning [1;31mfree-claude-code[m...' . PHP_EOL;
+[35mai-installer.php[m[36m:[m    fwrite(STDERR, 'CLI: Failed cloning [1;31mfree-claude-code[m.' . PHP_EOL);
+[35mai-installer.php[m[36m:[mecho 'CLI: [1;31mfree-claude-code[m ...ok' . PHP_EOL;
+[35mdocumentation/assets/data/commands.json[m[36m:[m        "explanation": "Install Free Claude Code with ML CLI. Run ml install ai to clone [1;31mfree-claude-code[m repo, install uv + Python 3.14, configure .env with default models, prompt for NVIDIA NIM API key, install Claude Code via npm, and patch VS Code settings.",
+[35mdocumentation/assets/data/commands.json[m[36m:[m        "expectedResult": "Free Claude Code installed to C:\\[1;31mfree-claude-code[m\\[1;31mfree-claude-code[m with everything configured."
+[35mdocumentation/assets/data/commands.json[m[36m:[m        "expectedResult": "NVIDIA NIM API key is stored in C:\\[1;31mfree-claude-code[m\\[1;31mfree-claude-code[m\\.env."
+[35mdocumentation/assets/data/commands.json[m[36m:[m        "explanation": "Start uvicorn (API server on port 8082) and Claude Code in visible terminal windows. Uvicorn runs in [1;31mfree-claude-code[m directory; Claude Code inherits your current working directory.",
+[35mdocumentation/assets/data/commands.json[m[36m:[m        "explanation": "Start uvicorn in background and Claude Code visibly in your project directory. Use this when you are already inside your project folder and want Claude Code to start there instead of [1;31mfree-claude-code[m.",
+[35mdocumentation/assets/data/commands.json[m[36m:[m        "explanation": "Check for and pull the latest updates in the [1;31mfree-claude-code[m installation from the remote repository.",
+[35mdocumentation/assets/data/commands.json[m[36m:[m        "Run ml install ai to set up the entire stack: uv, Python 3.14, [1;31mfree-claude-code[m repo, Claude Code npm package, and VS Code configuration.",
+[35mdocumentation/assets/data/commands.json[m[36m:[m        "Run ml --ai claude from your project folder when you want Claude Code to start in that directory instead of [1;31mfree-claude-code[m. Uvicorn stays in the background.",
+[35mdocumentation/assets/data/commands.json[m[36m:[m        "To update [1;31mfree-claude-code[m to the latest version: ml --ai update, which pulls changes from the remote repository.",
+[35mdocumentation/assets/data/commands.json[m[36m:[m        "Models are stored in C:\\[1;31mfree-claude-code[m\\[1;31mfree-claude-code[m\\.env. You can edit this file directly or use ml --ai cm.",
+[35mdocumentation/assets/data/commands.json[m[36m:[m        "meaning": "Tried to run ml --ai but [1;31mfree-claude-code[m directory does not exist.",
+[35mdocumentation/assets/js/main.js[m[36m:[m    ['Free Claude Code', '[1;31mfree-claude-code[m'],
+[35mdocumentation/assets/js/main.js[m[36m:[m  const freeClaudeCodeRoot = document.getElementById('[1;31mfree-claude-code[m');
+[35mdocumentation/index.html[m[36m:[m    <section id="[1;31mfree-claude-code[m" class="panel"></section>
+[35mml[m[36m:[m    echo "  --ai update      Check for and pull updates in [1;31mfree-claude-code[m"
+[35mml[m[36m:[m                    echo "  update    Check for and pull updates in [1;31mfree-claude-code[m"
+[35mml[m[36m:[m                        echo "Clones Free Claude Code to ~/.[1;31mfree-claude-code[m/"
+[35mml[m[36m:[m    local FREE_CC_DIR="$HOME/.[1;31mfree-claude-code[m/[1;31mfree-claude-code[m"
+[35mml[m[36m:[m        echo "Checking for updates in [1;31mfree-claude-code[m..."
+[35mml[m[36m:[m            echo "[1;31mfree-claude-code[m is up to date."
+[35mml[m[36m:[m# ── Check for [1;31mfree-claude-code[m updates ─────────────────────────────────────────
+[35mml[m[36m:[m    local FREE_CC_DIR="$HOME/.[1;31mfree-claude-code[m/[1;31mfree-claude-code[m"
+[35mml.bat[m[36m:[mecho   Installs prerequisites, clones the stack to C:\[1;31mfree-claude-code[m\[1;31mfree-claude-code[m,
+[35mml.bat[m[36m:[mecho   ml --ai update     Check for and pull updates in [1;31mfree-claude-code[m
+[35mml.bat[m[36m:[mset "FREE_CC_DIR=C:\[1;31mfree-claude-code[m\[1;31mfree-claude-code[m"
+[35mml.bat[m[36m:[mset "FREE_CC_DIR=C:\[1;31mfree-claude-code[m\[1;31mfree-claude-code[m"
+[35mml.bat[m[36m:[mset "FREE_CC_DIR=C:\[1;31mfree-claude-code[m\[1;31mfree-claude-code[m"
+[35mml.bat[m[36m:[mecho Checking for updates in [1;31mfree-claude-code[m...
+[35mml.bat[m[36m:[m        echo [1;31mfree-claude-code[m is up to date.
+[35mml.bat[m[36m:[m        echo [1;31mfree-claude-code[m is up to date.
+[35mscripts/parse-ml.js[m[36m:[m      helpDescription: 'Check for and pull updates in the [1;31mfree-claude-code[m installation. Pulls latest changes from the remote repository.',
+[35mscripts/parse-ml.js[m[36m:[m      expectedResult: 'Git pull runs in [1
