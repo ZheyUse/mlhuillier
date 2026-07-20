@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-07-20T02:37:37.346Z",
+  "generatedAt": "2026-07-20T02:41:52.544Z",
   "latestVersion": "1.1.18",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 272
+    "commitCount": 273
   },
   "releases": [
     {
       "version": "1.1.18",
       "isLatest": true,
-      "commitCount": 12,
+      "commitCount": 13,
       "dateRange": {
         "from": "2026-05-17",
         "to": "2026-07-20"
       },
       "stats": {
         "release": 2,
-        "feature": 10,
+        "feature": 11,
         "fix": 0,
         "docs": 0,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "feat: update version history timestamps and commit counts; enhance AI commands documentation with installation command details",
         "feat: update PowerShell script handling in fccClaudeScript and fccCodexScript; enhance version history with new timestamps and commit counts",
         "feat: enhance fccClaudeScript and fccCodexScript to support running in current directory; update related command handling",
         "feat: update generated timestamps and commit counts in version history; enhance release details",
         "feat: update generated timestamps and commit counts in commands and version history files",
         "feat: update generated timestamps and version to 1.1.18 in commands and version history files",
         "feat: update version to 1.1.18; adjust version history and documentation timestamps; enhance uninstall script version tracking",
-        "feat: update AI command handling in ml.bat and documentation; enhance version history tracking fix: correct command descriptions and add new subcommands for fcc-codex and fcc-pi docs: revise ai-installer-guide.md to reflect updated command structure and features chore: create ai-commands-study.md for documenting AI command architecture and planned updates",
-        "feat: enhance ai command handling to allow subcommand variants; update version history timestamps and commit counts"
+        "feat: update AI command handling in ml.bat and documentation; enhance version history tracking fix: correct command descriptions and add new subcommands for fcc-codex and fcc-pi docs: revise ai-installer-guide.md to reflect updated command structure and features chore: create ai-commands-study.md for documenting AI command architecture and planned updates"
       ],
       "commits": [
+        {
+          "hash": "53d55d2637c96e103f4c7449352c5aea1e201e7c",
+          "shortHash": "53d55d2",
+          "date": "2026-07-20",
+          "title": "feat: update version history timestamps and commit counts; enhance AI commands documentation with installation command details",
+          "type": "feature"
+        },
         {
           "hash": "efcfea40d9c839b59f0edada72dca8502cdf487c",
           "shortHash": "efcfea4",

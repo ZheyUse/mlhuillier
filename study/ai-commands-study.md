@@ -168,19 +168,195 @@ The `ml install ai` command performs a complete installation of the Free Claude 
 | 7 | Create .env | Copy `.env.example` to `.env` |
 | 8 | Configure models | Set default MODEL config |
 | 9 | Prompt for API key | Ask for NVIDIA_NIM_API_KEY |
-| 10 | Install npm | `npm install -g @anthropic-ai/claude-code` |
-| 11 | Create venv | `uv venv` |
-| 12 | Sync deps | `uv sync` |
-| 13 | Install FCC | `uv pip install -e .` |
+| 10 | Configure .env | Set default models, API keys |
+| 11 | Install npm | `npm install -g @anthropic-ai/claude-code` |
+| 12 | **Modify VS Code** | Configure settings.json for Claude Code |
+| 13 | Create venv | `uv venv` |
+| 14 | Sync deps | `uv sync` |
+| 15 | Install FCC | `uv pip install -e .` |
+
+### VS Code Settings Modification (Step 12)
+
+The installer modifies `settings.json` to configure Claude Code to use the local proxy server.
+
+**Settings File Location:**
+| OS | Path |
+|----|------|
+| Windows | `%APPDATA%\Code\User\settings.json` |
+| macOS | `~/Library/Application Support/Code/User/settings.json` |
+| Linux | `~/.config/Code/User/settings.json` |
+
+**VS Code Settings Modified by `configureVsCodeSettings()`:**
+
+| Setting Key | Value | Purpose |
+|-------------|-------|---------|
+| `liveServer.settings.CustomBrowser` | `"chrome"` | Open HTML files in Chrome |
+| `dart.flutterSdkPath` | OS-specific path | Flutter SDK location |
+| `workbench.editor.empty.hint` | `"hidden"` | Hide empty editor hint |
+| `github.copilot.nextEditSuggestions.enabled` | `true` | Enable Copilot suggestions |
+| `files.autoSave` | `"afterDelay"` | Auto-save files |
+| `git.autofetch` | `true` | Auto-fetch git changes |
+| `chat.mcp.gallery.enabled` | `true` | Enable MCP gallery |
+| `python.terminal.useEnvFile` | `true` | Use .env in Python terminal |
+| `terminal.integrated.initialHint` | `false` | Hide terminal hint |
+
+**🔑 CLAUDE CODE SPECIFIC SETTINGS:**
+
+| Setting Key | Value | Purpose |
+|-------------|-------|---------|
+| `claudeCode.environmentVariables` | `[ANTHROPIC_BASE_URL, ANTHROPIC_AUTH_TOKEN]` | **Route Claude Code through local proxy** |
+| `claudeCode.disableLoginPrompt` | `true` | Skip login prompt |
+
+**What the Claude Code settings do:**
+
+```json
+"claudeCode": {
+  "environmentVariables": [
+    {
+      "name": "ANTHROPIC_BASE_URL",
+      "value": "http://localhost:8082"
+    },
+    {
+      "name": "ANTHROPIC_AUTH_TOKEN",
+      "value": "freecc"
+    }
+  ],
+  "disableLoginPrompt": true
+}
+```
+
+- **`ANTHROPIC_BASE_URL`** = `http://localhost:8082` → Routes all Claude API calls through `fcc-server` proxy
+- **`ANTHROPIC_AUTH_TOKEN`** = `freecc` → Authentication token for the proxy
+- **`disableLoginPrompt`** = `true` → Skips the "Enter API key" prompt since auth is handled by proxy
+
+---
+
+### 🔑 CODEX SPECIFIC SETTINGS
+
+For Codex (Claude Code's code-specific version), the configuration is different. Codex uses a config file rather than VS Code settings.
+
+**Codex Config File Location:**
+| OS | Path |
+|----|------|
+| Windows | `%USERPROFILE%\.claude\codex.json` |
+| macOS | `~/.claude/codex.json` |
+| Linux | `~/.claude/codex.json` |
+
+**Codex Configuration (TOML/JSON):**
+
+```json
+{
+  "model_provider": "fcc",
+  "model": "nvidia_nim/nvidia/nemotron-3-super-120b-a12b",
+  "model_providers": {
+    "fcc": {
+      "name": "Free Claude Code",
+      "base_url": "http://127.0.0.1:8082/v1",
+      "http_headers": {
+        "Authorization": "Bearer freecc"
+      },
+      "wire_api": "responses"
+    }
+  }
+}
+```
+
+**Configuration Explanation:**
+
+| Setting | Value | Purpose |
+|---------|-------|---------|
+| `model_provider` | `"fcc"` | Use the "fcc" provider defined below |
+| `model` | `"nvidia_nim/nvidia/nemotron-3-super-120b-a12b"` | Default model for Codex |
+| `model_providers.fcc.name` | `"Free Claude Code"` | Display name |
+| `model_providers.fcc.base_url` | `"http://127.0.0.1:8082/v1"` | fcc-server endpoint |
+| `model_providers.fcc.http_headers` | `{"Authorization": "Bearer freecc"}` | Auth header |
+| `model_providers.fcc.wire_api` | `"responses"` | Use Responses API |
+
+**What this does:**
+1. Routes Codex requests through `fcc-server` on port 8082
+2. Uses Nemotron model (or any configured model)
+3. Authenticates via Bearer token `freecc`
+4. Matches NVIDIA NIM model format
+
+**Result:** When you run `fcc-codex` or Codex CLI:
+```
+User Input → Codex CLI → base_url=http://127.0.0.1:8082/v1 → fcc-server → NVIDIA NIM
+                                (from codex.json)        (port 8082)
+```
+
+---
+
+**Result:** When you run `claude` in VS Code:
+```
+User Input → Claude Code CLI → ANTHROPIC_BASE_URL=http://localhost:8082 → fcc-server → NVIDIA NIM
+                 (via env vars)            (from settings.json)      (port 8082)
+```
+
+**Request Flow Diagram:**
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          VS Code + Claude Code Extension                       │
+│                                                                               │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │ VS Code (claudeCode.environmentVariables)                            │    │
+│  │   ANTHROPIC_BASE_URL=http://localhost:8082                         │    │
+│  │   ANTHROPIC_AUTH_TOKEN=freecc                                      │    │
+│  └─────────────────────────────────┬───────────────────────────────────┘    │
+│                                    │                                            │
+│                                    ▼  (API calls go here)                      │
+└────────────────────────────────────┼────────────────────────────────────────────┘
+                                     │
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                             fcc-server (Port 8082)                           │
+│  ┌───────────────────────────────────────────────────────────────────────┐  │
+│  │ FastAPI Proxy Server                                                   │  │
+│  │ - Receives requests from Claude Code                                  │  │
+│  │ - Adds NVIDIA API KEY from .env                                       │  │
+│  │ - Forwards to NVIDIA NIM                                              │  │
+│  │ - Returns response back to Claude Code                                │  │
+│  └─────────────────────────────────┬───────────────────────────────────────┘  │
+│                                    │                                            │
+│                                    ▼  (Forwarded requests)                    │
+└────────────────────────────────────┼────────────────────────────────────────────┘
+                                     │
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            NVIDIA NIM API                                    │
+│                         https://integrate.api.nvidia.com                     │
+│                                                                               │
+│  - Authenticated with NVIDIA_NIM_API_KEY from .env                          │
+│  - Returns AI model responses                                                │
+│                                                                               │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Why this matters:**
+1. No need to enter API key manually - it's stored securely in `.env`
+2. All requests go through `fcc-server` on port 8082
+3. `fcc-server` handles authentication with NVIDIA NIM
+4. You can switch models via Admin UI at http://127.0.0.1:8082/admin without changing settings
 
 ### Key Files Created/Modified
 
 | File | Purpose |
 |------|---------|
-| `C:\free-claude-code\free-claude-code\.env` | Configuration with API keys |
-| `C:\free-claude-code\free-claude-code\.venv\` | Python virtual environment |
-| `C:\free-claude-code\free-claude-code\logs\` | Log directory |
-| `%APPDATA%\Code\User\settings.json` | VS Code settings (patched) |
+| `C:\free-claude-code\free-claude-code\.env` | Configuration with API keys and model settings |
+| `C:\free-claude-code\free-claude-code\.venv\` | Python virtual environment for FCC |
+| `C:\free-claude-code\free-claude-code\logs\` | Log files directory |
+| `%APPDATA%\Code\User\settings.json` | **VS Code settings - Claude Code configured here** |
+| `%USERPROFILE%\.claude\codex.json` | **Codex configuration - Free Claude Code provider** |
+| `%USERPROFILE%\.claude\` | Claude Code user data and settings |
+
+**VS Code Settings.json Details:**
+
+The installer **modifies** (not replaces) your existing `settings.json` to add Claude Code integration. It merges new settings with your existing ones, preserving any custom settings you already have.
+
+| OS | Full Path |
+|----|-----------|
+| Windows | `%APPDATA%\Code\User\settings.json` |
+| macOS | `~/Library/Application Support/Code/User/settings.json` |
+| Linux | `~/.config/Code/User/settings.json` |
 
 ### After Installation
 
@@ -204,6 +380,26 @@ ml --ai update       # Update Free Claude Code
 | "Node.js not found" | Install from https://nodejs.org |
 | "NVIDIA API key invalid" | Get key from https://build.nvidia.com and run `ml --ai key` |
 | Installation fails | Check internet connection, try running as administrator |
+| VS Code doesn't connect to fcc-server | Ensure port 8082 is open and fcc-server is running |
+| "ANTHROPIC_BASE_URL not set" | VS Code settings.json not updated correctly. Re-run `ml install ai` |
+
+### VS Code + Claude Code First Run
+
+**On Windows:** The installer automatically launches `ml --ai` to complete package installation (~77 packages). This happens in a visible PowerShell window. You may see:
+- A PowerShell window opening with "ml --ai"
+- fcc-server starting and installing packages
+- The window closes automatically when complete
+
+**On macOS/Linux:** Run manually:
+```bash
+ml --ai
+```
+
+**What happens during first run:**
+1. `fcc-server` starts on port 8082
+2. Installs ~77 Python packages automatically
+3. Creates logs directory
+4. `fcc-claude` connects to the server
 
 ### Source Files
 
