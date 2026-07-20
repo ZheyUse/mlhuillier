@@ -234,15 +234,49 @@ function fccServerScript(): string
         'uv run ' . FCC_PROJECT_FLAG . ' fcc-server' . PHP_EOL;
 }
 
-function fccClaudeScript(): string
+function fccClaudeScript(bool $runInCurrentDir = false): string
 {
+    if ($runInCurrentDir) {
+        // When called via 'ml --ai claude': run fcc-claude in CURRENT directory
+        // Server runs in background from FCC_INSTALL_DIR
+        return '$Host.UI.RawUI.WindowTitle = "ml --ai fcc-claude"' . PHP_EOL .
+            '$serverScript = [System.IO.Path]::GetTempFileName() + ".ps1"' . PHP_EOL .
+            '$serverBody = @' . PHP_EOL .
+            '\"$Host.UI.RawUI.WindowTitle = \'ml --ai fcc-server (bg)\'"\' + "`n" + ' . PHP_EOL .
+            '"Set-Location ' . psSingleQuote(FCC_INSTALL_DIR) . '`n' . PHP_EOL .
+            '"uv run ' . FCC_PROJECT_FLAG . ' fcc-server`"' . PHP_EOL .
+            '@' . PHP_EOL .
+            'Set-Content -Path $serverScript -Value $serverBody' . PHP_EOL .
+            'Start-Process powershell.exe -ArgumentList "-NoExit","-ExecutionPolicy","Bypass","-File",$serverScript -WindowStyle Hidden' . PHP_EOL .
+            'Start-Sleep -Seconds 2' . PHP_EOL .
+            'uv run ' . FCC_PROJECT_FLAG . ' fcc-claude' . PHP_EOL;
+    }
+
+    // Default: both server and claude in FCC_INSTALL_DIR
     return '$Host.UI.RawUI.WindowTitle = "ml --ai fcc-claude"' . PHP_EOL .
         'Set-Location ' . psSingleQuote(FCC_INSTALL_DIR) . PHP_EOL .
         'uv run ' . FCC_PROJECT_FLAG . ' fcc-claude' . PHP_EOL;
 }
 
-function fccCodexScript(): string
+function fccCodexScript(bool $runInCurrentDir = false): string
 {
+    if ($runInCurrentDir) {
+        // When called via 'ml --ai codex': run fcc-codex in CURRENT directory
+        // Server runs in background from FCC_INSTALL_DIR
+        return '$Host.UI.RawUI.WindowTitle = "ml --ai fcc-codex"' . PHP_EOL .
+            '$serverScript = [System.IO.Path]::GetTempFileName() + ".ps1"' . PHP_EOL .
+            '$serverBody = @' . PHP_EOL .
+            '\"$Host.UI.RawUI.WindowTitle = \'ml --ai fcc-server (bg)\'"\' + "`n" + ' . PHP_EOL .
+            '"Set-Location ' . psSingleQuote(FCC_INSTALL_DIR) . '`n' . PHP_EOL .
+            '"uv run ' . FCC_PROJECT_FLAG . ' fcc-server`"' . PHP_EOL .
+            '@' . PHP_EOL .
+            'Set-Content -Path $serverScript -Value $serverBody' . PHP_EOL .
+            'Start-Process powershell.exe -ArgumentList "-NoExit","-ExecutionPolicy","Bypass","-File",$serverScript -WindowStyle Hidden' . PHP_EOL .
+            'Start-Sleep -Seconds 2' . PHP_EOL .
+            'uv run ' . FCC_PROJECT_FLAG . ' fcc-codex' . PHP_EOL;
+    }
+
+    // Default: both server and codex in FCC_INSTALL_DIR
     return '$Host.UI.RawUI.WindowTitle = "ml --ai fcc-codex"' . PHP_EOL .
         'Set-Location ' . psSingleQuote(FCC_INSTALL_DIR) . PHP_EOL .
         'uv run ' . FCC_PROJECT_FLAG . ' fcc-codex' . PHP_EOL;
@@ -253,7 +287,9 @@ function startAiWindows(bool $serverVisible, bool $claudeVisible): void
     ensureInstalled();
 
     $serverPs = writeScript('ml-ai-fcc-server', fccServerScript());
-    $claudePs  = writeScript('ml-ai-fcc-claude', fccClaudeScript());
+    // When server is NOT visible: run claude in current directory (claude-only mode)
+    $runInCurrentDir = !$serverVisible;
+    $claudePs  = writeScript('ml-ai-fcc-claude', fccClaudeScript($runInCurrentDir));
 
     $state = [
         'started_at' => date(DATE_ATOM),
@@ -281,7 +317,8 @@ function startCodexWindows(bool $visible): void
 {
     ensureInstalled();
 
-    $codexPs = writeScript('ml-ai-fcc-codex', fccCodexScript());
+    // Always run codex in current directory, server in background
+    $codexPs = writeScript('ml-ai-fcc-codex', fccCodexScript(true));
 
     $state = [
         'started_at' => date(DATE_ATOM),

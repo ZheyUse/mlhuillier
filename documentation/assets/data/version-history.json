@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-07-20T01:57:54.083Z",
+  "generatedAt": "2026-07-20T01:58:49.433Z",
   "latestVersion": "1.1.18",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 269
+    "commitCount": 270
   },
   "releases": [
     {
       "version": "1.1.18",
       "isLatest": true,
-      "commitCount": 9,
+      "commitCount": 10,
       "dateRange": {
         "from": "2026-05-17",
         "to": "2026-07-20"
       },
       "stats": {
         "release": 2,
-        "feature": 7,
+        "feature": 8,
         "fix": 0,
         "docs": 0,
         "refactor": 0,
@@ -28,16 +28,23 @@
         "other": 0
       },
       "highlights": [
+        "feat: update generated timestamps and commit counts in version history; enhance release details",
         "feat: update generated timestamps and commit counts in commands and version history files",
         "feat: update generated timestamps and version to 1.1.18 in commands and version history files",
         "feat: update version to 1.1.18; adjust version history and documentation timestamps; enhance uninstall script version tracking",
         "feat: update AI command handling in ml.bat and documentation; enhance version history tracking fix: correct command descriptions and add new subcommands for fcc-codex and fcc-pi docs: revise ai-installer-guide.md to reflect updated command structure and features chore: create ai-commands-study.md for documenting AI command architecture and planned updates",
         "feat: enhance ai command handling to allow subcommand variants; update version history timestamps and commit counts",
         "feat: update version history with new timestamps and commit counts; fix UTF-8 BOM handling in remote file generation",
-        "feat: update command handling and version history; enhance file structure generation script",
-        "feat: enhance git update check functionality; update version history with new commit counts and timestamps"
+        "feat: update command handling and version history; enhance file structure generation script"
       ],
       "commits": [
+        {
+          "hash": "88c60f40090bab8738e4730284aa9d822716910b",
+          "shortHash": "88c60f4",
+          "date": "2026-07-20",
+          "title": "feat: update generated timestamps and commit counts in version history; enhance release details",
+          "type": "feature"
+        },
         {
           "hash": "7dcdca5cf301a1862914eac91c7e29afe81ada78",
           "shortHash": "7dcdca5",
