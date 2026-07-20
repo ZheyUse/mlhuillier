@@ -1,22 +1,22 @@
 {
-  "generatedAt": "2026-07-20T01:56:19.063Z",
+  "generatedAt": "2026-07-20T01:57:32.236Z",
   "latestVersion": "1.1.18",
   "source": {
     "versionFile": "VERSION",
     "gitLog": "git log --date=short --pretty=format:%H%x1f%h%x1f%ad%x1f%s%x1e",
-    "commitCount": 267
+    "commitCount": 268
   },
   "releases": [
     {
       "version": "1.1.18",
       "isLatest": true,
-      "commitCount": 7,
+      "commitCount": 8,
       "dateRange": {
         "from": "2026-05-17",
         "to": "2026-07-20"
       },
       "stats": {
-        "release": 1,
+        "release": 2,
         "feature": 6,
         "fix": 0,
         "docs": 0,
@@ -28,6 +28,7 @@
         "other": 0
       },
       "highlights": [
+        "feat: update generated timestamps and version to 1.1.18 in commands and version history files",
         "feat: update version to 1.1.18; adjust version history and documentation timestamps; enhance uninstall script version tracking",
         "feat: update AI command handling in ml.bat and documentation; enhance version history tracking fix: correct command descriptions and add new subcommands for fcc-codex and fcc-pi docs: revise ai-installer-guide.md to reflect updated command structure and features chore: create ai-commands-study.md for documenting AI command architecture and planned updates",
         "feat: enhance ai command handling to allow subcommand variants; update version history timestamps and commit counts",
@@ -37,6 +38,13 @@
         "feat: update timestamps and commit counts in version history; add local AI script handling in ml.bat"
       ],
       "commits": [
+        {
+          "hash": "d6f798d22138f024bac807f6da0dc7cdef5f99eb",
+          "shortHash": "d6f798d",
+          "date": "2026-07-20",
+          "title": "feat: update generated timestamps and version to 1.1.18 in commands and version history files",
+          "type": "release"
+        },
         {
           "hash": "0d56a120c52066e74176dd8a169eb763575a1399",
           "shortHash": "0d56a12",
